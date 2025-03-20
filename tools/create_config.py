@@ -1,6 +1,6 @@
 import os
 
-import toml
+import tomlkit
 
 config = {
     "general": {
@@ -39,6 +39,6 @@ if os.path.exists("config.toml"):
     exit(1)
 
 with open("config.toml", "w") as f:
-    toml.dump(config, f)
+    tomlkit.dump(config, f)
 
 print("Конфигурационный файл успешно создан.")

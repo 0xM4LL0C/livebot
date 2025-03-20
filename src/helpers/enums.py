@@ -15,7 +15,7 @@ class ItemRarity(Enum):
 
 class ItemType(Enum):
     USABLE = auto()
-    COUNTABLE = auto()
+    STACKABLE = auto()
 
 
 class WeatherType(Enum):

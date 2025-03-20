@@ -1,41 +1,33 @@
 from aiogram.exceptions import TelegramAPIError
 
 from config import bot
-from database.funcs import database
-from database.models import NotificationModel
+from database.models import UserModel
 from helpers.datetime_utils import utcnow
-from helpers.exceptions import NoResult
 from helpers.utils import antiflood, quick_markup
 
 
 async def _notification():
-    users = await database.users.async_get_all()
+    users = await UserModel.get_all_async()
 
     for user in users:
-        try:
-            user_notification = await database.notifications.async_get(owner=user._id)
-        except NoResult:
-            user_notification = NotificationModel(owner=user._id)
-            id = (await database.notifications.async_add(**user_notification.to_dict())).inserted_id
-            user_notification._id = id
+        await user.fetch_async()
 
-        user = await database.users.async_get(_id=user._id)
         if not user.action:
             continue
         try:
             current_time = utcnow()
             if user.action.end <= current_time:
-                if user.action.type == "street" and not user_notification.walk:
-                    user_notification.walk = True
+                if user.action.type == "street" and not user.notification_status.walk:
+                    user.notification_status.walk = True
                     mess = "Ты закончил прогулку"
-                elif user.action.type == "work" and not user_notification.work:
-                    user_notification.work = True
+                elif user.action.type == "work" and not user.notification_status.work:
+                    user.notification_status.work = True
                     mess = "Ты закончил работу"
-                elif user.action.type == "sleep" and not user_notification.sleep:
-                    user_notification.sleep = True
+                elif user.action.type == "sleep" and not user.notification_status.sleep:
+                    user.notification_status.sleep = True
                     mess = "Ты проснулся"
-                elif user.action.type == "game" and not user_notification.game:
-                    user_notification.game = True
+                elif user.action.type == "game" and not user.notification_status.game:
+                    user.notification_status.game = True
                     mess = "Ты проснулся"
                 else:
                     continue
@@ -46,7 +38,7 @@ async def _notification():
         except TelegramAPIError:
             continue
 
-        await database.notifications.async_update(**user_notification.to_dict())
+        await user.update_async()
 
 
 async def notification():

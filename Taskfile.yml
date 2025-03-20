@@ -34,7 +34,7 @@ tasks:
 
   dev-install:
     cmds:
-      - pip install --upgrade ruff pyright pre-commit pylint
+      - uv pip install --upgrade ruff pyright pre-commit pylint
       - npm install -g cspell @cspell/dict-ru_ru
       - cspell link add @cspell/dict-ru_ru
 
@@ -54,9 +54,9 @@ tasks:
     ignore_error: true
     cmd: python3 tools/create_config.py
 
-  docs-setup:
-    cmds:
-      - pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin
+  # docs-setup:
+  #   cmds:
+  #     - pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin
 
   release:
-    cmd: python3 tools/bump_version.py {{.CLI_ARGS}}
+    cmd: python3 tools/release.py {{.CLI_ARGS}}

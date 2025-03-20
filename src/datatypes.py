@@ -1,10 +1,17 @@
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import transliterate
 
-from database.models import UserModel
+from helpers.cache import cached
 from helpers.enums import ItemRarity, ItemType, WeatherType
+
+if TYPE_CHECKING:
+    from database.models import UserModel
+
+ChatIdType = int | str
+
 
 # ---------------------------------- weather --------------------------------- #
 
@@ -164,54 +171,33 @@ class WeatherData:
 
 
 # ----------------------------------- item ----------------------------------- #
+@dataclass
+class ItemCraft:
+    name: str
+    quantity: int
 
 
+@dataclass
 class Item:
-    def __init__(
-        self,
-        /,
-        name: str,
-        emoji: str,
-        desc: str,
-        rarity: ItemRarity,
-        type: ItemType = ItemType.COUNTABLE,
-        is_task_item: bool = False,
-        can_exchange: bool = False,
-        is_consumable: bool = False,
-        altnames: Optional[list[str]] = None,
-        craft: Optional[dict[str, int]] = None,
-        effect: Optional[int] = None,
-        price: Optional[int] = None,
-        task_coin: Optional[range] = None,
-        exchange_price: Optional[range] = None,
-        strength: Optional[float] = None,
-        strength_reduction: Optional[tuple[float, float]] = None,
-        can_equip: bool = False,
-    ):
-        self.name = name
-        self.emoji = emoji
-        self.desc = desc
-        self.craft = craft
-        self.effect = effect
-        self.price = price
-        self.is_consumable = is_consumable
-        self.altnames = altnames
-        self.rarity = rarity
-        self.is_task_item = is_task_item
-        self.task_coin = task_coin
-        self.can_exchange = can_exchange
-        self.exchange_price = exchange_price
-        self.strength = strength
-        self.strength_reduction = strength_reduction
-        self.can_equip = can_equip
-        self.type = type
+    name: str
+    emoji: str
+    desc: str
+    rarity: ItemRarity
+    type: ItemType = ItemType.STACKABLE
+    is_task_item: bool = False
+    can_exchange: bool = False
+    is_consumable: bool = False
+    altnames: Optional[list[str]] = None
+    craft: Optional[list[ItemCraft]] = None
+    effect: Optional[int] = None
+    price: Optional[int] = None
+    task_coin: Optional[range] = None
+    exchange_price: Optional[range] = None
+    strength: Optional[float] = None
+    strength_reduction: Optional[tuple[float, float]] = None
+    can_equip: bool = False
 
-    def __repr__(self) -> str:
-        return f"(Item {self.name})"
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
+    @cached
     def translit(self) -> str:
         return transliterate.translit(self.name, reversed=True)
 
@@ -219,31 +205,31 @@ class Item:
 # ------------------------------- achievement ------------------------------- #
 
 
+@dataclass
+class AchievementReward:
+    name: str
+    quantity: int
+
+
+@dataclass
 class Achievement:
-    def __init__(
-        self,
-        /,
-        name: str,
-        emoji: str,
-        desc: str,
-        need: int,
-        reward: dict[str, int],
-    ) -> None:
-        self.name = name
-        self.emoji = emoji
-        self.desc = desc
-        self.need = need
-        self.key = name.strip().replace(" ", "-")
-        self.reward = reward
+    name: str
+    emoji: str
+    desc: str
+    need: int
+    reward: list[AchievementReward]
+    key: str = field(init=False)
+
+    def __post_init__(self):
+        self.key = self.name.strip().replace(" ", "-")
 
     def __str__(self) -> str:
         return f"{self.name}"
 
-    def check(self, user: UserModel):
+    def check(self, user: "UserModel") -> bool:
         progress = user.achievement_progress.get(self.key, 0)
-        if progress >= self.need:
-            return True
-        return False
+        return progress >= self.need
 
+    @cached
     def translit(self) -> str:
         return transliterate.translit(self.key, reversed=True)

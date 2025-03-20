@@ -3,10 +3,9 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from config import TELEGRAM_ID
-from database.funcs import database
+from consts import TELEGRAM_ID
+from database.models import UserModel
 from helpers.datetime_utils import utcnow
-from helpers.utils import increment_achievement_progress
 
 
 class ActiveMiddleware(BaseMiddleware):
@@ -22,14 +21,9 @@ class ActiveMiddleware(BaseMiddleware):
                 return
 
             user_id = event.from_user.id
-            user = await database.users.async_get(id=user_id)
-
-            last_active_time = user.last_active_time
+            user = await UserModel.get_async(id=user_id)
 
             user.last_active_time = utcnow()
-            await database.users.async_update(**user.to_dict())
+            await user.update_async()
 
-            if (utcnow() - last_active_time).days >= 1:
-                increment_achievement_progress(user, "новичок")
-                increment_achievement_progress(user, "олд")
             return result

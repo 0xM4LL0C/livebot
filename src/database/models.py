@@ -1,105 +1,47 @@
-from dataclasses import asdict, dataclass, field
+import random
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Literal, Optional
+from weakref import ReferenceType, ref
 
-from bson import Int64, ObjectId
-from dacite import from_dict as _from_dict
-from dacite.data import Data
-from dateutil.relativedelta import relativedelta  # cspell: disable-line
+from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from bson import ObjectId
+from mashumaro import DataClassDictMixin, field_options
 
+from config import bot
+from data.achievements.utils import get_achievement
+from data.items.items import ITEMS
+from data.items.utils import get_item, get_item_emoji
+from database.base import BaseModel
+from datatypes import Achievement, ChatIdType
 from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType, Locations
+from helpers.exceptions import AchievementNotFoundError, ItemNotFoundError
+from helpers.player_utils import calc_xp_for_level
+from helpers.stickers import Stickers
+from helpers.utils import calc_percentage, create_progress_bar
 
 
 @dataclass
-class BaseModel:
-    def to_dict(self) -> dict:
-        result = {}
-        for key, value in asdict(self).items():
-            if isinstance(value, bool):
-                result[key] = value
-            elif isinstance(value, int):
-                result[key] = Int64(value)
-            else:
-                result[key] = value
-        return result
+class CasinoInfo:
+    win: int = 0
+    loose: int = 0
 
-    @classmethod
-    def from_dict(cls, dict_data: Data):
-        return _from_dict(cls, dict_data)
+    @property
+    def profit(self) -> int:
+        return self.win - self.loose
 
 
 @dataclass
-class ItemModel(BaseModel):
-    name: str
-    quantity: int = 0
-    usage: Optional[float] = None
-    is_equipped: bool = False
-    _id: ObjectId = field(default_factory=ObjectId)
-    owner: ObjectId = field(default_factory=ObjectId)
-
-    def __post_init__(self):
-        from helpers.utils import get_item
-
-        _item = get_item(self.name)
-        if _item.type == ItemType.USABLE and self.quantity > 1:
-            raise ValueError("Quantity must be 0 or 1 for items with type `ItemType.USABLE`")
-        if _item.type == ItemType.COUNTABLE and self.usage is not None:
-            raise ValueError("Usage must be `None` for items with type `ItemType.COUNTABLE`")
-        if not _item.can_equip and self.is_equipped:
-            raise ValueError(f"Item {self.name} cannot be equipped")
+class UserAction:
+    type: Literal["street", "work", "sleep", "game"]
+    end: datetime
+    start: datetime = field(default_factory=utcnow)
 
 
 @dataclass
-class PromoModel(BaseModel):
-    name: str
-    is_used: bool = False
-    usage_count: int = 1
-    description: Optional[str] = None
-    items: dict = field(default_factory=dict)
-    users: list = field(default_factory=list)
-    created_at: datetime = field(default_factory=utcnow)
-    _id: ObjectId = field(default_factory=ObjectId)
-
-
-@dataclass
-class QuestModel(BaseModel):
-    name: str
-    quantity: int = 1
-    start_time: datetime = field(default_factory=utcnow)
-    xp: float = 1.0
-    reward: int = 1
-    owner: ObjectId = field(default_factory=ObjectId)
-    _id: ObjectId = field(default_factory=ObjectId)
-
-
-@dataclass
-class ExchangerModel(BaseModel):
-    item: str
-    price: int
-    expires: datetime
-    _id: ObjectId = field(default_factory=ObjectId)
-    owner: ObjectId = field(default_factory=ObjectId)
-
-
-@dataclass
-class DogModel(BaseModel):
-    _id: ObjectId = field(default_factory=ObjectId)
-    name: str = "Песик"
-    level: int = 1
-    xp: float = 0.0
-    max_xp: int = 100
-    health: int = 100
-    hunger: int = 0
-    fatigue: int = 0
-    sleep_time: datetime = field(default_factory=utcnow)
-    owner: ObjectId = field(default_factory=ObjectId)
-
-
-@dataclass
-class NotificationModel(BaseModel):
-    _id: ObjectId = field(default_factory=ObjectId)
-    owner: ObjectId = field(default_factory=ObjectId)
+class UserNotificationStatus:
     walk: bool = False
     work: bool = False
     sleep: bool = False
@@ -111,91 +53,394 @@ class NotificationModel(BaseModel):
 
 
 @dataclass
-class Violation:
-    reason: str
-    type: Literal["warn", "mute", "ban", "permanent-ban"]
-    date: datetime = field(default_factory=utcnow)
-    is_permanent: bool = False
-    until_date: Optional[datetime] = None
+class UserItem(DataClassDictMixin):
+    name: str
+    quantity: int = 0
+    usage: Optional[float] = None
 
-    def __post_init__(self):
-        if self.type == "permanent-ban":
-            self.is_permanent = True
-        elif self.type == "warn" and not self.until_date:
-            self.until_date = utcnow() + relativedelta(months=3)
+    @property
+    def type(self):
+        if self.usage is not None:
+            return ItemType.USABLE
+        else:
+            return ItemType.STACKABLE
+
+    def add(self, amount: int):
+        if self.type == ItemType.STACKABLE:
+            self.quantity += amount
+        else:
+            raise ValueError("Cannot add quantity to a usable item")
+
+    def remove(self, amount: int):
+        if self.type == ItemType.STACKABLE:
+            if amount > self.quantity:
+                raise ValueError("Not enough items to remove")
+            self.quantity -= amount
+        else:
+            raise ValueError("Cannot remove quantity from a usable item")
+
+    def use(self, amount: float):
+        if self.type == ItemType.USABLE:
+            if self.usage is None or amount > self.usage:
+                raise ValueError("Not enough usage percentage left")
+            self.usage -= amount
+        else:
+            raise ValueError("Cannot use a stackable item")
 
 
 @dataclass
-class UserAction:
-    type: Literal["street", "work", "sleep", "game"]
-    end: datetime
-    start: datetime = field(default_factory=utcnow)
+class Inventory(DataClassDictMixin):
+    items: list[UserItem] = field(default_factory=list)
+
+    def add_item(self, item: UserItem):
+        if item.type == ItemType.STACKABLE:
+            for inv_item in self.items:
+                if inv_item.type == ItemType.STACKABLE and inv_item.name == item.name:
+                    inv_item.add(item.quantity)
+                    return
+        self.items.append(item)
+
+    def remove_item(self, item_name: str, quantity: int = 1):
+        for inv_item in self.items:
+            if inv_item.name == item_name:
+                if inv_item.type == ItemType.STACKABLE:
+                    inv_item.remove(quantity)
+                    if inv_item.quantity == 0:
+                        self.items.remove(inv_item)
+                    return
+                elif inv_item.type == ItemType.USABLE:
+                    if quantity > 1:
+                        raise ValueError("Cannot remove more than one usable item at a time")
+                    self.items.remove(inv_item)
+                    return
+        raise ValueError("Item not found in inventory")
+
+    def use_item(self, item_name: str, amount: float):
+        for inv_item in self.items:
+            if inv_item.type == ItemType.USABLE and inv_item.name == item_name:
+                inv_item.use(amount)
+                if inv_item.usage == 0:
+                    self.items.remove(inv_item)
+                return
+        raise ValueError("Usable item not found in inventory")
+
+    def get_items(self, name: str) -> list[UserItem]:
+        return [item for item in self.items if item.name == name]
+
+    def get_item(self, name: str) -> UserItem:
+        for item in self.items:
+            if item.name == name:
+                return item
+        raise ItemNotFoundError(name)
+
+    def get_stackable_items(self) -> list[UserItem]:
+        return [item for item in self.items if item.type == ItemType.STACKABLE]
+
+    def get_usable_items(self) -> list[UserItem]:
+        return [item for item in self.items if item.type == ItemType.USABLE]
+
+    def get_or_add(self, name: str) -> UserItem:
+        try:
+            item = self.get_item(name)
+        except ItemNotFoundError:
+            item_info = get_item(name)
+            if item_info.type == ItemType.STACKABLE:
+                item = UserItem(name=name, quantity=0)
+            elif item_info.type == ItemType.USABLE:
+                item = UserItem(name=name, usage=1.0)
+            else:
+                raise NotImplementedError(item_info.type)
+            self.items.append(item)
+        return item
+
+
+@dataclass
+class UserAchievement:
+    name: str
+    completed_at: datetime = field(default_factory=utcnow)
+
+
+@dataclass
+class AchievementsInfo(DataClassDictMixin):
+    achievements: list[UserAchievement] = field(default_factory=list)
+    progress: dict[str, int] = field(default_factory=dict)
+    _user: ReferenceType["UserModel"] = field(
+        init=False, repr=False, metadata=field_options(serialize="omit")
+    )
+
+    def get_progress_bar(self, name: str) -> str:
+        ach = get_achievement(name)
+        progress = self.progress.get(ach.name, 0)
+        percentage = min(100.0, calc_percentage(progress, ach.need))
+        progress_bar = f"Выполнено: {progress}/{ach.need}"
+        progress_bar += f"[{create_progress_bar(percentage)}] {percentage:.2f}%"
+        return progress_bar
+
+    def is_completed(self, name: str) -> bool:
+        try:
+            self.get(name)
+            return True
+        except AchievementNotFoundError:
+            return False
+
+    async def award(self, achievement: Achievement):
+        if not self._user():
+            return
+        if self.is_completed(achievement.name):
+            return
+
+        user_achievement = UserAchievement(achievement.name)
+        self.achievements.append(user_achievement)
+
+        reward = ""
+
+        for item in achievement.reward:
+            reward += f" + {item.quantity} {item.name} {get_item_emoji(item.name)}"
+
+            if item.name == "бабло":
+                self._user().coin += item.quantity
+                pass
+            else:
+                user_item = self._user().inventory.get_or_add(item.name)
+                user_item.quantity += item.quantity
+                pass
+
+        await bot.send_message(
+            self._user().id,
+            f'Поздравляю🎉, ты получил достижение "{user_achievement.name}"\n\nЗа это ты получил:\n{reward}',
+        )
+        await self._user().update_async()
+
+    def get(self, name: str) -> UserAchievement:
+        for achievement in self.achievements:
+            if achievement.name == name:
+                return achievement
+        raise AchievementNotFoundError(name)
+
+    def incr_progress(self, key: str, quantity: int = 1):
+        if self.is_completed(key.replace("-", " ")):
+            return
+        if key in self.progress:
+            self.progress[key] += quantity
+        else:
+            self.progress[key] = quantity
+
+        self._user().update()
+
+
+@dataclass
+class UserViolation:
+    reason: str
+    type: Literal["warn", "mute", "ban", "permanent-ban"]
+    until_date: Optional[datetime] = None
+
+
+@dataclass
+class DailyGift:
+    streak: int = 0
+    last_claimed_at: Optional[datetime] = None
+    next_claimable_at: datetime = field(default_factory=lambda: utcnow() + timedelta(days=1))
+    is_claimed: bool = False
+    itmes: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
+class UserTask:
+    needed_items: dict[str, int]
+    xp: float
+    reward: int  # coin
+    start_time: datetime = field(default_factory=utcnow)
 
 
 @dataclass
 class UserModel(BaseModel):
+    __settings__ = {"collection_name": "users"}
     id: int
     name: str
-    _id: ObjectId = field(default_factory=ObjectId)
+    lang: str = "ru"
     registered_at: datetime = field(default_factory=utcnow)
     level: int = 1
-    xp: float = 0.0
-    max_xp: int = 155
-    is_admin: bool = False
-    is_banned: bool = False
-    met_mob: bool = False
-    violations: list[Violation] = field(default_factory=list)
     coin: int = 0
+    xp: float = 0.0
+    max_xp: float = 155
+    is_admin: bool = False
     health: int = 100
     mood: int = 100
     hunger: int = 0
     fatigue: int = 0
-    location: str = Locations.HOME.value
-    action: Optional[UserAction] = None
-    casino_win: int = 0
-    casino_loose: int = 0
-    new_quest_coin_quantity: int = 2
-    max_items_count_in_market: int = 4
     luck: int = 1
     last_active_time: datetime = field(default_factory=utcnow)
     achievement_progress: dict = field(default_factory=dict)
     accepted_rules: bool = False
-
-
-@dataclass
-class MarketItemModel(BaseModel):
-    name: str
-    price: int
-    _id: ObjectId = field(default_factory=ObjectId)
-    quantity: int = 0
-    usage: Optional[float] = None
-    published_at: datetime = field(default_factory=utcnow)
-    owner: ObjectId = field(default_factory=ObjectId)
+    casino_info: CasinoInfo = field(default_factory=CasinoInfo)
+    action: Optional[UserAction] = None
+    location: Locations = Locations.HOME
+    inventory: Inventory = field(default_factory=Inventory)
+    notification_status: UserNotificationStatus = field(default_factory=UserNotificationStatus)
+    achievements_info: AchievementsInfo = field(default_factory=AchievementsInfo)
+    violations: list[UserViolation] = field(default_factory=list)
+    task: Optional[UserTask] = None
+    max_items_count_in_market: int = 2
 
     def __post_init__(self):
-        from helpers.utils import get_item
+        self.achievements_info._user = ref(self)
 
-        _item = get_item(self.name)
-        if _item.type == ItemType.USABLE and self.quantity > 1:
-            raise ValueError("Quantity must be 0 or 1 for items with type `ItemType.USABLE`")
-        if _item.type == ItemType.COUNTABLE and self.usage is not None:
-            raise ValueError("Usage must be `None` for items with type `ItemType.COUNTABLE`")
+    @property
+    def tg_tag(self) -> str:
+        return f"<a href='tg://user?id={self.id}'>{self.name}</a>"
+
+    async def new_task(self):
+        available_items = [item for item in ITEMS if item.is_task_item]
+
+        items_quantity = random.randint(1, 5)
+        items = random.choices(available_items, k=items_quantity)
+
+        task_items: dict[str, int] = {}
+
+        total_price = 0
+        for item in items:
+            task_items[item.name] = random.randint(2, 10) * self.level
+            total_price += random.randint(min(item.task_coin), max(item.task_coin))  # type: ignore
+
+        xp = random.uniform(5.0, float(len(items)))
+        reward = int(total_price * 1.5)
+        reward += random.randint(0, 100)  # Случайная добавка к награде
+
+        self.task = UserTask(
+            task_items,
+            xp=xp,
+            reward=reward,
+        )
+
+        await self.update_async()
+
+    async def _level_up(self, chat_id: Optional[ChatIdType] = None):
+        if not chat_id:
+            chat_id = self.id
+
+        if self.xp > self.max_xp:
+            self.xp -= self.max_xp
+        else:
+            self.xp = 0
+
+        self.level += 1
+        self.max_xp = calc_xp_for_level(self.level)
+
+        mess = f"{self.tg_tag} получил новый уровень 🏵"
+
+        box = self.inventory.get_or_add("бокс")
+
+        if box.quantity < 0:
+            box.quantity = 0
+
+        box.quantity += 1
+
+        await self.update_async()
+
+        builder = InlineKeyboardBuilder()
+        buttons: list[InlineKeyboardButton] = []
+        btn_data: list[tuple[str, str]] = []
+
+        if self.max_items_count_in_market <= 10:
+            btn_data.append(("+1 место в ларьке", "market"))
+        if self.level >= 10 and self.luck <= 15:
+            btn_data.append(("+1 удача", "luck"))
+
+        for data in btn_data:
+            buttons.append(
+                InlineKeyboardButton(text=data[0], callback_data=f"levelup {data[1]} {self.id}")
+            )
+
+        builder.add(*buttons)
+        builder.adjust(1)
+        if len(buttons) != 0:
+            mess += "\n\nВыбери что хочешь улучшить"
+
+        await bot.send_sticker(chat_id, Stickers.level_up)
+        await bot.send_message(chat_id, mess, reply_markup=builder.as_markup())
+
+    async def check_status(self, chat_id: Optional[ChatIdType] = None):
+        if not chat_id:
+            chat_id = self.id
+
+        if self.xp >= self.max_xp:
+            await self._level_up(chat_id)
+
+        if self.health < 0:
+            self.health = 0
+        if self.health > 100:
+            self.health = 100
+
+        if self.mood < 0:
+            self.mood = 0
+        if self.mood > 100:
+            self.mood = 100
+
+        if self.fatigue < 0:
+            self.fatigue = 0
+        if self.fatigue > 100:
+            self.fatigue = 100
+
+        if self.hunger < 0:
+            self.hunger = 0
+        if self.hunger > 100:
+            self.hunger = 100
+
+        if self.coin < 0:
+            self.coin = 0
+
+        await self.update_async()
+
+    async def check_achievements(self):
+        unknown_achievements = set()
+
+        for user_ach in self.achievements_info.achievements:
+            try:
+                ach = get_achievement(user_ach.name.lower().replace("-", " "))
+            except AchievementNotFoundError:
+                unknown_achievements.add(user_ach)
+                continue
+
+            if ach.check(self):
+                await self.achievements_info.award(ach)
+
+        await self.update_async()
 
 
 @dataclass
-class DailyGiftModel(BaseModel):
-    _id: ObjectId = field(default_factory=ObjectId)
-    owner: ObjectId = field(default_factory=ObjectId)
-    last_claimed_at: Optional[datetime] = None
-    next_claimable_at: datetime = field(default_factory=lambda: utcnow() + timedelta(days=1))
-    is_claimed: bool = False
-    items: list = field(default_factory=list)
-    streak: int = 0
+class PromoModel(BaseModel):
+    __settings__ = {"collection_name": "promos"}
+
+    code: str
+    items: dict[str, int]
+    usage_count: int = 1
+    users: set[ObjectId] = field(default_factory=set)
+
+    @property
+    def is_used(self) -> bool:
+        return len(self.users) > self.usage_count
 
 
-@dataclass
-class AchievementModel(BaseModel):
-    name: str
-    _id: ObjectId = field(default_factory=ObjectId)
-    owner: ObjectId = field(default_factory=ObjectId)
-    created_at: datetime = field(default_factory=utcnow)
+# @dataclass
+# class MarketItemModel(BaseModel):
+#     name: str
+#     price: int
+#     quantity: int
+#     owner_oid: ObjectId
+#     usage: Optional[float] = None
+#     publishes_ad: datetime = field(default_factory=utcnow)
+
+#     @property
+#     def owner(self) -> UserModel:
+#         return UserModel.get(oid=self.owner_oid)
+
+#     @property
+#     def type(self) -> ItemType:
+#         return get_item(self.name).type
+
+#     def __post_init__(self):
+#         item = get_item(self.name)
+#         if item.type == ItemType.USABLE and self.quantity > 1:
+#             raise ValueError("Quantity must be 0 or 1 for items with type `ItemType.USABLE`")
+#         if item.type == ItemType.STACKABLE and self.usage is not None:
+#             raise ValueError("Usage must be `None` for items with type `ItemType.STACKABLE`")

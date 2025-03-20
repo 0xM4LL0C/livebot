@@ -1,0 +1,36 @@
+locale-info:
+  name: "русский"
+  emoji: "🇷🇺"
+  author: "HamletSargsyan"
+
+welcome: "Привет {name}, добро пожаловать в livebot"
+new_referral_joined: |
+  {name} присоединился к игре благодаря твой реферальной ссылке
+
+  Ты получил {coin} бабла {func:get_item_emoji('бабло')}
+help: |
+  <b>Помощь</b>
+
+  <b>Канал:</b> {const:CHANNEL_USERNAME}
+  <b>Чат</b>: {const:CHAT_USERNAME}
+  <b>Гайд</b>: {const:GUIDE_URL}
+profile: |
+  <b>Профиль {user.name}</b>
+
+  <b>❤️ Здоровье:</b> {user.health}
+  <b>🎭 Настроение:</b> {user.mood}
+  <b>💤 Усталость:</b> {user.fatigue}
+  <b>🍞 Голод:</b> {user.hunger}
+  <b>🪙 Бабло:</b> {user.coin}
+  <b>🍀 Удача:</b> {user.luck}
+  <b>🏵 Уровень:</b> {user.level}
+  <b>🎗 Опыт:</b> {func:int(user.xp)}/{func:int(user.max_xp)}
+inventory: |
+  <b>Инвентарь</b>
+
+  {items}
+empty-inventory: <i>Инвентарь пуст</i>
+items-help: |
+  <b>Предметы</b>
+
+  {current_page}/{max_pages}

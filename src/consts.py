@@ -1,9 +1,7 @@
 from typing import Final
 
 from aiogram.types import InlineKeyboardButton
-
-COIN_EMOJI: Final = "🪙"
-
+from bson import ObjectId
 
 PAGER_CONTROLLERS: Final = [
     InlineKeyboardButton(text="↩️", callback_data="{name} start {pos} {user_id}"),
@@ -11,3 +9,7 @@ PAGER_CONTROLLERS: Final = [
     InlineKeyboardButton(text="➡️", callback_data="{name} next {pos} {user_id}"),
     InlineKeyboardButton(text="↪️", callback_data="{name} end {pos} {user_id}"),
 ]
+
+COIN_EMOJI: Final = "🪙"
+TELEGRAM_ID: Final = 777000
+EMPTY_OBJECTID: Final = ObjectId("000000000000000000000000")

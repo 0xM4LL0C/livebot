@@ -1,22 +1,30 @@
-class NoResult(Exception):
+class BotException(Exception):
     pass
 
 
-class ItemNotFoundError(Exception):
+class NoResult(BotException):
     pass
 
 
-class UserNotFoundError(Exception):
+class AlreadyExists(BotException):
     pass
 
 
-class ItemIsCoin(Exception):
+class UserNotFoundError(BotException):
     pass
 
 
-class QuestNotFound(Exception):
+class ItemIsCoin(BotException):
     pass
 
 
-class AchievementNotFoundError(Exception):
+class QuestNotFound(BotException):
+    pass
+
+
+class AchievementNotFoundError(BotException):
+    pass
+
+
+class ItemNotFoundError(BotException):
     pass

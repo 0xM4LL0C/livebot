@@ -2,16 +2,16 @@ import asyncio
 import random
 from itertools import filterfalse
 
-from base.player import check_user_stats
-from database.funcs import database
+from database.models import UserModel
 from helpers.datetime_utils import utcnow
 
 
 async def _check():
-    users = await database.users.async_get_all()
+    users = await UserModel.get_all_async()
 
     for user in users:
-        user = await database.users.async_get(_id=user._id)
+        print(user.oid)
+        await user.fetch_async()
         match random.randint(0, 5):
             case 0:
                 user.hunger += 1
@@ -27,8 +27,8 @@ async def _check():
             )
         )
 
-        await database.users.async_update(**user.to_dict())
-        await check_user_stats(user)
+        await user.check_status()
+        await user.update_async()
 
 
 async def check():
