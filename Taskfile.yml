@@ -17,10 +17,12 @@ tasks:
       - rm .pid
 
   lint:
+    vars:
+      paths: "{{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}src/ tools/{{end}}"
     cmds:
-      - ruff check --respect-gitignore src tools
-      - pylint -f colorized src
-      - pyright src tools
+      - ruff check --respect-gitignore {{.paths}}
+      - pylint -f colorized {{.paths}}
+      - pyright {{.paths}}
 
   format:
     ignore_error: true
@@ -30,7 +32,9 @@ tasks:
     cmd: ruff check --respect-gitignore --fix src tools
 
   spell-check:
-    cmd: cspell lint "**"
+    vars:
+      paths: "{{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}.{{end}}"
+    cmd: cspell lint {{.paths}}
 
   dev-install:
     cmds:

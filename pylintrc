@@ -6,7 +6,8 @@ source-roots = src
 const-naming-style = any
 
 ignore-paths =
-    src/test*.py
+    src/test*.py,
+    tools/*
 
 disable =
     missing-module-docstring,
