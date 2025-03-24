@@ -6,6 +6,7 @@ import tomlkit
 config = {
     "general": {
         "debug": False,
+        "owners": [5161392463],
     },
     "database": {
         "url": "your_db_url",
@@ -18,7 +19,6 @@ config = {
         "token": "your_bot_token",
         "log_chat_id": "",
         "log_thread_id": 2,
-        "owners": [5161392463],
     },
     "weather": {
         "region": "",
