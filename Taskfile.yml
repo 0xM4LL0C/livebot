@@ -54,9 +54,9 @@ tasks:
     ignore_error: true
     cmd: python3 tools/create_config.py
 
-  # docs-setup:
-  #   cmds:
-  #     - pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin
+  docs-setup:
+    cmds:
+      - pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin
 
   release:
     cmd: python3 tools/release.py {{.CLI_ARGS}}
