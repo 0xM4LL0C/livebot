@@ -60,3 +60,6 @@ tasks:
 
   release:
     cmd: python3 tools/release.py {{.CLI_ARGS}}
+
+  scan-comments:
+    cmd: rg -I -n -H -e "# TODO" -e "# FIXME" -e "# NOTE" --glob "!Taskfile.yml" --ignore-file .gitignore
