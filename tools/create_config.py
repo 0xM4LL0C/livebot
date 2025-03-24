@@ -1,4 +1,5 @@
 import os
+import sys
 
 import tomlkit
 
@@ -36,7 +37,7 @@ config = {
 
 if os.path.exists("config.toml"):
     print("Конфигурационный файл существует")
-    exit(1)
+    sys.exit(1)
 
 with open("config.toml", "w") as f:
     tomlkit.dump(config, f)
