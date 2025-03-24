@@ -3,20 +3,20 @@ repos:
     hooks:
       - id: format
         name: format
-        entry: task format --
+        entry: "task format -- "
         language: system
         types: [python]
         pass_filenames: true
         exclude: "src/\\*test\\*.py"
       - id: check-spell
         name: spell-check
-        entry: task spell-check --
+        entry: "task spell-check -- "
         language: system
         pass_filenames: true
         exclude: ".pre-commit-config.yaml"
       - id: lint
         name: lint
-        entry: task lint --
+        entry: "task lint -- "
         language: system
         types: [python]
         pass_filenames: true
