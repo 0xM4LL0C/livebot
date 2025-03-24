@@ -15,9 +15,9 @@ def make_hashable(*args: Any) -> str:
     def convert(obj: Any) -> Any:
         if hasattr(obj, "to_dict"):
             return obj.to_dict()
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return {k: convert(v) for k, v in obj.items()}
-        elif isinstance(obj, (list, set, tuple)):
+        if isinstance(obj, (list, set, tuple)):
             return type(obj)(convert(v) for v in obj)
         return obj
 

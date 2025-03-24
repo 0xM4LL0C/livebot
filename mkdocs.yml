@@ -15,11 +15,10 @@ markdown_extensions:
   - tables
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
-  - toc:
-      slugify: !!python/object/apply:pymdownx.slugs.slugify
-        kwds:
-          case: lower
+
+hooks:
+  - docs/hooks.py
+
 theme:
   features:
     - content.code.copy

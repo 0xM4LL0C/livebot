@@ -8,7 +8,7 @@ from database.models import UserModel
 from helpers.utils import quick_markup
 
 
-async def send_rulse_message(message: Message, user: UserModel):
+async def send_rules_message(message: Message, user: UserModel):
     mess = f"{user.tg_tag}, перед тем как использовать бота, ты должен прочитать правила"
     markup = quick_markup(
         {
@@ -47,4 +47,4 @@ class RuleCheckMiddleware(BaseMiddleware):
         else:
             return
 
-        await send_rulse_message(message, user)
+        await send_rules_message(message, user)

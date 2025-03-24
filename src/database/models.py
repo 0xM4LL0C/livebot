@@ -241,7 +241,7 @@ class DailyGift:
     last_claimed_at: Optional[datetime] = None
     next_claimable_at: datetime = field(default_factory=lambda: utcnow() + timedelta(days=1))
     is_claimed: bool = False
-    itmes: dict[str, int] = field(default_factory=dict)
+    items: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass

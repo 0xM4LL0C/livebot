@@ -160,7 +160,7 @@ class WeatherData:
         self.latitude: float = data.get("latitude", 0.0)
         self.longitude: float = data.get("latitude", 0.0)
         self.elevation: float = data.get("elevation", 0.0)
-        self.generationtime_ms: float = data.get("generationtime_ms", 0.0)
+        self.generationtime_ms: float = data.get("generationtime_ms", 0.0)  # cspell: disable-line
         self.utc_offset_seconds: int = data.get("utc_offset_seconds", 0)
         self.timezone: str = data.get("timezone", "GMT")
         self.timezone_abbreviation: str = data.get("timezone_abbreviation", "GMT")

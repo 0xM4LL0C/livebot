@@ -3,7 +3,7 @@ from i18n import I18N
 from data.items.utils import get_item_emoji
 from helpers.utils import pretty_float
 
-i18n = I18N("src/locales")
+i18n = I18N("ru", "src/locales")
 
 
 i18n.register_function("int", int)

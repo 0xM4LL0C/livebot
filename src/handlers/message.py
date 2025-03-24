@@ -46,14 +46,14 @@ async def start_cmd(message: Message, command: CommandObject):
 
 
 @router.message(Command("help"))
-async def help_cmd(message: Message, command: CommandObject):
+async def help_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t(user.lang, "help"))
 
 
 @router.message(Command("profile"))
-async def profile_cmd(message: Message, command: CommandObject):
+async def profile_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t(user.lang, "profile", user=user))
@@ -73,12 +73,6 @@ async def bag_cmd(message: Message):
     if not items:
         items = t(user.lang, "empty-inventory")
     await message.reply(t(user.lang, "inventory", items=items))
-
-
-@router.message(Command("items"))
-async def items_cmd(message: Message):
-    user = await UserModel.get_async(id=message.from_user.id)
-    await message.reply(t(user.lang, "items-help"))
 
 
 # ---------------------------------------------------------------------------- #

@@ -37,11 +37,9 @@ class ModelSettings(TypedDict):
 
 class FormattedObjectId(SerializationStrategy):
     def serialize(self, value: ObjectId) -> str:
-        print("serialize", value)
         return str(value)
 
     def deserialize(self, value: str) -> ObjectId:
-        print("deserialize", value)
         return ObjectId(value)
 
 
