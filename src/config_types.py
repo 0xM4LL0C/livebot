@@ -2,35 +2,41 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import tomlkit
+from mashumaro.config import BaseConfig as MashumaroBaseConfig
 from mashumaro.mixins.toml import DataClassTOMLMixin
 
 
+class _BaseConfig(DataClassTOMLMixin):
+    class Config(MashumaroBaseConfig):
+        omit_none = True
+
+
 @dataclass
-class GeneralConfig:
+class GeneralConfig(_BaseConfig):
     owners: list[int] = field(default_factory=list)
     debug: bool = False
 
 
 @dataclass
-class DatabaseConfig:
+class DatabaseConfig(_BaseConfig):
     url: str
     name: str = "livebot"
 
 
 @dataclass
-class RedisConfig:
+class RedisConfig(_BaseConfig):
     url: str
 
 
 @dataclass
-class TelegramConfig:
+class TelegramConfig(_BaseConfig):
     token: str
-    log_chat_id: int
+    log_chat_id: int | str
     log_thread_id: Optional[int] = None
 
 
 @dataclass
-class Config(DataClassTOMLMixin):
+class Config(_BaseConfig):
     general: GeneralConfig
     database: DatabaseConfig
     redis: RedisConfig
