@@ -1,19 +1,20 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import tomlkit
+from mashumaro.mixins.toml import DataClassTOMLMixin
 
 
 @dataclass
 class GeneralConfig:
-    owners: list[int]
+    owners: list[int] = field(default_factory=list)
     debug: bool = False
 
 
 @dataclass
 class DatabaseConfig:
     url: str
-    name: str
+    name: str = "livebot"
 
 
 @dataclass
@@ -29,20 +30,13 @@ class TelegramConfig:
 
 
 @dataclass
-class Config:
+class Config(DataClassTOMLMixin):
     general: GeneralConfig
     database: DatabaseConfig
     redis: RedisConfig
     telegram: TelegramConfig
 
-    @staticmethod
-    def from_file(path: str) -> "Config":
+    @classmethod
+    def from_file(cls, path: str) -> "Config":
         with open(path, "r", encoding="utf-8") as f:
-            data = tomlkit.load(f)
-
-        return Config(
-            general=GeneralConfig(**data.get("general", {})),
-            database=DatabaseConfig(**data.get("database", {})),
-            redis=RedisConfig(**data.get("redis", {})),
-            telegram=TelegramConfig(**data.get("telegram", {})),
-        )
+            return cls.from_toml(f.read(), decoder=tomlkit.loads)
