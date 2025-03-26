@@ -4,6 +4,7 @@ import sys
 import tomlkit
 
 config = tomlkit.document()
+config.add(tomlkit.comment("config docs: https://hamletsargsyan.github.io/livebot/dev/config/"))
 config["general"] = {
     "debug": False,
     "owners": [5161392463],
