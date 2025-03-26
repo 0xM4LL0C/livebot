@@ -1,46 +1,50 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 import tomlkit
-from mashumaro.config import BaseConfig as MashumaroBaseConfig
 from mashumaro.mixins.toml import DataClassTOMLMixin
 
 
-class _BaseConfig(DataClassTOMLMixin):
-    class Config(MashumaroBaseConfig):
-        omit_none = True
-
-
 @dataclass
-class GeneralConfig(_BaseConfig):
+class GeneralConfig:
     owners: list[int] = field(default_factory=list)
     debug: bool = False
 
 
 @dataclass
-class DatabaseConfig(_BaseConfig):
+class DatabaseConfig:
     url: str
     name: str = "livebot"
 
 
 @dataclass
-class RedisConfig(_BaseConfig):
+class RedisConfig:
     url: str
 
 
 @dataclass
-class TelegramConfig(_BaseConfig):
+class TelegramConfig:
     token: str
     log_chat_id: int | str
     log_thread_id: Optional[int] = None
 
 
 @dataclass
-class Config(_BaseConfig):
+class Config(DataClassTOMLMixin):
     general: GeneralConfig
     database: DatabaseConfig
     redis: RedisConfig
     telegram: TelegramConfig
+
+    def __post_serialize__(self, d: dict[Any, Any]) -> dict[Any, Any]:
+        def remove_none_values(data: dict[Any, Any]) -> dict[Any, Any]:
+            return {
+                k: (remove_none_values(v) if isinstance(v, dict) else v)
+                for k, v in data.items()
+                if v is not None
+            }
+
+        return remove_none_values(d)
 
     @classmethod
     def from_file(cls, path: str) -> "Config":

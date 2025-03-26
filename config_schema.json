@@ -58,7 +58,14 @@
           "type": "string"
         },
         "log_chat_id": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "log_thread_id": {
           "anyOf": [
