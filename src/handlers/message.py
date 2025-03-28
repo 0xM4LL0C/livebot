@@ -1,3 +1,4 @@
+import asyncio
 import random
 
 from aiogram import F, Router
@@ -8,7 +9,7 @@ from aiogram.types import Message
 from data.items.utils import get_item_emoji
 from database.models import UserModel
 from helpers.enums import ItemType
-from helpers.exceptions import NoResult
+from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.utils import pretty_float
 from middlewares.register import register_user
@@ -59,8 +60,8 @@ async def profile_cmd(message: Message):
     await message.reply(t(user.lang, "profile", user=user))
 
 
-@router.message(Command("bag"))
-async def bag_cmd(message: Message):
+@router.message(Command("inventory"))
+async def inventory_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
     items = ""
 
@@ -73,6 +74,55 @@ async def bag_cmd(message: Message):
     if not items:
         items = t(user.lang, "empty-inventory")
     await message.reply(t(user.lang, "inventory", items=items))
+
+
+@router.message(Command("shop"))
+async def shop_cmd(message: Message, command: CommandObject):
+    raise NotImplementedError
+
+
+@router.message(Command("casino"))
+async def casino_cmd(message: Message, command: CommandObject):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    quantity = command.args
+
+    if not quantity:
+        await message.reply(t(user.lang, "casino.main"))
+        return
+
+    try:
+        quantity = int(quantity)
+    except ValueError:
+        quantity = 1
+
+    try:
+        ticket = user.inventory.get_item("билет")
+    except ItemNotFoundError:
+        await message.reply(t(user.lang, "item-not-found-in-inventory", item_name="билет"))
+        return
+
+    if user.coin < quantity:
+        await message.reply(t(user.lang, "item-not-enough", item_name="бабло"))
+        return
+
+    dice = await message.answer_dice("🎲")
+
+    await asyncio.sleep(1)
+
+    ticket.quantity -= 1
+
+    if dice.dice.value > 3:
+        user.coin += quantity * 2
+        user.casino_info.win += quantity * 2
+        await message.reply(t(user.lang, "casino.win", quantity=quantity * 2))
+    else:
+        user.coin -= quantity
+        user.casino_info.loose += quantity
+        await message.reply(t(user.lang, "casino.loose", quantity=quantity))
+
+    await user.check_status(message.chat.id)
+    await user.update_async()
 
 
 # ---------------------------------------------------------------------------- #

@@ -128,7 +128,7 @@ class Inventory(DataClassDictMixin):
 
     def get_item(self, name: str) -> UserItem:
         for item in self.items:
-            if item.name == name:
+            if item.name == name and item.quantity > 0:
                 return item
         raise ItemNotFoundError(name)
 
@@ -317,7 +317,7 @@ class UserModel(BaseModel):
         if self.xp > self.max_xp:
             self.xp -= self.max_xp
         else:
-            self.xp = 0
+            self.xp = 0.0
 
         self.level += 1
         self.max_xp = calc_xp_for_level(self.level)

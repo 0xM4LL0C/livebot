@@ -140,4 +140,4 @@ class MessageEditor:
 
 @cached
 def pretty_float(num: float) -> str:
-    return f"{num:.2f}"
+    return f"{num:.1f}"

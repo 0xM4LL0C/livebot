@@ -18,16 +18,29 @@ help: |
 profile: |
   <b>Профиль {obj:user.name}</b>
 
-  <b>❤️ Здоровье:</b> <code>{obj:user.health}</code>
-  <b>🎭 Настроение:</b> <code>{obj:user.mood}</code>
-  <b>💤 Усталость:</b> <code>{obj:user.fatigue}</code>
-  <b>🍞 Голод:</b> <code>{obj:user.hunger}</code>
+  <b>❤️ Здоровье:</b> <code>{obj:user.health}/100</code>
+  <b>🎭 Настроение:</b> <code>{obj:user.mood}/100</code>
+  <b>💤 Усталость:</b> <code>{obj:user.fatigue}/100</code>
+  <b>🍞 Голод:</b> <code>{obj:user.hunger}/100</code>
   <b>🪙 Бабло:</b> <code>{obj:user.coin}</code>
   <b>🍀 Удача:</b> <code>{obj:user.luck}</code>
   <b>🏵 Уровень:</b> <code>{obj:user.level}</code>
-  <b>🎗 Опыт:</b> <code>{func:int(user.xp)}/{func:int(user.max_xp)}</code>
+  <b>🎗 Опыт:</b> <code>{func:pretty_float(user.xp)}/{func:pretty_float(user.max_xp)}</code>
 inventory: |
   <b>Инвентарь</b>
 
   {items}
 empty-inventory: <i>Инвентарь пуст</i>
+casino:
+  main: |
+    <b>🎰 Казино</b>
+
+    Решил заработать легкие деньги?
+    Ну давай, шансы 50 на 50
+
+    Чтобы сыграть напиши <code>/casino [кол-во]</code>
+  win: 🎉 Ураа, ты выиграл {quantity} {func:get_item_emoji("бабло")}
+  loose: 😢 Ой, ты проиграл {quantity} {func:get_item_emoji("бабло")}
+item-not-found-in-inventory: У тебя нет {item_name} {func:get_item_emoji(item_name)}
+item-not-exist: Предмет `{item_name}` не существует 🤔
+item-not-enough: У тебя недостаточно `<code>{item_name}</code>` {func:get_item_emoji(item_name)}
