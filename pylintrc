@@ -16,7 +16,6 @@ disable =
     redefined-outer-name,
     unspecified-encoding,
     import-outside-toplevel,
-    protected-access, # TODO: delete
     broad-exception-caught,
     super-init-not-called,
     too-few-public-methods,
