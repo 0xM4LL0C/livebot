@@ -11,6 +11,7 @@ from database.models import UserModel
 from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
+from helpers.markups import InlineMarkup
 from helpers.utils import pretty_float
 from middlewares.register import register_user
 
@@ -78,7 +79,20 @@ async def inventory_cmd(message: Message):
 
 @router.message(Command("shop"))
 async def shop_cmd(message: Message, command: CommandObject):
-    raise NotImplementedError
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    if command.args:
+        try:
+            quantity = int(command.args)
+        except ValueError:
+            quantity = 1
+    else:
+        quantity = 1
+
+    await message.reply(
+        t(user.lang, "shop.main", quantity=quantity),
+        reply_markup=InlineMarkup.shop_main(quantity, user),
+    )
 
 
 @router.message(Command("casino"))

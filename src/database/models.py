@@ -146,7 +146,7 @@ class Inventory(DataClassDictMixin):
             if item_info.type == ItemType.STACKABLE:
                 item = UserItem(name=name, quantity=0)
             elif item_info.type == ItemType.USABLE:
-                item = UserItem(name=name, usage=1.0)
+                item = UserItem(name=name, usage=0.0)
             else:
                 raise NotImplementedError(item_info.type) from e
             self.items.append(item)
@@ -279,7 +279,7 @@ class UserModel(BaseModel):
     max_items_count_in_market: int = 2
 
     def __post_init__(self):
-        self.achievements_info._user = ref(self)
+        self.achievements_info._user = ref(self)  # pylint: disable=W0212
 
     @property
     def tg_tag(self) -> str:

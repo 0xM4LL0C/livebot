@@ -14,7 +14,9 @@ def get_item(name: str) -> Item:
     for item in ITEMS:
         if item.name == name:
             return item
-        elif item.altnames and item.name in item.altnames:
+        if item.altnames and item.name in item.altnames:
+            return item
+        if item.translit() == name:
             return item
     raise ItemNotFoundError(name)
 

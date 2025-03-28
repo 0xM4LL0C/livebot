@@ -141,3 +141,8 @@ class MessageEditor:
 @cached
 def pretty_float(num: float) -> str:
     return f"{num:.1f}"
+
+
+@cached
+def pretty_int(num: int) -> str:
+    return f"{num:,}".replace(",", " ")

@@ -29,7 +29,7 @@ def make_hashable(*args: Any) -> str:
 def cached(func: Callable[P, T]) -> Callable[P, T]:
     @wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-        key = make_hashable(args, kwargs)
+        key = make_hashable(func.__name__, args, kwargs)
         if key in cache:
             result: T = cache[key]
         else:

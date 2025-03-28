@@ -43,4 +43,10 @@ casino:
   loose: 😢 Ой, ты проиграл {quantity} {func:get_item_emoji("бабло")}
 item-not-found-in-inventory: У тебя нет {item_name} {func:get_item_emoji(item_name)}
 item-not-exist: Предмет `{item_name}` не существует 🤔
-item-not-enough: У тебя недостаточно `<code>{item_name}</code>` {func:get_item_emoji(item_name)}
+item-not-enough: У тебя недостаточно `{item_name}` {func:get_item_emoji(item_name)}
+shop:
+  main: |
+    <b>🛍 Магазин</b>
+
+    * <i>Кол-во: {quantity}</i>
+  buy-item: Купил {quantity} {item_name} {func:get_item_emoji(item_name)} за {price} {func:get_item_emoji("бабло")}
