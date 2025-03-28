@@ -227,7 +227,7 @@ class Achievement:
         return f"{self.name}"
 
     def check(self, user: "UserModel") -> bool:
-        progress = user.achievement_progress.get(self.key, 0)
+        progress = user.achievements_info.progress.get(self.key, 0)
         return progress >= self.need
 
     @cached

@@ -16,16 +16,16 @@ help: |
   <b>Чат</b>: {const:CHAT_USERNAME}
   <b>Гайд</b>: {const:GUIDE_URL}
 profile: |
-  <b>Профиль {user.name}</b>
+  <b>Профиль {obj:user.name}</b>
 
-  <b>❤️ Здоровье:</b> {user.health}
-  <b>🎭 Настроение:</b> {user.mood}
-  <b>💤 Усталость:</b> {user.fatigue}
-  <b>🍞 Голод:</b> {user.hunger}
-  <b>🪙 Бабло:</b> {user.coin}
-  <b>🍀 Удача:</b> {user.luck}
-  <b>🏵 Уровень:</b> {user.level}
-  <b>🎗 Опыт:</b> {func:int(user.xp)}/{func:int(user.max_xp)}
+  <b>❤️ Здоровье:</b> <code>{obj:user.health}</code>
+  <b>🎭 Настроение:</b> <code>{obj:user.mood}</code>
+  <b>💤 Усталость:</b> <code>{obj:user.fatigue}</code>
+  <b>🍞 Голод:</b> <code>{obj:user.hunger}</code>
+  <b>🪙 Бабло:</b> <code>{obj:user.coin}</code>
+  <b>🍀 Удача:</b> <code>{obj:user.luck}</code>
+  <b>🏵 Уровень:</b> <code>{obj:user.level}</code>
+  <b>🎗 Опыт:</b> <code>{func:int(user.xp)}/{func:int(user.max_xp)}</code>
 inventory: |
   <b>Инвентарь</b>
 

@@ -35,7 +35,7 @@ class ModelSettings(TypedDict):
     collection_name: Required[str]
 
 
-class FormattedObjectId(SerializationStrategy):
+class ObjectIdSerializationStrategy(SerializationStrategy):
     def serialize(self, value: ObjectId) -> str:
         return str(value)
 
@@ -55,7 +55,7 @@ class BaseModel(DataClassDictMixin):
         serialize_by_alias = True
         allow_deserialization_not_by_alias = True
         serialization_strategy = {
-            ObjectId: FormattedObjectId(),
+            ObjectId: ObjectIdSerializationStrategy(),
         }
 
     def __init_subclass__(cls, **kwargs):

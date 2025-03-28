@@ -62,8 +62,7 @@ class UserItem(DataClassDictMixin):
     def type(self):
         if self.usage is not None:
             return ItemType.USABLE
-        else:
-            return ItemType.STACKABLE
+        return ItemType.STACKABLE
 
     def add(self, amount: int):
         if self.type == ItemType.STACKABLE:
@@ -108,7 +107,7 @@ class Inventory(DataClassDictMixin):
                     if inv_item.quantity == 0:
                         self.items.remove(inv_item)
                     return
-                elif inv_item.type == ItemType.USABLE:
+                if inv_item.type == ItemType.USABLE:
                     if quantity > 1:
                         raise ValueError("Cannot remove more than one usable item at a time")
                     self.items.remove(inv_item)
@@ -142,14 +141,14 @@ class Inventory(DataClassDictMixin):
     def get_or_add(self, name: str) -> UserItem:
         try:
             item = self.get_item(name)
-        except ItemNotFoundError:
+        except ItemNotFoundError as e:
             item_info = get_item(name)
             if item_info.type == ItemType.STACKABLE:
                 item = UserItem(name=name, quantity=0)
             elif item_info.type == ItemType.USABLE:
                 item = UserItem(name=name, usage=1.0)
             else:
-                raise NotImplementedError(item_info.type)
+                raise NotImplementedError(item_info.type) from e
             self.items.append(item)
         return item
 
@@ -199,11 +198,9 @@ class AchievementsInfo(DataClassDictMixin):
 
             if item.name == "бабло":
                 self._user().coin += item.quantity
-                pass
             else:
                 user_item = self._user().inventory.get_or_add(item.name)
                 user_item.quantity += item.quantity
-                pass
 
         await bot.send_message(
             self._user().id,
@@ -262,15 +259,14 @@ class UserModel(BaseModel):
     level: int = 1
     coin: int = 0
     xp: float = 0.0
-    max_xp: float = 155
+    max_xp: float = calc_xp_for_level(1)
     is_admin: bool = False
     health: int = 100
     mood: int = 100
-    hunger: int = 0
-    fatigue: int = 0
+    hunger: int = 100
+    fatigue: int = 100
     luck: int = 1
     last_active_time: datetime = field(default_factory=utcnow)
-    achievement_progress: dict = field(default_factory=dict)
     accepted_rules: bool = False
     casino_info: CasinoInfo = field(default_factory=CasinoInfo)
     action: Optional[UserAction] = None
@@ -330,10 +326,7 @@ class UserModel(BaseModel):
 
         box = self.inventory.get_or_add("бокс")
 
-        if box.quantity < 0:
-            box.quantity = 0
-
-        box.quantity += 1
+        box.quantity += max(0, box.quantity) + 1
 
         await self.update_async()
 
@@ -366,28 +359,12 @@ class UserModel(BaseModel):
         if self.xp >= self.max_xp:
             await self._level_up(chat_id)
 
-        if self.health < 0:
-            self.health = 0
-        if self.health > 100:
-            self.health = 100
+        attrs = ("health", "mood", "fatigue", "hunger")
 
-        if self.mood < 0:
-            self.mood = 0
-        if self.mood > 100:
-            self.mood = 100
-
-        if self.fatigue < 0:
-            self.fatigue = 0
-        if self.fatigue > 100:
-            self.fatigue = 100
-
-        if self.hunger < 0:
-            self.hunger = 0
-        if self.hunger > 100:
-            self.hunger = 100
-
-        if self.coin < 0:
-            self.coin = 0
+        for attr_name in attrs:
+            attr: int = getattr(self, attr_name)
+            attr = max(0, min(attr, 100))
+            setattr(self, attr_name, attr)
 
         await self.update_async()
 

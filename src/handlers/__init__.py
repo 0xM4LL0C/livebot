@@ -23,3 +23,4 @@ async def handle_my_custom_exception(event: ErrorEvent, message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
     await message.answer(t(user.lang, "error-while-handling-update"))
     logger.critical(f"Error while handling update: {event.exception}")
+    raise event.exception
