@@ -1,6 +1,8 @@
 import random
+from contextlib import suppress
 
 from aiogram import Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 
 from data.items.utils import get_item
@@ -8,6 +10,7 @@ from database.models import UserModel
 from helpers.callback_factory import CraftCallback, ShopCallback
 from helpers.exceptions import ItemNotFoundError
 from helpers.localization import t
+from helpers.markups import InlineMarkup
 
 router = Router()
 
@@ -85,6 +88,9 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
 
     assert isinstance(query.message, Message)
 
+    with suppress(TelegramBadRequest):
+        await query.message.edit_reply_markup(reply_markup=InlineMarkup.craft_main(quantity, user))
+
     await query.message.reply_to_message.reply(
         t(
             user.lang,
@@ -94,4 +100,3 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
             xp=xp,
         )
     )
-    await query.answer()

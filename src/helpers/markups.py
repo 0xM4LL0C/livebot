@@ -63,5 +63,5 @@ class InlineMarkup:
                     ),
                 )
 
-        builder.adjust(3)
+        builder.adjust(2)
         return builder.as_markup()
