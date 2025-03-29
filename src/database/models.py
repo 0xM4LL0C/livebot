@@ -93,7 +93,7 @@ class UserItem(DataClassDictMixin):
 class Inventory(DataClassDictMixin):
     items: list[UserItem] = field(default_factory=list)
 
-    def add(self, name: str, count: int = 0):
+    def add(self, name: str, count: int = 1):
         item = get_item(name)
         print("ADD", item.type, name, count)
 
@@ -127,6 +127,10 @@ class Inventory(DataClassDictMixin):
         return [item for item in self.items if item.name == name and item.quantity > 0]
 
     def get(self, name: str) -> UserItem:
+        items = self.get_all(name)
+        if items:
+            return items[0]
+        self.add(name)
         return self.get_all(name)[0]
 
     def has(self, name: str) -> bool:
