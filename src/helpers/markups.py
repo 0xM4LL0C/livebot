@@ -3,7 +3,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from data.items.items import ITEMS
 from database.models import UserModel
-from datatypes import ItemCraft
 from helpers.callback_factory import CraftCallback, ShopCallback
 from helpers.utils import pretty_int
 
@@ -40,22 +39,14 @@ class InlineMarkup:
         for item in available_items:
             assert item.craft  # for linters
 
-            can_craft = True
-            required_resources: list[ItemCraft] = []
-            for craft_item in item.craft:
-                required_amount = craft_item.quantity * quantity
-                user_item = user.inventory.add_and_get(craft_item.name)
-                if (
-                    (user_item.quantity <= 0)
-                    or (user_item.quantity < craft_item.quantity)
-                    or (user_item.quantity < required_amount)
-                ):
-                    can_craft = False
-                    break
-                required_resources.append(craft_item)
-            if can_craft:
+            max_craftable = min(
+                user.inventory.get(craft_item.name).quantity // craft_item.quantity
+                for craft_item in item.craft
+            )
+
+            if max_craftable >= quantity > 0:
                 builder.button(
-                    text=f"{item.emoji} {item.name}",
+                    text=f"{item.emoji} {item.name} ({pretty_int(max_craftable)})",
                     callback_data=CraftCallback(
                         item_name=item.translit(),
                         quantity=quantity,

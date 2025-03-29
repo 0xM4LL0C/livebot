@@ -22,7 +22,7 @@ profile: |
   <b>🎭 Настроение:</b> <code>{obj:user.mood}/100</code>
   <b>💤 Усталость:</b> <code>{obj:user.fatigue}/100</code>
   <b>🍞 Голод:</b> <code>{obj:user.hunger}/100</code>
-  <b>🪙 Бабло:</b> <code>{obj:user.coin}</code>
+  <b>🪙 Бабло:</b> <code>{func:pretty_int(user.coin)}</code>
   <b>🍀 Удача:</b> <code>{obj:user.luck}</code>
   <b>🏵 Уровень:</b> <code>{obj:user.level}</code>
   <b>🎗 Опыт:</b> <code>{func:pretty_float(user.xp)}/{func:pretty_float(user.max_xp)}</code>
