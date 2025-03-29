@@ -3,7 +3,7 @@
 
 ## Установка из релиза
 
-Перейдите на [эту](https://github.com/HamletSargsyan/livebot/releases/latest) страницу, скачайте архив и распакуйте его
+Перейдите на [эту](https://github.com/0xM4LL0C/livebot/releases/latest) страницу, скачайте архив и распакуйте его
 
 !!! note
     Рекомендуется использовать самую последнюю версию

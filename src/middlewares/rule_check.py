@@ -12,7 +12,7 @@ async def send_rules_message(message: Message, user: UserModel):
     mess = f"{user.tg_tag}, перед тем как использовать бота, ты должен прочитать правила"
     markup = quick_markup(
         {
-            "Читать": {"url": "https://hamletsargsyan.github.io/livebot/rules"},
+            "Читать": {"url": "https://0xM4LL0C.github.io/livebot/rules"},
             "Я прочитал и полностью согласен с правилами": {
                 "callback_data": f"accept_rules {user.id}"
             },

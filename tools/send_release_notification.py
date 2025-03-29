@@ -5,7 +5,7 @@ import httpx
 
 
 def get_github_release_info(version) -> Union[dict[Any, Any], NoReturn]:
-    url = f"https://api.github.com/repos/HamletSargsyan/livebot/releases/tags/{version}"
+    url = f"https://api.github.com/repos/0xM4LL0C/livebot/releases/tags/{version}"
     response = httpx.get(url)
 
     response.raise_for_status()

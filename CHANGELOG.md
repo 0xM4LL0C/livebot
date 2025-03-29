@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг [#121](https://github.com/HamletSargsyan/livebot/issues/121)
+- Баг [#121](https://github.com/0xM4LL0C/livebot/issues/121)
 
 ## [11.0.0] - 2025-02-07
 
@@ -27,13 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг [#117](https://github.com/HamletSargsyan/livebot/issues/117)
+- Баг [#117](https://github.com/0xM4LL0C/livebot/issues/117)
 
 ## [11.0.0-rc.7] - 2025-02-03
 
 ### Исправлено
 
-- Баг [#115](https://github.com/HamletSargsyan/livebot/issues/115)
+- Баг [#115](https://github.com/0xM4LL0C/livebot/issues/115)
 
 ## [11.0.0-rc.6] - 2025-02-02
 
@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг [#113](https://github.com/HamletSargsyan/livebot/issues/113)
+- Баг [#113](https://github.com/0xM4LL0C/livebot/issues/113)
 
 ## [11.0.0-rc.5] - 2025-02-01
 
@@ -58,35 +58,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг [#110](https://github.com/HamletSargsyan/livebot/issues/110)
+- Баг [#110](https://github.com/0xM4LL0C/livebot/issues/110)
 
 ## [11.0.0-rc.3] - 2025-01-31
 
 ### Исправлено
 
-- Баг [#108](https://github.com/HamletSargsyan/livebot/issues/108)
+- Баг [#108](https://github.com/0xM4LL0C/livebot/issues/108)
 
 ## [11.0.0-rc.2] - 2025-01-31
 
 ### Исправлено
 
-- Баг [#106](https://github.com/HamletSargsyan/livebot/issues/106)
+- Баг [#106](https://github.com/0xM4LL0C/livebot/issues/106)
 
 ## [11.0.0-rc.1] - 2025-01-31
 
 ### Добавлено
 
-- Механизм кеширования для запросов получения версии бота ([#87](https://github.com/HamletSargsyan/livebot/issues/87))
+- Механизм кеширования для запросов получения версии бота ([#87](https://github.com/0xM4LL0C/livebot/issues/87))
 
 ### Изменено
 
-- Переход с сервиса OpenWeatherMapApi на open-meteo ([#88](https://github.com/HamletSargsyan/livebot/issues/88))
+- Переход с сервиса OpenWeatherMapApi на open-meteo ([#88](https://github.com/0xM4LL0C/livebot/issues/88))
 - Проведён рефакторинг кода для улучшения читаемости и поддержки с использованием pylint
-- Миграция на aiogram ([#90](https://github.com/HamletSargsyan/livebot/issues/90))
+- Миграция на aiogram ([#90](https://github.com/0xM4LL0C/livebot/issues/90))
 
 ### Исправлено
 
-- Баг при просмотре конкретного достижения ([#86](https://github.com/HamletSargsyan/livebot/issues/86))
+- Баг при просмотре конкретного достижения ([#86](https://github.com/0xM4LL0C/livebot/issues/86))
 
 ## [10.3.0] - 2024-12-24
 
@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Исправлено
 
 - Отправка уведомлений для действий
-- Баг при покупке предмета из рынка ([#84](https://github.com/HamletSargsyan/livebot/issues/84))
+- Баг при покупке предмета из рынка ([#84](https://github.com/0xM4LL0C/livebot/issues/84))
 
 ## [10.2.0] - 2024-11-03
 
@@ -109,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Добавлено
 
-- Добавлена реализация команды `/event_shop` [#65](https://github.com/HamletSargsyan/livebot/issues/65)
+- Добавлена реализация команды `/event_shop` [#65](https://github.com/0xM4LL0C/livebot/issues/65)
 
 ## [10.0.1] - 2024-10-31
 
@@ -122,7 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Добавлено
 
 - Сообщение о входе и выходе участника из чата
-- Добавлена команда `/event_shop` (реализация отсутствует) [#65](https://github.com/HamletSargsyan/livebot/issues/65)
+- Добавлена команда `/event_shop` (реализация отсутствует) [#65](https://github.com/0xM4LL0C/livebot/issues/65)
 - Функция `deprecated`
 - Новые предметы: тыква 🎃 и конфета 🍬
 
@@ -141,7 +141,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Добавлено
 
 - Добавлена новая зависимость: `tinylogging`
-- В место стикера теперь полезные подсказки [#60](https://github.com/HamletSargsyan/livebot/issues/60)
+- В место стикера теперь полезные подсказки [#60](https://github.com/0xM4LL0C/livebot/issues/60)
 
 ### Изменено
 
@@ -158,7 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Добавлены правила. Каждый игрок обязан прочитать правила и согласится с ними чтобы продолжить использовать бота
 - Новые поля в модели пользователя
-- Добавлены команды для модераторов [#38](https://github.com/HamletSargsyan/livebot/issues/38)
+- Добавлены команды для модераторов [#38](https://github.com/0xM4LL0C/livebot/issues/38)
 
 ### Изменено
 
@@ -248,18 +248,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг-фикс ([коммит](https://github.com/HamletSargsyan/livebot/commit/58f8ca0b957ef9485896722eb4e7b96c52bae589))
+- Баг-фикс ([коммит](https://github.com/0xM4LL0C/livebot/commit/58f8ca0b957ef9485896722eb4e7b96c52bae589))
 
 ## [4.0.0] - 2024-07-26
 
 ### Добавлено
 
-- Процент использования для предметов ([#6](https://github.com/HamletSargsyan/livebot/issues/6))
-- Возможность передать приметы с процентами другим игрокам ([#41](https://github.com/HamletSargsyan/livebot/issues/41))
+- Процент использования для предметов ([#6](https://github.com/0xM4LL0C/livebot/issues/6))
+- Возможность передать приметы с процентами другим игрокам ([#41](https://github.com/0xM4LL0C/livebot/issues/41))
 
 ### Изменено
 
-- В команде `/market` теперь отображаются сначала новые предметы ([#40](https://github.com/HamletSargsyan/livebot/issues/40))
+- В команде `/market` теперь отображаются сначала новые предметы ([#40](https://github.com/0xM4LL0C/livebot/issues/40))
 - Изменен шанс встречи мобов
 - Подсказка о том как использовать команду `/transfer`
 - В команде `/shop` сначала отображаются дорогие предметы
@@ -278,7 +278,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Добавлено
 
-- Добавлена команда `/version` ([#37](https://github.com/HamletSargsyan/livebot/issues/37))
+- Добавлена команда `/version` ([#37](https://github.com/0xM4LL0C/livebot/issues/37))
 
 ### Изменено
 
@@ -296,7 +296,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Удалено
 
-- Кеширование, из-за изменения результата функции ([#35](https://github.com/HamletSargsyan/livebot/issues/35), [#34](https://github.com/HamletSargsyan/livebot/issues/34), [#33](https://github.com/HamletSargsyan/livebot/issues/33))
+- Кеширование, из-за изменения результата функции ([#35](https://github.com/0xM4LL0C/livebot/issues/35), [#34](https://github.com/0xM4LL0C/livebot/issues/34), [#33](https://github.com/0xM4LL0C/livebot/issues/33))
 
 ## [3.6.4] - 2024-07-22
 
@@ -346,7 +346,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг с обменником ([#18](https://github.com/HamletSargsyan/livebot/issues/18))
+- Баг с обменником ([#18](https://github.com/0xM4LL0C/livebot/issues/18))
 - Орфографические ошибки
 
 ## [3.5.0] - 2024-06-09
@@ -354,8 +354,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Добавлено
 
 - Добавлена новая библиотека: `argparse`
-- Добавлена команда `/daily_gift` ([#20](https://github.com/HamletSargsyan/livebot/issues/20))
-- Добавлена интеграция с сервисом GramAds ([#23](https://github.com/HamletSargsyan/livebot/issues/23))
+- Добавлена команда `/daily_gift` ([#20](https://github.com/0xM4LL0C/livebot/issues/20))
+- Добавлена интеграция с сервисом GramAds ([#23](https://github.com/0xM4LL0C/livebot/issues/23))
 
 ### Изменено
 
@@ -381,7 +381,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг [#19](https://github.com/HamletSargsyan/livebot/issues/19)
+- Баг [#19](https://github.com/0xM4LL0C/livebot/issues/19)
 
 ## [3.3.1] - 2024-06-05
 
@@ -399,7 +399,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Изменен процесс обновления опыта и уровня пользователя
 - В функциях `coin_top`, `level_top` и `dog_level_top` изменен механизм формирования топов на более обобщенный, используя функцию `get_top`, что упрощает поддержку и расширение кода.
 - В главном меню пункт `рейтинг` переименован на `топ`
-- Команда `/exchanger` не временно отключена из из-за бага [#18](https://github.com/HamletSargsyan/livebot/issues/18)
+- Команда `/exchanger` не временно отключена из из-за бага [#18](https://github.com/0xM4LL0C/livebot/issues/18)
 
 ### Исправлено
 
@@ -416,24 +416,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Баг [#17](https://github.com/HamletSargsyan/livebot/issues/17)
+- Баг [#17](https://github.com/0xM4LL0C/livebot/issues/17)
 
 ## [3.2.5] - 2024-06-05
 
 ### Добавлено
 
-- Эмодзи для типов погоды в команде `/weather` [#7](https://github.com/HamletSargsyan/livebot/issues/7)
+- Эмодзи для типов погоды в команде `/weather` [#7](https://github.com/0xM4LL0C/livebot/issues/7)
 
 ### Удалено
 
-- Все что связанно с старым гайдом [#10](https://github.com/HamletSargsyan/livebot/issues/10)
+- Все что связанно с старым гайдом [#10](https://github.com/0xM4LL0C/livebot/issues/10)
 - Иконки в команде `/weather`
 
 ## [3.2.4] - 2024-06-01
 
 ### Добавлено
 
-- Новый предмет: клевер-удачи 🍀 [#8](https://github.com/HamletSargsyan/livebot/issues/8)
+- Новый предмет: клевер-удачи 🍀 [#8](https://github.com/0xM4LL0C/livebot/issues/8)
 
 ## [3.2.3] - 2024-05-14
 
@@ -498,7 +498,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Окончательно исправлен баг [#2](https://github.com/HamletSargsyan/livebot/issues/2)
+- Окончательно исправлен баг [#2](https://github.com/0xM4LL0C/livebot/issues/2)
 
 ## [2.3.0] - 2024-05-10
 
@@ -509,13 +509,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Исправлен баг [#2](https://github.com/HamletSargsyan/livebot/issues/2)
+- Исправлен баг [#2](https://github.com/0xM4LL0C/livebot/issues/2)
 
 ## [2.2.1] - 2024-05-10
 
 ### Исправлено
 
-- Исправлен баг [#1](https://github.com/HamletSargsyan/livebot/issues/1)
+- Исправлен баг [#1](https://github.com/0xM4LL0C/livebot/issues/1)
 
 ## [2.2.0] - 2024-05-09
 

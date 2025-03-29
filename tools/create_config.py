@@ -15,12 +15,12 @@ config = tomlkit.document()
 config.add(
     tomlkit.items.Comment(
         tomlkit.items.Trivia(
-            comment=f"#:schema https://raw.githubusercontent.com/HamletSargsyan/livebot/refs/tags/v{version}/config_schema.json"
+            comment=f"#:schema https://raw.githubusercontent.com/0xM4LL0C/livebot/refs/tags/v{version}/config_schema.json"
         )
     )
 )
 config.add(tomlkit.nl())
-config.add(tomlkit.comment("config docs: https://hamletsargsyan.github.io/livebot/dev/config/"))
+config.add(tomlkit.comment("config docs: https://0xM4LL0C.github.io/livebot/dev/config/"))
 
 
 default_config = Config(

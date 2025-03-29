@@ -14,7 +14,7 @@ i18n.register_function("t", i18n.t)
 
 i18n.register_constant("CHANNEL_USERNAME", "@LiveBotOfficial")
 i18n.register_constant("CHAT_USERNAME", "@LiveBotOfficialChat")
-i18n.register_constant("GUIDE_URL", "https://hamletsargsyan.github.io/livebot/guide")
+i18n.register_constant("GUIDE_URL", "https://0xM4LL0C.github.io/livebot/guide")
 
 
 def t(*args, **kwargs):
