@@ -9,9 +9,10 @@ from bson import ObjectId
 from data.items.utils import get_item
 from database.models import UserModel
 from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback
-from helpers.exceptions import ItemNotFoundError, NoResult
+from helpers.exceptions import ItemNotFoundError
 from helpers.localization import t
 from helpers.markups import InlineMarkup
+from helpers.player_utils import transfer
 
 router = Router()
 
@@ -109,34 +110,8 @@ async def transfer_callback(query: CallbackQuery, callback_data: TransferCallbac
         return
 
     user = await UserModel.get_async(id=query.from_user.id)
-
-    try:
-        item_name = user.inventory.get_by_id(ObjectId(callback_data.item_oid)).name
-        item = get_item(item_name)
-    except NoResult:
-        query.message.reply(t(user.lang, "item-not-found-in-inventory", item_name="?????????"))
-        return
-
-    try:
-        user_item = user.inventory.remove(item.name, id=ObjectId(callback_data.item_oid))
-        assert user_item
-    except (IndexError, AssertionError):
-        query.message.reply(t(user.lang, "item-not-found-in-inventory", item_name=item.name))
-        return
-
     target_user = await UserModel.get_async(id=callback_data.to_user_id)
-    target_user.inventory.items.append(user_item)
 
-    await user.update_async()
-    await target_user.update_async()
+    mess = transfer(user, target_user, ObjectId(callback_data.item_oid))
 
-    await query.message.answer(
-        t(
-            user.lang,
-            "transfer.success-usable",
-            from_user=user,
-            to_user=target_user,
-            usage=user_item.usage,
-            item_name=item.name,
-        )
-    )
+    await query.message.answer(mess)

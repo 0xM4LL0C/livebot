@@ -13,6 +13,7 @@ from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
+from helpers.player_utils import transfer
 from helpers.utils import pretty_float
 from middlewares.register import register_user
 
@@ -200,6 +201,14 @@ async def transfer_cmd(message: Message, command: CommandObject):
             return
         user.coin -= quantity
         target_user.coin += quantity
+        mess = t(
+            user.lang,
+            "transfer.success",
+            from_user=user,
+            to_user=target_user,
+            quantity=quantity,
+            item_name=item.name,
+        )
     elif item.type == ItemType.USABLE:
         await message.reply(
             t(user.lang, "select-which-one"),
@@ -210,20 +219,14 @@ async def transfer_cmd(message: Message, command: CommandObject):
             ),
         )
         return
+    else:
+        user_item = user.inventory.get(item.name)
+        mess = transfer(user, target_user, user_item.id, quantity=quantity)
 
     await user.update_async()
     await target_user.update_async()
 
-    await message.reply(
-        t(
-            user.lang,
-            "transfer.success",
-            from_user=user,
-            to_user=target_user,
-            quantity=quantity,
-            item_name=item.name,
-        )
-    )
+    await message.reply(mess)
 
 
 # ---------------------------------------------------------------------------- #
