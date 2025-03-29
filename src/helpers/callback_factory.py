@@ -1,7 +1,13 @@
 from aiogram.filters.callback_data import CallbackData
 
 
-class ItemInfoCallback(CallbackData, prefix="item_info"):
+class ShopCallback(CallbackData, prefix="shop"):
     item_name: str
-    current_page: int
-    user_id: str
+    quantity: int
+    user_id: int
+
+
+class CraftCallback(CallbackData, prefix="craft"):
+    item_name: str
+    quantity: int
+    user_id: int

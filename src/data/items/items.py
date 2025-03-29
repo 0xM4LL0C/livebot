@@ -275,6 +275,7 @@ ITEMS: Final = [
         is_consumable=True,
         rarity=ItemRarity.LEGENDARY,
         can_exchange=True,
+        price=1_000_000,
         exchange_price=range(800000, 1500000),
     ),
     Item(

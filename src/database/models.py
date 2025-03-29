@@ -17,7 +17,7 @@ from database.base import BaseModel
 from datatypes import Achievement, ChatIdType
 from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType, Locations
-from helpers.exceptions import AchievementNotFoundError, ItemNotFoundError
+from helpers.exceptions import AchievementNotFoundError
 from helpers.player_utils import calc_xp_for_level
 from helpers.stickers import Stickers
 from helpers.utils import calc_percentage, create_progress_bar
@@ -58,11 +58,13 @@ class UserItem(DataClassDictMixin):
     quantity: int = 0
     usage: Optional[float] = None
 
+    def __post_init__(self):
+        if self.type == ItemType.USABLE and not self.usage:
+            self.usage = 0.0
+
     @property
-    def type(self):
-        if self.usage is not None:
-            return ItemType.USABLE
-        return ItemType.STACKABLE
+    def type(self) -> ItemType:
+        return get_item(self.name).type
 
     def add(self, amount: int):
         if self.type == ItemType.STACKABLE:
@@ -91,66 +93,53 @@ class UserItem(DataClassDictMixin):
 class Inventory(DataClassDictMixin):
     items: list[UserItem] = field(default_factory=list)
 
-    def add_item(self, item: UserItem):
-        if item.type == ItemType.STACKABLE:
+    def add(self, name: str, count: int = 0):
+        item = get_item(name)
+        print("ADD", item.type, name, count)
+
+        if item.type == ItemType.USABLE:
+            for _ in range(count):
+                self.items.append(UserItem(name=name, quantity=1, usage=100.0))
+        elif item.type == ItemType.STACKABLE:
             for inv_item in self.items:
-                if inv_item.type == ItemType.STACKABLE and inv_item.name == item.name:
-                    inv_item.add(item.quantity)
+                if inv_item.name == name:
+                    inv_item.quantity += count
                     return
-        self.items.append(item)
+            self.items.append(UserItem(name=name, quantity=count))
 
-    def remove_item(self, item_name: str, quantity: int = 1):
-        for inv_item in self.items:
-            if inv_item.name == item_name:
-                if inv_item.type == ItemType.STACKABLE:
-                    inv_item.remove(quantity)
-                    if inv_item.quantity == 0:
-                        self.items.remove(inv_item)
-                    return
-                if inv_item.type == ItemType.USABLE:
-                    if quantity > 1:
-                        raise ValueError("Cannot remove more than one usable item at a time")
-                    self.items.remove(inv_item)
-                    return
-        raise ValueError("Item not found in inventory")
-
-    def use_item(self, item_name: str, amount: float):
-        for inv_item in self.items:
-            if inv_item.type == ItemType.USABLE and inv_item.name == item_name:
-                inv_item.use(amount)
-                if inv_item.usage == 0:
-                    self.items.remove(inv_item)
-                return
-        raise ValueError("Usable item not found in inventory")
-
-    def get_items(self, name: str) -> list[UserItem]:
-        return [item for item in self.items if item.name == name]
-
-    def get_item(self, name: str) -> UserItem:
+    def remove(self, name: str, count: int = 1):
         for item in self.items:
-            if item.name == name and item.quantity > 0:
-                return item
-        raise ItemNotFoundError(name)
+            if item.name == name:
+                if item.type == ItemType.USABLE:
+                    self.items.remove(item)
+                    return
+                if item.type == ItemType.STACKABLE:
+                    item.quantity -= count
+                    if item.quantity <= 0:
+                        self.items.remove(item)
+                    return
 
-    def get_stackable_items(self) -> list[UserItem]:
-        return [item for item in self.items if item.type == ItemType.STACKABLE]
+    def add_and_get(self, name: str) -> UserItem:
+        self.add(name)
+        return self.get(name)
 
-    def get_usable_items(self) -> list[UserItem]:
-        return [item for item in self.items if item.type == ItemType.USABLE]
+    def get_all(self, name: str) -> list[UserItem]:
+        return [item for item in self.items if item.name == name and item.quantity > 0]
 
-    def get_or_add(self, name: str) -> UserItem:
-        try:
-            item = self.get_item(name)
-        except ItemNotFoundError as e:
-            item_info = get_item(name)
-            if item_info.type == ItemType.STACKABLE:
-                item = UserItem(name=name, quantity=0)
-            elif item_info.type == ItemType.USABLE:
-                item = UserItem(name=name, usage=0.0)
-            else:
-                raise NotImplementedError(item_info.type) from e
-            self.items.append(item)
-        return item
+    def get(self, name: str) -> UserItem:
+        return self.get_all(name)[0]
+
+    def has(self, name: str) -> bool:
+        return self.get_all(name) != []
+
+    def use(self, name: str, amount: float):
+        for item in self.items:
+            if item.name == name and item.type == ItemType.USABLE:
+                assert item.usage  # for linters
+                item.usage = max(0.0, item.usage - amount)
+                if item.usage == 0.0:
+                    self.items.remove(item)
+                return
 
 
 @dataclass
@@ -199,8 +188,7 @@ class AchievementsInfo(DataClassDictMixin):
             if item.name == "бабло":
                 self._user().coin += item.quantity
             else:
-                user_item = self._user().inventory.get_or_add(item.name)
-                user_item.quantity += item.quantity
+                self._user().inventory.add(item.name, item.quantity)
 
         await bot.send_message(
             self._user().id,
@@ -308,8 +296,6 @@ class UserModel(BaseModel):
             reward=reward,
         )
 
-        await self.update_async()
-
     async def _level_up(self, chat_id: Optional[ChatIdType] = None):
         if not chat_id:
             chat_id = self.id
@@ -324,9 +310,8 @@ class UserModel(BaseModel):
 
         mess = f"{self.tg_tag} получил новый уровень 🏵"
 
-        box = self.inventory.get_or_add("бокс")
-
-        box.quantity += max(0, box.quantity) + 1
+        box = self.inventory.add_and_get("бокс")
+        self.inventory.add("бокс", max(0, box.quantity) + 1)
 
         await self.update_async()
 
@@ -366,8 +351,6 @@ class UserModel(BaseModel):
             attr = max(0, min(attr, 100))
             setattr(self, attr_name, attr)
 
-        await self.update_async()
-
     async def check_achievements(self):
         unknown_achievements = set()
 
@@ -380,8 +363,6 @@ class UserModel(BaseModel):
 
             if ach.check(self):
                 await self.achievements_info.award(ach)
-
-        await self.update_async()
 
 
 @dataclass

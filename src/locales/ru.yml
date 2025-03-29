@@ -39,8 +39,8 @@ casino:
     Ну давай, шансы 50 на 50
 
     Чтобы сыграть напиши <code>/casino [кол-во]</code>
-  win: 🎉 Ураа, ты выиграл {quantity} {func:get_item_emoji("бабло")}
-  loose: 😢 Ой, ты проиграл {quantity} {func:get_item_emoji("бабло")}
+  win: 🎉 Ураа, ты выиграл {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
+  loose: 😢 Ой, ты проиграл {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
 item-not-found-in-inventory: У тебя нет {item_name} {func:get_item_emoji(item_name)}
 item-not-exist: Предмет `{item_name}` не существует 🤔
 item-not-enough: У тебя недостаточно `{item_name}` {func:get_item_emoji(item_name)}
@@ -48,5 +48,14 @@ shop:
   main: |
     <b>🛍 Магазин</b>
 
-    * <i>Кол-во: {quantity}</i>
-  buy-item: Купил {quantity} {item_name} {func:get_item_emoji(item_name)} за {price} {func:get_item_emoji("бабло")}
+    * <i>Кол-во: {func:pretty_int(quantity)}</i>
+  buy-item: Купил {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)} за {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+craft:
+  main: |
+    <b>🧰 Верстак</b>
+
+    <i>Доступные крафты</i>
+  craft-item: |
+    Скрафтил {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)}
+
+    + {func:pretty_float(xp)} хп

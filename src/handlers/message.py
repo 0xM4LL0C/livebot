@@ -67,9 +67,12 @@ async def inventory_cmd(message: Message):
     items = ""
 
     for item in sorted(user.inventory.items, key=lambda i: i.quantity, reverse=True):
+        if item.quantity <= 0:
+            continue
         items += f"{get_item_emoji(item.name)} {item.name} {item.quantity}"
 
-        if item.type == ItemType.USABLE and item.usage:
+        if item.type == ItemType.USABLE:
+            assert item.usage is not None  # for linters
             items += f" ({pretty_float(item.usage)} %)"  # pyright: ignore[reportAttributeAccessIssue]
         items += "\n"
     if not items:
@@ -111,7 +114,7 @@ async def casino_cmd(message: Message, command: CommandObject):
         quantity = 1
 
     try:
-        ticket = user.inventory.get_item("билет")
+        ticket = user.inventory.add_and_get("билет")
     except ItemNotFoundError:
         await message.reply(t(user.lang, "item-not-found-in-inventory", item_name="билет"))
         return
@@ -137,6 +140,23 @@ async def casino_cmd(message: Message, command: CommandObject):
 
     await user.check_status(message.chat.id)
     await user.update_async()
+
+
+@router.message(Command("craft"))
+async def craft_cmd(message: Message, command: CommandObject):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    if command.args:
+        try:
+            quantity = int(command.args)
+        except ValueError:
+            quantity = 1
+    else:
+        quantity = 1
+
+    await message.reply(
+        t(user.lang, "craft.main"), reply_markup=InlineMarkup.craft_main(quantity, user)
+    )
 
 
 # ---------------------------------------------------------------------------- #
