@@ -6,7 +6,8 @@ from aiogram.enums import ContentType
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
-from data.items.utils import get_item_emoji
+from consts import TELEGRAM_ID
+from data.items.utils import get_item, get_item_emoji
 from database.models import UserModel
 from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
@@ -156,6 +157,72 @@ async def craft_cmd(message: Message, command: CommandObject):
 
     await message.reply(
         t(user.lang, "craft.main"), reply_markup=InlineMarkup.craft_main(quantity, user)
+    )
+
+
+@router.message(Command("transfer"))
+async def transfer_cmd(message: Message, command: CommandObject):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    args = str(command.args).strip().split()
+
+    if len(args) < 2:
+        await message.reply(t(user.lang, "transfer.help"))
+        return
+
+    item_name, quantity = args
+
+    try:
+        item = get_item(item_name)
+    except ItemNotFoundError:
+        await message.reply(t(user.lang, "item-not-exist", item_name=item_name))
+        return
+
+    try:
+        quantity = int(quantity)
+    except ValueError:
+        quantity = 1
+
+    if not message.reply_to_message:
+        await message.reply(t(user.lang, "reply-to-message-required"))
+        return
+    if (
+        message.reply_to_message.from_user.is_bot
+        or message.reply_to_message.from_user.id == TELEGRAM_ID
+    ):
+        return
+
+    target_user = await UserModel.get_async(id=message.reply_to_message.from_user.id)
+
+    if item.name == "бабло":
+        if user.coin < quantity:
+            await message.reply(t(user.lang, "item-not-enough", item_name="бабло"))
+            return
+        user.coin -= quantity
+        target_user.coin += quantity
+    elif item.type == ItemType.USABLE:
+        await message.reply(
+            t(user.lang, "select-which-one"),
+            reply_markup=InlineMarkup.transfer_usable_items(
+                user=user,
+                to_user=target_user,
+                item_name=item_name,
+            ),
+        )
+        return
+
+    await user.update_async()
+    await target_user.update_async()
+
+    await message.reply(
+        t(
+            user.lang,
+            "transfer.success",
+            from_user=user,
+            to_user=target_user,
+            quantity=quantity,
+            item_name=item.name,
+        )
     )
 
 

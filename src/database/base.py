@@ -4,7 +4,7 @@ from typing import Any, ClassVar, Required, Self, TypedDict
 from bson import ObjectId
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.config import BaseConfig
-from mashumaro.types import SerializationStrategy
+from mashumaro.types import Discriminator, SerializationStrategy
 from pymongo import AsyncMongoClient, MongoClient
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.collection import Collection
@@ -43,20 +43,26 @@ class ObjectIdSerializationStrategy(SerializationStrategy):
         return ObjectId(value)
 
 
-@dataclass(kw_only=True)
-class BaseModel(DataClassDictMixin):
-    oid: ObjectId = field(default=EMPTY_OBJECTID, metadata=field_options(alias="_id"))
-
-    __settings__: ClassVar[ModelSettings]
-    sync_collection: ClassVar[Collection]
-    async_collection: ClassVar[AsyncCollection]
-
+@dataclass
+class SubModel(DataClassDictMixin):
     class Config(BaseConfig):
         serialize_by_alias = True
         allow_deserialization_not_by_alias = True
         serialization_strategy = {
             ObjectId: ObjectIdSerializationStrategy(),
         }
+        discriminator = Discriminator(
+            include_subtypes=True,
+        )
+
+
+@dataclass(kw_only=True)
+class BaseModel(SubModel):
+    oid: ObjectId = field(default=EMPTY_OBJECTID, metadata=field_options(alias="_id"))
+
+    __settings__: ClassVar[ModelSettings]
+    sync_collection: ClassVar[Collection]
+    async_collection: ClassVar[AsyncCollection]
 
     def __init_subclass__(cls, **kwargs):
         if not cls.__name__.endswith("Model"):

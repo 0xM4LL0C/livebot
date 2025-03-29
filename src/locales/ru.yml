@@ -59,3 +59,15 @@ craft:
     Скрафтил {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)}
 
     + {func:pretty_float(xp)} хп
+transfer:
+  help: <code>/transfer [имя предмета] [кол-во]</code>
+  success: |
+    {obj:from_user.tg_tag} подарил {obj:to_user.tg_tag}
+    ---------------------------
+    {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)}
+  success-usable: |
+    {obj:from_user.tg_tag} подарил {obj:to_user.tg_tag}
+    ---------------------------
+    {item_name} ({func:pretty_float(usage)}) {func:get_item_emoji(item_name)}
+reply-to-message-required: Для этой команды нужно ответить на сообщение
+select-which-one: Выбери какой

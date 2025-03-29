@@ -7,24 +7,24 @@ from weakref import ReferenceType, ref
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bson import ObjectId
-from mashumaro import DataClassDictMixin, field_options
+from mashumaro import field_options
 
 from config import bot
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_emoji
-from database.base import BaseModel
+from database.base import BaseModel, SubModel
 from datatypes import Achievement, ChatIdType
 from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType, Locations
-from helpers.exceptions import AchievementNotFoundError
+from helpers.exceptions import AchievementNotFoundError, NoResult
 from helpers.player_utils import calc_xp_for_level
 from helpers.stickers import Stickers
 from helpers.utils import calc_percentage, create_progress_bar
 
 
 @dataclass
-class CasinoInfo:
+class CasinoInfo(SubModel):
     win: int = 0
     loose: int = 0
 
@@ -34,14 +34,14 @@ class CasinoInfo:
 
 
 @dataclass
-class UserAction:
+class UserAction(SubModel):
     type: Literal["street", "work", "sleep", "game"]
     end: datetime
     start: datetime = field(default_factory=utcnow)
 
 
 @dataclass
-class UserNotificationStatus:
+class UserNotificationStatus(SubModel):
     walk: bool = False
     work: bool = False
     sleep: bool = False
@@ -53,10 +53,11 @@ class UserNotificationStatus:
 
 
 @dataclass
-class UserItem(DataClassDictMixin):
+class UserItem(SubModel):
     name: str
     quantity: int = 0
     usage: Optional[float] = None
+    id: ObjectId = field(default_factory=ObjectId)
 
     def __post_init__(self):
         if self.type == ItemType.USABLE and not self.usage:
@@ -90,7 +91,7 @@ class UserItem(DataClassDictMixin):
 
 
 @dataclass
-class Inventory(DataClassDictMixin):
+class Inventory(SubModel):
     items: list[UserItem] = field(default_factory=list)
 
     def add(self, name: str, count: int = 1):
@@ -107,17 +108,21 @@ class Inventory(DataClassDictMixin):
                     return
             self.items.append(UserItem(name=name, quantity=count))
 
-    def remove(self, name: str, count: int = 1):
+    def remove(
+        self,
+        name: str,
+        count: int = 1,
+        id: Optional[ObjectId] = None,
+    ) -> Optional[UserItem]:
         for item in self.items:
-            if item.name == name:
+            if item.name == name and (id is None or item.id == id):
                 if item.type == ItemType.USABLE:
-                    self.items.remove(item)
-                    return
+                    return self.items.pop(self.items.index(item))
                 if item.type == ItemType.STACKABLE:
                     item.quantity -= count
                     if item.quantity <= 0:
                         self.items.remove(item)
-                    return
+                    return item
 
     def add_and_get(self, name: str) -> UserItem:
         self.add(name)
@@ -125,6 +130,12 @@ class Inventory(DataClassDictMixin):
 
     def get_all(self, name: str) -> list[UserItem]:
         return [item for item in self.items if item.name == name and item.quantity > 0]
+
+    def get_by_id(self, id: ObjectId) -> UserItem:
+        try:
+            return [item for item in self.items if item.id == id and item.quantity > 0][0]
+        except IndexError as e:
+            raise NoResult(id) from e
 
     def get(self, name: str) -> UserItem:
         items = self.get_all(name)
@@ -147,13 +158,13 @@ class Inventory(DataClassDictMixin):
 
 
 @dataclass
-class UserAchievement:
+class UserAchievement(SubModel):
     name: str
     completed_at: datetime = field(default_factory=utcnow)
 
 
 @dataclass
-class AchievementsInfo(DataClassDictMixin):
+class AchievementsInfo(SubModel):
     achievements: list[UserAchievement] = field(default_factory=list)
     progress: dict[str, int] = field(default_factory=dict)
     _user: ReferenceType["UserModel"] = field(
@@ -218,14 +229,14 @@ class AchievementsInfo(DataClassDictMixin):
 
 
 @dataclass
-class UserViolation:
+class UserViolation(SubModel):
     reason: str
     type: Literal["warn", "mute", "ban", "permanent-ban"]
     until_date: Optional[datetime] = None
 
 
 @dataclass
-class DailyGift:
+class DailyGift(SubModel):
     streak: int = 0
     last_claimed_at: Optional[datetime] = None
     next_claimable_at: datetime = field(default_factory=lambda: utcnow() + timedelta(days=1))
@@ -234,7 +245,7 @@ class DailyGift:
 
 
 @dataclass
-class UserTask:
+class UserTask(SubModel):
     needed_items: dict[str, int]
     xp: float
     reward: int  # coin

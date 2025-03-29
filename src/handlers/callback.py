@@ -4,11 +4,12 @@ from contextlib import suppress
 from aiogram import Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
+from bson import ObjectId
 
 from data.items.utils import get_item
 from database.models import UserModel
-from helpers.callback_factory import CraftCallback, ShopCallback
-from helpers.exceptions import ItemNotFoundError
+from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback
+from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
 
@@ -98,5 +99,44 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
             quantity=quantity,
             item_name=item.name,
             xp=xp,
+        )
+    )
+
+
+@router.callback_query(TransferCallback.filter())
+async def transfer_callback(query: CallbackQuery, callback_data: TransferCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    try:
+        item_name = user.inventory.get_by_id(ObjectId(callback_data.item_oid)).name
+        item = get_item(item_name)
+    except NoResult:
+        query.message.reply(t(user.lang, "item-not-found-in-inventory", item_name="?????????"))
+        return
+
+    try:
+        user_item = user.inventory.remove(item.name, id=ObjectId(callback_data.item_oid))
+        assert user_item
+    except (IndexError, AssertionError):
+        query.message.reply(t(user.lang, "item-not-found-in-inventory", item_name=item.name))
+        return
+
+    target_user = await UserModel.get_async(id=callback_data.to_user_id)
+    target_user.inventory.items.append(user_item)
+
+    await user.update_async()
+    await target_user.update_async()
+
+    await query.message.answer(
+        t(
+            user.lang,
+            "transfer.success-usable",
+            from_user=user,
+            to_user=target_user,
+            usage=user_item.usage,
+            item_name=item.name,
         )
     )

@@ -1,3 +1,5 @@
+from typing import Any
+
 from i18n import I18N
 
 from data.items.utils import get_item_emoji
@@ -17,6 +19,6 @@ i18n.register_constant("CHAT_USERNAME", "@LiveBotOfficialChat")
 i18n.register_constant("GUIDE_URL", "https://0xM4LL0C.github.io/livebot/guide")
 
 
-def t(*args, **kwargs):
+def t(locale: str, key: str, **kwargs: Any):
     i18n.load()
-    return i18n.t(*args, **kwargs)
+    return i18n.t(locale, key, **kwargs)
