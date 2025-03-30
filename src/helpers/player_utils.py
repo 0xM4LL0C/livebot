@@ -17,7 +17,7 @@ def calc_xp_for_level(level: int) -> float:
     return float(5 * level + 50 * level + 100)
 
 
-def transfer(
+def transfer_item(
     from_user: "UserModel",
     to_user: "UserModel",
     item_id: ObjectId,

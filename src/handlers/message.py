@@ -13,7 +13,7 @@ from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.player_utils import transfer
+from helpers.player_utils import transfer_item
 from helpers.utils import pretty_float
 from middlewares.register import register_user
 
@@ -221,7 +221,7 @@ async def transfer_cmd(message: Message, command: CommandObject):
         return
     else:
         user_item = user.inventory.get(item.name)
-        mess = transfer(user, target_user, user_item.id, quantity=quantity)
+        mess = transfer_item(user, target_user, user_item.id, quantity=quantity)
 
     await user.update_async()
     await target_user.update_async()

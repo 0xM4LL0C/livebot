@@ -12,7 +12,7 @@ from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallba
 from helpers.exceptions import ItemNotFoundError
 from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.player_utils import transfer
+from helpers.player_utils import transfer_item
 
 router = Router()
 
@@ -112,6 +112,6 @@ async def transfer_callback(query: CallbackQuery, callback_data: TransferCallbac
     user = await UserModel.get_async(id=query.from_user.id)
     target_user = await UserModel.get_async(id=callback_data.to_user_id)
 
-    mess = transfer(user, target_user, ObjectId(callback_data.item_oid))
+    mess = transfer_item(user, target_user, ObjectId(callback_data.item_oid))
 
     await query.message.answer(mess)
