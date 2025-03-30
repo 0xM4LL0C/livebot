@@ -6,11 +6,11 @@ class Locations(Enum):
 
 
 class ItemRarity(Enum):
-    COMMON = "Обычный"
-    UNCOMMON = "Необычный"
-    RARE = "Редкий"
-    EPIC = "Эпический"
-    LEGENDARY = "Легендарный"
+    COMMON = auto()
+    UNCOMMON = auto()
+    RARE = auto()
+    EPIC = auto()
+    LEGENDARY = auto()
 
 
 class ItemType(Enum):

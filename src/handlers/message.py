@@ -13,7 +13,7 @@ from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.player_utils import transfer_item
+from helpers.player_utils import get_available_items_for_use, transfer_item
 from helpers.utils import pretty_float
 from middlewares.register import register_user
 
@@ -227,6 +227,23 @@ async def transfer_cmd(message: Message, command: CommandObject):
     await target_user.update_async()
 
     await message.reply(mess)
+
+
+@router.message(Command("use"))
+async def use_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    items = get_available_items_for_use(user)
+
+    if items:
+        key = "use.available-items"
+    else:
+        key = "use.not-available-items"
+
+    await message.reply(
+        t(user.lang, key),
+        reply_markup=InlineMarkup.use(items, user),
+    )
 
 
 # ---------------------------------------------------------------------------- #

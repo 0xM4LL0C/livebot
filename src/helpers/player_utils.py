@@ -9,7 +9,7 @@ from helpers.exceptions import NoResult
 from helpers.localization import t
 
 if TYPE_CHECKING:
-    from database.models import UserModel
+    from database.models import UserItem, UserModel
 
 
 @cached
@@ -49,3 +49,20 @@ def transfer_item(
         quantity=quantity,
         item_name=item.name,
     )
+
+
+def get_available_items_for_use(user: "UserModel") -> "list[UserItem]":
+    def is_item_available(user_item: "UserItem"):
+        item = get_item(user_item.name)
+        if not item.is_consumable or user_item.quantity <= 0:
+            return False
+        if item.type == ItemType.USABLE and user_item.usage > 0:  # type: ignore
+            return True
+        if item.type == ItemType.STACKABLE:
+            return True
+        return False
+
+    available_items = [
+        user_item for user_item in user.inventory.items if is_item_available(user_item)
+    ]
+    return sorted(available_items, key=lambda item: item.quantity, reverse=True)

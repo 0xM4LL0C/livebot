@@ -94,6 +94,11 @@ class UserItem(SubModel):
 class Inventory(SubModel):
     items: list[UserItem] = field(default_factory=list)
 
+    def __pre_serialize__(self):
+        items = list(filter(lambda i: i.quantity > 0, self.items))
+        self.items = items
+        return self
+
     def add(self, name: str, count: int = 1, usage: float = 100.0):
         item = get_item(name)
 

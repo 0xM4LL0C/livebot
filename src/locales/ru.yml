@@ -71,3 +71,34 @@ transfer:
     {item_name} ({func:pretty_float(usage)}) {func:get_item_emoji(item_name)}
 reply-to-message-required: Для этой команды нужно ответить на сообщение
 select-which-one: Выбери какой
+use:
+  available-items: <b>Доступные предметы для юза</b>
+  not-available-items: <i>Нет доступных предметов для юза</i>
+  hunger: |
+    {func:get_item_emoji(item_name)} Поел
+    - {func:pretty_int(effect)} голода
+  boost: |
+    {func:get_item_emoji(item_name)} Юзнул буст
+    + {func:pretty_float(xp)} опыта
+  box-opened: |
+    Ты открыл бокс и получил
+    ---------------------------
+    {items}
+  fatigue: |
+    {func:get_item_emoji(item_name)} Юзнул {item_name}
+    - {func:pretty_int(effect)} усталости
+  help-item: |
+    {func:get_item_emoji(item_name)} Юзнул хелп
+    + {func:pretty_int(effect)} здоровья
+  vodka: |
+    {func:get_item_emoji(item_name)} Юзнул водку
+    - {func:pretty_int(effect)} здоровья, сбросил усталость
+  bike: |
+    {func:get_item_emoji(item_name)} Юзнул велик и сократил время прогулки на {func:pretty_int(minutes)} минут
+  luck: |
+    {func:get_item_emoji(item_name)} Увеличил удачу на {func:pretty_int(effect)}
+  candy: |
+    {func:get_item_emoji(item_name)} Юзнул конфету
+    - {func:pretty_int(effect)}% голода
+    - {func:pretty_int(effect)}% усталости
+under-development: 🔜 В разработке

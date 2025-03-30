@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import transliterate
 
-from helpers.cache import cached
+from helpers.cache import cached, cached_method
 from helpers.enums import ItemRarity, ItemType, WeatherType
 
 if TYPE_CHECKING:
@@ -197,7 +197,7 @@ class Item:
     strength_reduction: Optional[tuple[float, float]] = None
     can_equip: bool = False
 
-    @cached
+    @cached_method
     def translit(self) -> str:
         return transliterate.translit(self.name, reversed=True)
 

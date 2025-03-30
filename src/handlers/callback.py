@@ -1,18 +1,21 @@
 import random
 from contextlib import suppress
+from datetime import timedelta
 
 from aiogram import Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
-from data.items.utils import get_item
+from data.items.items import ITEMS
+from data.items.utils import get_item, get_item_count_for_rarity
 from database.models import UserModel
-from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback
-from helpers.exceptions import ItemNotFoundError
+from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback, UseCallback
+from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.player_utils import transfer_item
+from helpers.player_utils import get_available_items_for_use, transfer_item
+from helpers.utils import pretty_int
 
 router = Router()
 
@@ -115,3 +118,94 @@ async def transfer_callback(query: CallbackQuery, callback_data: TransferCallbac
     mess = transfer_item(user, target_user, ObjectId(callback_data.item_oid))
 
     await query.message.answer(mess)
+
+
+@router.callback_query(UseCallback.filter())
+async def use_callback(query: CallbackQuery, callback_data: UseCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    try:
+        user_item = user.inventory.get_by_id(id=ObjectId(callback_data.item_oid))
+    except NoResult:
+        await query.answer(t(user.lang, "item-not-found-in-inventory", item_name="?????"))
+        return
+
+    if user_item.quantity <= 0:
+        await query.answer(t(user.lang, "item-not-enough", item_name=user_item.name))
+        return
+
+    item = get_item(user_item.name)
+
+    match item.name:
+        case "трава" | "буханка" | "сэндвич" | "пицца" | "тако" | "суп":
+            user.hunger -= item.effect  # type: ignore
+            mess = t(user.lang, "use.hunger", item_name=item.name, effect=item.effect)
+        case "буст":
+            xp = random.randint(100, 150)
+            user.xp += xp
+            mess = t(user.lang, "use.boost", item_name=item.name, xp=xp)
+        case "бокс":
+            num_items_to_get = random.randint(1, 3)
+            items = ""
+
+            for item_to_get in random.choices(ITEMS, k=num_items_to_get):
+                quantity = get_item_count_for_rarity(item_to_get.rarity)
+
+                items += f"+ {pretty_int(quantity)} {item_to_get.name} {item_to_get.emoji}\n"
+                if item_to_get.name == "бабло":
+                    user.coin += quantity
+                else:
+                    user.inventory.add(item_to_get.name, quantity)
+            mess = t(user.lang, "use.box-opened", items=items)
+        case "энергос" | "чай":
+            user.fatigue -= item.effect  # type: ignore
+            mess = t(user.lang, "use.fatigue", item_name=item.name, effect=item.effect)
+        case "пилюля":
+            await query.message.reply(t(user.lang, "under-development"))
+            return
+        case "хелп":
+            user.health += item.effect  # type: ignore
+            mess = t(user.lang, "use.health", item_name=item.name, effect=item.effect)
+        case "фиксоманчик":
+            await query.message.reply(t(user.lang, "under-development"))
+            return
+        case "водка":
+            user.fatigue = 0
+            user.health -= item.effect  # type: ignore
+            mess = t(user.lang, "use.vodka", item_name=item.name, effect=item.effect)
+        case "велик":
+            if not user.action or user.action.type != "street":
+                await query.message.reply("Ты не гуляешь")  # TODO: add translation
+                return
+            minutes = random.randint(10, 45)
+            user.action.end -= timedelta(minutes=minutes)
+            mess = t(user.lang, "use.bike", item_name=item.name, minutes=minutes)
+        case "клевер-удачи":
+            user.luck += item.effect  # type: ignore
+            mess = t(user.lang, "use.luck", item_name=item.name, effect=item.effect)
+        case "конфета":
+            user.hunger -= item.effect  # type: ignore
+            user.fatigue -= item.effect  # type: ignore
+            mess = t(user.lang, "use.candy", item_name=item.name, effect=item.effect)
+        case _:
+            raise NotImplementedError(item.name)
+
+    user_item.quantity -= 1
+    await user.update_async()
+
+    items = get_available_items_for_use(user)
+
+    if items:
+        key = "use.available-items"
+    else:
+        key = "use.not-available-items"
+
+    assert isinstance(query.message, Message)
+    await query.message.edit_text(
+        t(user.lang, key),
+        reply_markup=InlineMarkup.use(items, user),
+    )
+    await query.message.reply(mess)

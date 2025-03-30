@@ -17,3 +17,8 @@ class TransferCallback(CallbackData, prefix="transfer"):
     to_user_id: int
     item_oid: str
     user_id: int
+
+
+class UseCallback(CallbackData, prefix="use"):
+    item_oid: str
+    user_id: int

@@ -3,8 +3,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from data.items.items import ITEMS
 from data.items.utils import get_item_emoji
-from database.models import UserModel
-from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback
+from database.models import UserItem, UserModel
+from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback, UseCallback
 from helpers.enums import ItemType
 from helpers.utils import pretty_float, pretty_int
 
@@ -75,6 +75,26 @@ class InlineMarkup:
                 text=f"{get_item_emoji(item.name)} {pretty_float(item.usage)}%",
                 callback_data=TransferCallback(
                     to_user_id=to_user.id,
+                    item_oid=str(item.id),
+                    user_id=user.id,
+                ),
+            )
+
+        builder.adjust(3)
+        return builder.as_markup()
+
+    @classmethod
+    def use(cls, items: list[UserItem], user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for item in items:
+            text = f"{get_item_emoji(item.name)} {pretty_int(item.quantity)}"
+            if item.type == ItemType.USABLE:
+                assert item.usage
+                text += f" ({pretty_float(item.usage)}%)"
+            builder.button(
+                text=text,
+                callback_data=UseCallback(
                     item_oid=str(item.id),
                     user_id=user.id,
                 ),
