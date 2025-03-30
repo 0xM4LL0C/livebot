@@ -246,6 +246,15 @@ async def use_cmd(message: Message):
     )
 
 
+@router.message(Command("ref"))
+async def ref_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    link = f"https://t.me/{(await message.bot.me()).username}?start=ref_{user.id}"
+
+    await message.reply(t(user.lang, "ref", link=link))
+
+
 # ---------------------------------------------------------------------------- #
 
 

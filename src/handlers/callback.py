@@ -193,12 +193,12 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
         case _:
             raise NotImplementedError(item.name)
 
-    user_item.quantity -= 1
+    user.inventory.remove(user_item.name, 1, id=user_item.id)
     await user.update_async()
 
     items = get_available_items_for_use(user)
 
-    if items:
+    if items:  # pylint: disable=duplicate-code
         key = "use.available-items"
     else:
         key = "use.not-available-items"
