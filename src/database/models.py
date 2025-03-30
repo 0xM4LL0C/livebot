@@ -340,7 +340,7 @@ class UserModel(BaseModel):
             quest_items[item.name] = random.randint(2, 10) * self.level
             total_price += random.randint(min(item.quest_coin), max(item.quest_coin))  # type: ignore
 
-        xp = random.uniform(5.0, float(len(items))) * self.level
+        xp = random.uniform((len(items) / 2), float(len(items))) * self.level
         reward = int(total_price * 1.5)
         reward += random.randint(0, 100)  # Случайная добавка к награде
 
