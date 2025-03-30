@@ -24,16 +24,11 @@ def transfer_item(
     quantity: int = 1,
 ) -> str:
     try:
-        item_name = from_user.inventory.get_by_id(item_id).name
-        item = get_item(item_name)
-    except NoResult:
-        return t(from_user.lang, "item-not-found-in-inventory", item_name="?????????")
-
-    try:
         user_item = from_user.inventory.get_by_id(id=item_id)
         assert user_item
+        item = get_item(user_item.name)
     except NoResult:
-        return t(from_user.lang, "item-not-found-in-inventory", item_name=item.name)
+        return t(from_user.lang, "item-not-found-in-inventory", item_name="?????")
 
     if user_item.type == ItemType.USABLE:
         to_user.inventory.items.append(user_item)
