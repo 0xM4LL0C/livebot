@@ -148,7 +148,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
 
     match item.name:
         case "трава" | "буханка" | "сэндвич" | "пицца" | "тако" | "суп":
-            user.hunger -= item.effect  # type: ignore
+            user.hunger += item.effect  # type: ignore
             mess = t(user.lang, "use.hunger", item_name=item.name, effect=item.effect)
         case "буст":
             xp = random.randint(100, 150)
@@ -168,7 +168,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
                     user.inventory.add(item_to_get.name, quantity)
             mess = t(user.lang, "use.box-opened", items=items)
         case "энергос" | "чай":
-            user.fatigue -= item.effect  # type: ignore
+            user.fatigue += item.effect  # type: ignore
             mess = t(user.lang, "use.fatigue", item_name=item.name, effect=item.effect)
         case "пилюля":
             await query.message.reply(t(user.lang, "under-development"))
@@ -180,7 +180,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
             await query.message.reply(t(user.lang, "under-development"))
             return
         case "водка":
-            user.fatigue = 0
+            user.fatigue = 100
             user.health -= item.effect  # type: ignore
             mess = t(user.lang, "use.vodka", item_name=item.name, effect=item.effect)
         case "велик":
@@ -194,8 +194,8 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
             user.luck += item.effect  # type: ignore
             mess = t(user.lang, "use.luck", item_name=item.name, effect=item.effect)
         case "конфета":
-            user.hunger -= item.effect  # type: ignore
-            user.fatigue -= item.effect  # type: ignore
+            user.hunger += item.effect  # type: ignore
+            user.fatigue += item.effect  # type: ignore
             mess = t(user.lang, "use.candy", item_name=item.name, effect=item.effect)
         case _:
             raise NotImplementedError(item.name)
