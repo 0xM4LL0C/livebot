@@ -315,6 +315,18 @@ async def quest_cmd(message: Message):
     )
 
 
+@router.message(Command("weather"))
+async def weather_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+    await message.reply(t(user.lang, "under-development"))
+
+
+@router.message(Command("price"))
+async def price_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+    await message.reply(t(user.lang, "under-development"))
+
+
 # ---------------------------------------------------------------------------- #
 
 
