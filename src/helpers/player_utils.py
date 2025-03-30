@@ -30,14 +30,16 @@ def transfer_item(
     except NoResult:
         return t(from_user.lang, "item-not-found-in-inventory", item_name="?????")
 
+    from_user.inventory.remove(user_item.name, quantity, id=user_item.id)
+
     if user_item.type == ItemType.USABLE:
-        to_user.inventory.items.append(user_item)
+        assert user_item.usage  # for linters
+        to_user.inventory.add(user_item.name, quantity, user_item.usage)
         key = "transfer.success-usable"
     else:
         to_user.inventory.add(user_item.name, quantity)
         key = "transfer.success"
 
-    from_user.inventory.remove(user_item.name, quantity, user_item.id)
     return t(
         from_user.lang,
         key,

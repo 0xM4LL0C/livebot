@@ -94,13 +94,12 @@ class UserItem(SubModel):
 class Inventory(SubModel):
     items: list[UserItem] = field(default_factory=list)
 
-    def add(self, name: str, count: int = 1):
+    def add(self, name: str, count: int = 1, usage: float = 100.0):
         item = get_item(name)
-        print("ADD", item.type, name, count)
 
         if item.type == ItemType.USABLE:
             for _ in range(count):
-                self.items.append(UserItem(name=name, quantity=1, usage=100.0))
+                self.items.append(UserItem(name=name, quantity=1, usage=usage))
         elif item.type == ItemType.STACKABLE:
             for inv_item in self.items:
                 if inv_item.name == name:
@@ -122,6 +121,7 @@ class Inventory(SubModel):
                     item.quantity -= count
                     if item.quantity <= 0:
                         self.items.remove(item)
+                        return
                     return item
 
     def add_and_get(self, name: str) -> UserItem:
