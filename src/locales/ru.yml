@@ -108,3 +108,15 @@ ref: |
   Делись реферальной ссылкой, и если друг впервые зарегистрируется, ты получишь от {func:pretty_int(15000)} до {func:pretty_int(15000)} {func:get_item_emoji("бабло")}
 
   Твоя ссылка: {link}
+promo:
+  usage: |
+    Чтобы активировать промокод напиши:
+
+    <code>/promo [код]</code>
+  not-exists: Такого промокода не существует
+  user-already-activated: Ты уже активировал этот промокод
+  already-activated: Этот промокод уже активировали
+  activate: |
+    Ухты, {obj:user.tg_tag} активировал промокод и получил
+
+    {items}

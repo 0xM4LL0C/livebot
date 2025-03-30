@@ -391,12 +391,12 @@ class PromoModel(BaseModel):
 
     code: str
     items: dict[str, int]
-    usage_count: int = 1
+    max_usage_count: int = 1
     users: set[ObjectId] = field(default_factory=set)
 
     @property
     def is_used(self) -> bool:
-        return len(self.users) > self.usage_count
+        return len(self.users) > self.max_usage_count
 
 
 # @dataclass

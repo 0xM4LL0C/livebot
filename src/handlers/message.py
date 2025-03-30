@@ -8,13 +8,14 @@ from aiogram.types import Message
 
 from consts import TELEGRAM_ID
 from data.items.utils import get_item, get_item_emoji
-from database.models import UserModel
+from database.models import PromoModel, UserModel
 from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.player_utils import get_available_items_for_use, transfer_item
-from helpers.utils import pretty_float
+from helpers.stickers import Stickers
+from helpers.utils import pretty_float, pretty_int, sorted_dict
 from middlewares.register import register_user
 
 router = Router()
@@ -253,6 +254,53 @@ async def ref_cmd(message: Message):
     link = f"https://t.me/{(await message.bot.me()).username}?start=ref_{user.id}"
 
     await message.reply(t(user.lang, "ref", link=link))
+
+
+@router.message(Command("promo"))
+async def promo_cmd(message: Message, command: CommandObject):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    args = command.args
+
+    if not args:
+        await message.reply(t(user.lang, "promo.usage"))
+        return
+
+    try:
+        promo = await PromoModel.get_async(code=args)
+    except NoResult:
+        await message.reply(t(user.lang, "promo.not-exists"))
+        return
+
+    if promo.is_used:
+        await message.reply(t(user.lang, "promo.already-activated"))
+        return
+
+    await message.delete()
+    if user.oid in promo.users:
+        await message.reply(t(user.lang, "promo.user-already-activated"))
+        return
+
+    promo.users.add(user.oid)
+
+    items = ""
+
+    promo_items = sorted_dict(promo.items, reverse=True)
+
+    for item_name, quantity in promo_items.items():
+        item = get_item(item_name)
+
+        if item.name == "бабло":
+            user.coin += quantity
+        else:
+            user.inventory.add(item.name, quantity)
+        items += f"+ {pretty_int(quantity)} {item.name} {item.emoji}\n"
+
+    await promo.update_async()
+    await user.update_async()
+
+    await message.answer_sticker(Stickers.promo)
+    await message.answer(t(user.lang, "promo.activate", user=user, items=items))
 
 
 # ---------------------------------------------------------------------------- #

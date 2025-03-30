@@ -7,11 +7,14 @@ from typing import Any, Awaitable, Callable, Generator, Iterable, ParamSpec, Sel
 from aiogram.exceptions import TelegramRetryAfter
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from annotated_types import SupportsLt
 
 from helpers.cache import cached
 
 P = ParamSpec("P")
 T = TypeVar("T")
+K = TypeVar("K")  # dict key
+V = TypeVar("V", bound=SupportsLt)  # dict value
 
 
 @cached
@@ -146,3 +149,8 @@ def pretty_float(num: float) -> str:
 @cached
 def pretty_int(num: int) -> str:
     return f"{num:,}".replace(",", " ")
+
+
+@cached
+def sorted_dict(d: dict[K, V], /, *, reverse: bool = False) -> dict[K, V]:
+    return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))
