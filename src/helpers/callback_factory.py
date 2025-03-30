@@ -1,3 +1,5 @@
+from typing import Literal
+
 from aiogram.filters.callback_data import CallbackData
 
 
@@ -21,4 +23,9 @@ class TransferCallback(CallbackData, prefix="transfer"):
 
 class UseCallback(CallbackData, prefix="use"):
     item_oid: str
+    user_id: int
+
+
+class QuestCallback(CallbackData, prefix="quest"):
+    action: Literal["done", "skip"]
     user_id: int

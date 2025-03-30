@@ -303,6 +303,18 @@ async def promo_cmd(message: Message, command: CommandObject):
     await message.answer(t(user.lang, "promo.activate", user=user, items=items))
 
 
+@router.message(Command("quest"))
+async def quest_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    assert user.quest  # for linters
+
+    await message.reply(
+        t(user.lang, "quest.main", quest=user.quest),
+        reply_markup=InlineMarkup.quest(user),
+    )
+
+
 # ---------------------------------------------------------------------------- #
 
 

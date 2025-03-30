@@ -184,14 +184,14 @@ class Item:
     desc: str
     rarity: ItemRarity
     type: ItemType = ItemType.STACKABLE
-    is_task_item: bool = False
+    is_quest_item: bool = False
     can_exchange: bool = False
     is_consumable: bool = False
     altnames: Optional[list[str]] = None
     craft: Optional[list[ItemCraft]] = None
     effect: Optional[int] = None
     price: Optional[int] = None
-    task_coin: Optional[range] = None
+    quest_coin: Optional[range] = None
     exchange_price: Optional[range] = None
     strength: Optional[float] = None
     strength_reduction: Optional[tuple[float, float]] = None

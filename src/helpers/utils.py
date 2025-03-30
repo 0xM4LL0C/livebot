@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any, Awaitable, Callable, Generator, Iterable, ParamSpec, Self, Sequence, TypeVar
 
 from aiogram.exceptions import TelegramRetryAfter
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import InlineKeyboardMarkup, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from annotated_types import SupportsLt
 
@@ -34,18 +34,16 @@ def calc_percentage(part: int, total: int = 100) -> float:
 
 @cached
 def create_progress_bar(percentage: float) -> str:
-    if not (0 <= percentage <= 100):  # pylint: disable=superfluous-parens
-        raise ValueError("Процент должен быть в диапазоне от 0 до 100.")
+    percentage = max(0, min(percentage, 100))
 
-    length: int = 10
-    filled_length = int(length * percentage // 100)
+    length = 10
+    filled_length = round(length * percentage / 100)
     empty_length = length - filled_length
 
     filled_block = "■"
     empty_block = "□"
 
-    progress_bar = filled_block * filled_length + empty_block * empty_length
-    return progress_bar
+    return filled_block * filled_length + empty_block * empty_length
 
 
 @cached
@@ -56,8 +54,9 @@ def quick_markup(
     repeat: bool = False,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    buttons = [InlineKeyboardButton(text=text, **kwargs) for text, kwargs in values.items()]
-    builder.add(*buttons)
+    for text, kwargs in values.items():
+        builder.button(text=text, **kwargs)
+
     builder.adjust(*sizes, repeat=repeat)
     return builder.as_markup()
 

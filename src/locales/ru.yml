@@ -120,3 +120,25 @@ promo:
     Ухты, {obj:user.tg_tag} активировал промокод и получил
 
     {items}
+quest:
+  buttons:
+    done: |
+      {button_text}
+    skip: Пропустить
+    done-text: Завершить
+    in-progress: В прогрессе
+  main: |
+    <b>Квест</b>
+
+    {obj:quest.status}
+
+    <b>Награда:</b> {obj:quest.reward} {func:get_item_emoji("бабло")}
+  skipped: Пропустил квест. Новый квест уже доступен
+  quest-not-completed: Не хватает предметов для завершения задачи
+  complete: |
+    Ураа, ты завершил квест
+
+    + {func:pretty_float(quest.xp)} хп
+    + {func:pretty_int(quest.reward)} бабла {func:get_item_emoji("бабло")}
+
+    Ты выполнил квест за {func:get_time_difference_string(utcnow() - quest.start_time)}

@@ -10,11 +10,18 @@ from bson import ObjectId
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_count_for_rarity
 from database.models import UserModel
-from helpers.callback_factory import CraftCallback, ShopCallback, TransferCallback, UseCallback
+from helpers.callback_factory import (
+    CraftCallback,
+    QuestCallback,
+    ShopCallback,
+    TransferCallback,
+    UseCallback,
+)
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.player_utils import get_available_items_for_use, transfer_item
+from helpers.stickers import Stickers
 from helpers.utils import pretty_int
 
 router = Router()
@@ -209,3 +216,41 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
         reply_markup=InlineMarkup.use(items, user),
     )
     await query.message.reply(mess)
+
+
+@router.callback_query(QuestCallback.filter())
+async def quest_callback(query: CallbackQuery, callback_data: QuestCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    assert isinstance(query.message, Message)  # for linters
+    if callback_data.action == "skip":
+        if user.coin < user.new_quest_coin_quantity:
+            await query.answer(t(user.lang, "item-not-enough", item_name="бабло"))
+            return
+        user.coin -= user.new_quest_coin_quantity
+        user.new_quest_coin_quantity += random.randint(10, 20)
+        user.new_quest()
+        await query.message.delete()
+        await user.update_async()
+        await query.answer(t(user.lang, "quest.skipped"), show_alert=True)
+        return
+
+    if not user.quest.is_done:
+        await query.answer(t(user.lang, "quest.quest-not-completed"))
+        return
+
+    for name, quantity in user.quest.needed_items.items():
+        user.inventory.remove(name, quantity)
+
+    user.coin += user.quest.reward
+    user.xp += user.quest.xp
+    old_quest = user.quest
+    user.new_quest()
+    await user.update_async()
+
+    await query.message.delete()
+    await query.message.answer_sticker(Stickers.quest)
+    await query.message.reply_to_message.reply(t(user.lang, "quest.complete", quest=old_quest))

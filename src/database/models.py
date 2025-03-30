@@ -20,7 +20,7 @@ from helpers.enums import ItemType, Locations
 from helpers.exceptions import AchievementNotFoundError, NoResult
 from helpers.player_utils import calc_xp_for_level
 from helpers.stickers import Stickers
-from helpers.utils import calc_percentage, create_progress_bar
+from helpers.utils import calc_percentage, create_progress_bar, pretty_float, sorted_dict
 
 
 @dataclass
@@ -250,11 +250,41 @@ class DailyGift(SubModel):
 
 
 @dataclass
-class UserTask(SubModel):
+class UserQuest(SubModel):
     needed_items: dict[str, int]
     xp: float
     reward: int  # coin
     start_time: datetime = field(default_factory=utcnow)
+    _user: ReferenceType["UserModel"] = field(
+        init=False, repr=False, metadata=field_options(serialize="omit")
+    )
+
+    @property
+    def status(self) -> str:
+        status_lines = []
+
+        needed_items = sorted_dict(self.needed_items, reverse=True)
+
+        for name, quantity in needed_items.items():
+            user_item = self._user().inventory.add_and_get(name)
+            percentage = calc_percentage(user_item.quantity, quantity)
+            progress_bar = create_progress_bar(percentage)
+            emoji = get_item_emoji(name)
+            percent_text = pretty_float(min(100.0, percentage))
+            user_item_quantity = min(quantity, user_item.quantity)
+            status_lines.append(
+                f"{emoji} {user_item_quantity}/{quantity} [<code>{progress_bar}</code>] {percent_text} %"
+            )
+
+        return "\n".join(status_lines)
+
+    @property
+    def is_done(self) -> bool:
+        for name, quantity in self.needed_items.items():
+            user_item = self._user().inventory.add_and_get(name)
+            if user_item.quantity < quantity:
+                return False
+        return True
 
 
 @dataclass
@@ -283,35 +313,39 @@ class UserModel(BaseModel):
     notification_status: UserNotificationStatus = field(default_factory=UserNotificationStatus)
     achievements_info: AchievementsInfo = field(default_factory=AchievementsInfo)
     violations: list[UserViolation] = field(default_factory=list)
-    task: Optional[UserTask] = None
+    quest: Optional[UserQuest] = None
     max_items_count_in_market: int = 2
+    new_quest_coin_quantity: int = 5
 
     def __post_init__(self):
         self.achievements_info._user = ref(self)  # pylint: disable=W0212
+        if not self.quest:
+            self.new_quest()
+        self.quest._user = ref(self)  # pylint: disable=W0212 # type: ignore
 
     @property
     def tg_tag(self) -> str:
         return f"<a href='tg://user?id={self.id}'>{self.name}</a>"
 
-    async def new_task(self):
-        available_items = [item for item in ITEMS if item.is_task_item]
+    def new_quest(self):
+        available_items = [item for item in ITEMS if item.is_quest_item]
 
         items_quantity = random.randint(1, 5)
         items = random.choices(available_items, k=items_quantity)
 
-        task_items: dict[str, int] = {}
+        quest_items: dict[str, int] = {}
 
         total_price = 0
         for item in items:
-            task_items[item.name] = random.randint(2, 10) * self.level
-            total_price += random.randint(min(item.task_coin), max(item.task_coin))  # type: ignore
+            quest_items[item.name] = random.randint(2, 10) * self.level
+            total_price += random.randint(min(item.quest_coin), max(item.quest_coin))  # type: ignore
 
-        xp = random.uniform(5.0, float(len(items)))
+        xp = random.uniform(5.0, float(len(items))) * self.level
         reward = int(total_price * 1.5)
         reward += random.randint(0, 100)  # Случайная добавка к награде
 
-        self.task = UserTask(
-            task_items,
+        self.quest = UserQuest(
+            quest_items,
             xp=xp,
             reward=reward,
         )
