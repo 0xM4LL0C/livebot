@@ -7,16 +7,21 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
+from core.player_actions import game_action, sleep_action, walk_action, work_action
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_count_for_rarity
 from database.models import UserModel
 from helpers.callback_factory import (
+    ChestCallback,
     CraftCallback,
+    HomeCallback,
     QuestCallback,
     ShopCallback,
+    TraderCallback,
     TransferCallback,
     UseCallback,
 )
+from helpers.enums import ItemRarity
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
@@ -81,10 +86,14 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
     quantity = callback_data.quantity
 
     for craft in item.craft:
-        user_item = user.inventory.add_and_get(craft.name)
-        if user_item.quantity <= 0 or user_item.quantity < craft.quantity * quantity:
+        try:
+            user_item = user.inventory.get(craft.name)
+            if user_item.quantity < craft.quantity * quantity:
+                raise NoResult(craft.name)
+        except NoResult:
             await query.answer(t(user.lang, "item-not-enough", item_name=craft.name))
             return
+
         user.inventory.remove(user_item.name, craft.quantity * quantity)
 
     user.inventory.add(item.name, quantity)
@@ -184,7 +193,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
             user.health -= item.effect  # type: ignore
             mess = t(user.lang, "use.vodka", item_name=item.name, effect=item.effect)
         case "велик":
-            if not user.action or user.action.type != "street":
+            if not user.action or user.action.type != "walk":
                 await query.message.reply("Ты не гуляешь")  # TODO: add translation
                 return
             minutes = random.randint(10, 45)
@@ -254,3 +263,123 @@ async def quest_callback(query: CallbackQuery, callback_data: QuestCallback):
     await query.message.delete()
     await query.message.answer_sticker(Stickers.quest)
     await query.message.reply_to_message.reply(t(user.lang, "quest.complete", quest=old_quest))
+
+
+@router.callback_query(HomeCallback.filter())
+async def home_callback(query: CallbackQuery, callback_data: HomeCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    assert isinstance(query.message, Message)  # for liners
+
+    match callback_data.action:
+        case "actions":
+            await query.message.edit_text(
+                t(user.lang, "home.actions-choice"),
+                reply_markup=InlineMarkup.home_actions_choice(user),
+            )
+        case "main-menu":
+            await query.message.edit_text(
+                t(user.lang, "home.main"),
+                reply_markup=InlineMarkup.home_main(user),
+            )
+        case "walk":
+            await walk_action(query, user)
+        case "work":
+            await work_action(query, user)
+        case "sleep":
+            await sleep_action(query, user)
+        case "game":
+            await game_action(query, user)
+
+
+@router.callback_query(TraderCallback.filter())
+async def trader_callback(query: CallbackQuery, callback_data: TraderCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    assert isinstance(query.message, Message)  # for liners
+
+    if callback_data.action == "leave":
+        await query.message.delete()
+        await query.answer(t(user.lang, "mobs.trader.leave"), show_alert=True)
+        return
+
+    assert callback_data.item_name  # for linters
+    assert callback_data.price  # for linters
+    assert callback_data.quantity  # for linters
+
+    item = get_item(callback_data.item_name)
+
+    if user.coin < callback_data.price:
+        await query.answer(
+            t(user.lang, "item-not-enough", item_name="бабло"),
+            show_alert=True,
+        )
+        return
+
+    user.coin -= callback_data.price
+    user.inventory.add(item.name, callback_data.quantity)
+    await user.update_async()
+    await query.message.delete()
+    await query.message.answer(
+        t(
+            user.lang,
+            "mobs.trader.trade",
+            user=user,
+            item=item,
+            quantity=callback_data.quantity,
+            price=callback_data.price,
+        )
+    )
+
+
+@router.callback_query(ChestCallback.filter())
+async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    assert isinstance(query.message, Message)  # for liners
+
+    if callback_data.action == "leave":
+        await query.message.delete()
+        await query.answer(t(user.lang, "mobs.chest.leave"), show_alert=True)
+        return
+
+    try:
+        key_item = user.inventory.get("ключ")
+    except NoResult:
+        await query.answer(
+            t(user.lang, "item-not-found-in-inventory", item_name="ключ"), show_alert=True
+        )
+        return
+
+    print(key_item.quantity, key_item.quantity < 1)
+
+    items = ""
+    items_quantity = random.randint(2, 3)
+    available_items = list(
+        filter(lambda i: i.rarity in (ItemRarity.COMMON, ItemRarity.UNCOMMON), ITEMS)
+    )
+    available_items = random.choices(available_items, k=items_quantity)
+
+    for item in available_items:
+        quantity = get_item_count_for_rarity(item.rarity)
+        if item.name == "бабло":
+            user.coin += quantity
+        else:
+            user.inventory.add(item.name, quantity)
+
+        items += f"+ {pretty_int(quantity)} {item.name} {item.emoji}\n"
+
+    user.inventory.remove(key_item.name, 1)
+
+    await query.message.answer(t(user.lang, "mobs.chest.open", user=user, items=items))
+    await user.update_async()
+    await query.message.delete()

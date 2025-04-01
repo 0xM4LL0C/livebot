@@ -25,10 +25,7 @@ def get_item(name: str) -> Item:
 
 @cached
 def get_item_emoji(name: str) -> str:
-    try:
-        return get_item(name).emoji
-    except ItemNotFoundError:
-        return ""
+    return get_item(name).emoji
 
 
 @cached

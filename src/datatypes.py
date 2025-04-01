@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import transliterate
+from aiogram.types import CallbackQuery
 
 from helpers.cache import cached, cached_method
 from helpers.enums import ItemRarity, ItemType
@@ -11,15 +12,16 @@ if TYPE_CHECKING:
 
 
 ChatIdType = int | str
+UserActionType = Literal["walk", "work", "sleep", "game"]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ItemCraft:
     name: str
     quantity: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Item:
     name: str
     emoji: str
@@ -35,7 +37,6 @@ class Item:
     price: Optional[int] = None
     quest_coin: Optional[range] = None
     exchange_price: Optional[range] = None
-    strength: Optional[float] = None
     strength_reduction: Optional[tuple[float, float]] = None
     can_equip: bool = False
 
@@ -44,16 +45,13 @@ class Item:
         return transliterate.translit(self.name, reversed=True)
 
 
-# ------------------------------- achievement ------------------------------- #
-
-
-@dataclass
+@dataclass(kw_only=True)
 class AchievementReward:
     name: str
     quantity: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Achievement:
     name: str
     emoji: str
@@ -75,3 +73,18 @@ class Achievement:
     @cached
     def translit(self) -> str:
         return transliterate.translit(self.key, reversed=True)
+
+
+@dataclass(kw_only=True)
+class Mob:
+    emoji: str
+    name: str
+    desc: str
+    chance: float
+
+    async def on_meet(self, query: CallbackQuery, user: "UserModel"):
+        raise NotImplementedError
+
+    @cached_method
+    def translit(self) -> str:
+        return transliterate.translit(self.name, reversed=True)

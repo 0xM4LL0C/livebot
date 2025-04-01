@@ -9,7 +9,7 @@ ACHIEVEMENTS: Final = [
         desc="поработай 10 раз",
         need=10,
         reward=[
-            AchievementReward("бабло", 10_000),
+            AchievementReward(name="бабло", quantity=10_000),
         ],
     ),
     Achievement(
@@ -18,7 +18,7 @@ ACHIEVEMENTS: Final = [
         desc="погуляй 10 раз",
         need=10,
         reward=[
-            AchievementReward("бокс", 2),
+            AchievementReward(name="бокс", quantity=2),
         ],
     ),
     Achievement(
@@ -27,7 +27,7 @@ ACHIEVEMENTS: Final = [
         desc="поспи 15 раз",
         need=15,
         reward=[
-            AchievementReward("энергос", 10),
+            AchievementReward(name="энергос", quantity=10),
         ],
     ),
     Achievement(
@@ -36,7 +36,7 @@ ACHIEVEMENTS: Final = [
         desc="поиграй 20 раз",
         need=20,
         reward=[
-            AchievementReward("бокс", 3),
+            AchievementReward(name="бокс", quantity=3),
         ],
     ),
     Achievement(
@@ -45,7 +45,7 @@ ACHIEVEMENTS: Final = [
         desc="пригласи друга по твоей реферальной ссылке и раздели веселье вместе с другом",
         need=1,
         reward=[
-            AchievementReward("буст", 2),
+            AchievementReward(name="буст", quantity=2),
         ],
     ),
     Achievement(
@@ -54,7 +54,7 @@ ACHIEVEMENTS: Final = [
         desc="продай в рынке 30 предметов",
         need=30,
         reward=[
-            AchievementReward("бокс", 5),
+            AchievementReward(name="бокс", quantity=5),
         ],
     ),
     Achievement(
@@ -63,8 +63,8 @@ ACHIEVEMENTS: Final = [
         desc="потрать 200_000 бабла на рынке",
         need=200000,
         reward=[
-            AchievementReward("бокс", 5),
-            AchievementReward("буст", 2),
+            AchievementReward(name="бокс", quantity=5),
+            AchievementReward(name="буст", quantity=2),
         ],
     ),
     Achievement(
@@ -73,7 +73,7 @@ ACHIEVEMENTS: Final = [
         desc="открой 20 сундуков",
         need=20,
         reward=[
-            AchievementReward("бокс", 4),
+            AchievementReward(name="бокс", quantity=4),
         ],
     ),
     Achievement(
@@ -82,7 +82,7 @@ ACHIEVEMENTS: Final = [
         desc="посети игру каждый день на протяжении первой недели",
         need=7,
         reward=[
-            AchievementReward("бабло", 5_000),
+            AchievementReward(name="бабло", quantity=5_000),
         ],
     ),
     Achievement(
@@ -91,7 +91,7 @@ ACHIEVEMENTS: Final = [
         desc="оставайся активным игроком в течение целого года",
         need=365,
         reward=[
-            AchievementReward("бабло", 20_000),
+            AchievementReward(name="бабло", quantity=20_000),
         ],
     ),
     Achievement(
@@ -100,8 +100,8 @@ ACHIEVEMENTS: Final = [
         desc="выполни 50 квестов",
         need=50,
         reward=[
-            AchievementReward("бабло", 15_000),
-            AchievementReward("буст", 3),
+            AchievementReward(name="бабло", quantity=15_000),
+            AchievementReward(name="буст", quantity=3),
         ],
     ),
 ]

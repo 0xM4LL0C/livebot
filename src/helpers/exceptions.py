@@ -28,3 +28,7 @@ class AchievementNotFoundError(BotException):
 
 class ItemNotFoundError(BotException):
     pass
+
+
+class MobNotFoundError(BotException):
+    pass

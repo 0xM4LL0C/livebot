@@ -117,8 +117,8 @@ async def casino_cmd(message: Message, command: CommandObject):
         quantity = 1
 
     try:
-        ticket = user.inventory.add_and_get("билет")
-    except ItemNotFoundError:
+        ticket = user.inventory.get("билет")
+    except NoResult:
         await message.reply(t(user.lang, "item-not-found-in-inventory", item_name="билет"))
         return
 
@@ -325,6 +325,13 @@ async def weather_cmd(message: Message):
 async def price_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
     await message.reply(t(user.lang, "under-development"))
+
+
+@router.message(Command("home"))
+async def home_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    await message.reply(t(user.lang, "home.main"), reply_markup=InlineMarkup.home_main(user))
 
 
 # ---------------------------------------------------------------------------- #

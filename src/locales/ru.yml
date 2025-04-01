@@ -3,6 +3,10 @@ locale-info:
   emoji: "🇷🇺"
   author: "0xM4LL0C"
 
+buttons:
+  update: Обновить
+  back: Назад
+
 error-while-handling-update: "Ой-ой, кажется произошла неизвестная ошибка при обработке данных :_("
 welcome: "Привет {name}, добро пожаловать в livebot"
 new_referral_joined: |
@@ -76,7 +80,7 @@ use:
   not-available-items: <i>Нет доступных предметов для юза</i>
   hunger: |
     {func:get_item_emoji(item_name)} Поел
-    - {func:pretty_int(effect)} голода
+    + {func:pretty_int(effect)} голода
   boost: |
     {func:get_item_emoji(item_name)} Юзнул буст
     + {func:pretty_float(xp)} опыта
@@ -86,21 +90,22 @@ use:
     {items}
   fatigue: |
     {func:get_item_emoji(item_name)} Юзнул {item_name}
-    - {func:pretty_int(effect)} усталости
+    + {func:pretty_int(effect)} усталости
   help-item: |
     {func:get_item_emoji(item_name)} Юзнул хелп
     + {func:pretty_int(effect)} здоровья
   vodka: |
     {func:get_item_emoji(item_name)} Юзнул водку
-    - {func:pretty_int(effect)} здоровья, сбросил усталость
+    - {func:pretty_int(effect)} здоровья
+    сбросил усталость
   bike: |
     {func:get_item_emoji(item_name)} Юзнул велик и сократил время прогулки на {func:pretty_int(minutes)} минут
   luck: |
     {func:get_item_emoji(item_name)} Увеличил удачу на {func:pretty_int(effect)}
   candy: |
     {func:get_item_emoji(item_name)} Юзнул конфету
-    - {func:pretty_int(effect)}% голода
-    - {func:pretty_int(effect)}% усталости
+    + {func:pretty_int(effect)}% голода
+    + {func:pretty_int(effect)}% усталости
 under-development: 🔜 В разработке
 ref: |
   <b>Зови друзей – получай до {func:pretty_int(15000)} {func:get_item_emoji("бабло")}!</b>
@@ -142,3 +147,81 @@ quest:
     + {func:pretty_int(quest.reward)} бабла {func:get_item_emoji("бабло")}
 
     Ты выполнил квест за {func:get_time_difference_string(utcnow() - quest.start_time)}
+home:
+  buttons:
+    open-actions: Действия
+    actions:
+      walk: Прогулка
+      work: Работа
+      sleep: Спать
+      game: Играть
+  main: <b>🏠 Дом милый дом</b>
+  actions-choice: Чем хочешь заняться?
+mobs:
+  buttons:
+    leave: Уйти
+  trader:
+    buttons:
+      trade: Обменять
+    on-meet: |
+      <b>{obj:mob.emoji} {obj:mob.name}</b>
+
+      Эй дружок, у меня для тебя есть выгодное предложение
+
+      Я даю тебе {func:pretty_int(quantity)} {obj:item.name} {obj:item.emoji} за {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+    leave: Пф... не хочешь как хочешь
+    trade: |
+      {obj:user.tg_tag} купил {func:pretty_int(quantity)} {obj:item.name} {obj:item.emoji} за {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+  chest:
+    buttons:
+      open: Открыть
+    on-meet: |
+      <b>{obj:mob.emoji} {obj:mob.name}</b>
+
+      - Ой а что это такое...?
+    leave: |
+      *Ушел от сундука*
+    open: |
+      <b>{obj:user.tg_tag} открыл сундук</b>
+
+      {items}
+busy_with_something_else: Ты занят чем то другим
+actions:
+  walk:
+    walking: |
+      <b>Прогулка</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты прогулялся
+
+      {items}
+  work:
+    working: |
+      <b>Работа</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты закончил работу
+
+      + {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
+  sleep:
+    sleeping: |
+      <b>Сон</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты проснулся
+
+      + {func:pretty_int(fatigue)} усталость
+  game:
+    gaming: |
+      <b>Игра</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты поиграл
+
+      + {func:pretty_int(mood)} настроения
+too_hungry: Ты слишком голодный
+too_tired: Ты слишком устал

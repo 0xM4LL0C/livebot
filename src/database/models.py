@@ -14,7 +14,7 @@ from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_emoji
 from database.base import BaseModel, SubModel
-from datatypes import Achievement, ChatIdType
+from datatypes import Achievement, ChatIdType, UserActionType
 from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType, Locations
 from helpers.exceptions import AchievementNotFoundError, NoResult
@@ -35,7 +35,7 @@ class CasinoInfo(SubModel):
 
 @dataclass
 class UserAction(SubModel):
-    type: Literal["street", "work", "sleep", "game"]
+    type: UserActionType
     end: datetime
     start: datetime = field(default_factory=utcnow)
 
@@ -129,9 +129,9 @@ class Inventory(SubModel):
                         return
                     return item
 
-    def add_and_get(self, name: str) -> UserItem:
-        self.add(name)
-        return self.get(name)
+    # def add_and_get(self, name: str, count: int = 1, usage: float = 100.0) -> UserItem:
+    #     self.add(name, count=count, usage=usage)
+    #     return self.get(name)
 
     def get_all(self, name: str) -> list[UserItem]:
         return [item for item in self.items if item.name == name and item.quantity > 0]
@@ -144,13 +144,17 @@ class Inventory(SubModel):
 
     def get(self, name: str) -> UserItem:
         items = self.get_all(name)
-        if items:
-            return items[0]
-        self.add(name)
-        return self.get_all(name)[0]
+
+        try:
+            item = items[0]
+            if item.quantity <= 0:
+                raise NoResult(name)
+            return item
+        except IndexError as e:
+            raise NoResult(name) from e
 
     def has(self, name: str) -> bool:
-        return self.get_all(name) != []
+        return len(self.get_all(name)) != 0
 
     def use(self, name: str, amount: float):
         for item in self.items:
@@ -266,12 +270,16 @@ class UserQuest(SubModel):
         needed_items = sorted_dict(self.needed_items, reverse=True)
 
         for name, quantity in needed_items.items():
-            user_item = self._user().inventory.add_and_get(name)
-            percentage = calc_percentage(user_item.quantity, quantity)
+            try:
+                user_item = self._user().inventory.get(name)
+                user_item_quantity = user_item.quantity
+            except NoResult:
+                user_item_quantity = 0
+            percentage = calc_percentage(user_item_quantity, quantity)
             progress_bar = create_progress_bar(percentage)
             emoji = get_item_emoji(name)
             percent_text = pretty_float(min(100.0, percentage))
-            user_item_quantity = min(quantity, user_item.quantity)
+            user_item_quantity = min(quantity, user_item_quantity)
             status_lines.append(
                 f"{emoji} {user_item_quantity}/{quantity} [<code>{progress_bar}</code>] {percent_text} %"
             )
@@ -281,7 +289,10 @@ class UserQuest(SubModel):
     @property
     def is_done(self) -> bool:
         for name, quantity in self.needed_items.items():
-            user_item = self._user().inventory.add_and_get(name)
+            try:
+                user_item = self._user().inventory.get(name)
+            except NoResult:
+                return False
             if user_item.quantity < quantity:
                 return False
         return True
@@ -316,6 +327,7 @@ class UserModel(BaseModel):
     quest: Optional[UserQuest] = None
     max_items_count_in_market: int = 2
     new_quest_coin_quantity: int = 5
+    met_mob: bool = False
 
     def __post_init__(self):
         self.achievements_info._user = ref(self)  # pylint: disable=W0212
@@ -326,6 +338,9 @@ class UserModel(BaseModel):
     @property
     def tg_tag(self) -> str:
         return f"<a href='tg://user?id={self.id}'>{self.name}</a>"
+
+    def is_current_action(self, type: UserActionType) -> bool:
+        return bool(self.action and self.action.type == type)
 
     def new_quest(self):
         available_items = [item for item in ITEMS if item.is_quest_item]
@@ -364,8 +379,7 @@ class UserModel(BaseModel):
 
         mess = f"{self.tg_tag} получил новый уровень 🏵"
 
-        box = self.inventory.add_and_get("бокс")
-        self.inventory.add("бокс", max(0, box.quantity) + 1)
+        self.inventory.add("бокс", 1)
 
         await self.update_async()
 
