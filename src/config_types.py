@@ -7,8 +7,9 @@ from mashumaro.mixins.toml import DataClassTOMLMixin
 
 @dataclass
 class GeneralConfig:
-    owners: list[int] = field(default_factory=list)
+    weather_region: str = "moscow"
     debug: bool = False
+    owners: list[int] = field(default_factory=list)
 
 
 @dataclass

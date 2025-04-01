@@ -153,3 +153,8 @@ def pretty_int(num: int) -> str:
 @cached
 def sorted_dict(d: dict[K, V], /, *, reverse: bool = False) -> dict[K, V]:
     return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))
+
+
+@cached
+def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
+    return {key: dict2[key] for key in dict2 if key in dict1}

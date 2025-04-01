@@ -283,7 +283,7 @@ ITEMS: Final = [
         emoji="⛄",
         desc="Ивентовый предмет",
         craft=[
-            ItemCraft(name="снежок", quantity=10),
+            ItemCraft(name="снег", quantity=10),
         ],
         rarity=ItemRarity.UNCOMMON,
         is_quest_item=False,
@@ -292,10 +292,11 @@ ITEMS: Final = [
         exchange_price=range(500, 1000),
     ),
     Item(
-        name="снежок",
+        name="снег",
         emoji="❄",
         desc="Используется в крафте снеговика",
         rarity=ItemRarity.COMMON,
+        altnames=["снежок"],
         is_quest_item=False,
         quest_coin=range(70, 100),
         can_exchange=True,

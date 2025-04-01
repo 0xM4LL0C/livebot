@@ -5,10 +5,12 @@ from datetime import timedelta
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 
+from core.weather import get_weather
 from data.items.utils import get_item_emoji
 from data.mobs.utils import get_random_mob
 from database.models import UserAction, UserModel
 from helpers.datetime_utils import utcnow
+from helpers.enums import WeatherCode
 from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.utils import pretty_int
@@ -47,13 +49,25 @@ async def walk_action(query: CallbackQuery, user: UserModel):
             )
         return
 
+    weather = await get_weather()
+
+    water = range(1, 2)
+
+    if weather.current.code == WeatherCode.RAIN:
+        water = range(5, 10)
+
     loot_table = [
         ("бабло", range(5, 20)),
         ("трава", range(1, 3)),
         ("гриб", range(1, 3)),
         ("вода", range(2, 5)),
         ("чаинка", range(1, 2)),
+        ("вода", water),
     ]
+
+    if weather.current.code == WeatherCode.SNOW:
+        snow = range(5, 10)
+        loot_table.append(("снег", snow))
 
     items = ""
 
