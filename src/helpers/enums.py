@@ -25,8 +25,7 @@ class WeatherCode(Enum):
     DRIZZLE = range(51, 58)
     RAIN = list(range(61, 68)) + list(range(80, 83))
     SNOW = list(range(71, 78)) + list(range(85, 87))
-    THUNDERSTORM = range(95, 96)
-    THUNDERSTORM_WITH_HAIL = range(96, 100)
+    THUNDERSTORM = list(range(95, 96)) + list(range(96, 100))
 
     @classmethod
     def get(cls, code: int) -> "WeatherCode":
