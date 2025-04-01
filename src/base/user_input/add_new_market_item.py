@@ -30,6 +30,8 @@ class AddNewItemState(StatesGroup):
 
 @router.callback_query(StateFilter(AddNewItemState.name), F.data.startswith("sell"))
 async def name_state(call: CallbackQuery, state: FSMContext):
+    await call.answer("Из за серьезного бага эта команда временно не доступна. жди новой обновы", show_alert=True)
+    return
     data = call.data.split(" ")
 
     if data[-1] != str(call.from_user.id):
