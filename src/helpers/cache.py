@@ -4,13 +4,18 @@ from functools import wraps
 from typing import Any, Callable, Concatenate, ParamSpec, TypeVar
 
 from cachetools import LRUCache
+from cachetools import cached as _cached
+from cachetools import cachedmethod as _cachedmethod
+from diskcache import Cache as DiskCache
 
 P = ParamSpec("P")
 T = TypeVar("T")
 S = TypeVar("S")
-cache = LRUCache(16384)
+cache = LRUCache(16384 * 2)
+hashed_keys_cache = DiskCache(".cache")  # , eviction_policy="least-recently-used")
 
 
+@hashed_keys_cache.memoize()
 def make_hashable(*args: Any) -> str:
     def convert(obj: Any) -> Any:
         if hasattr(obj, "to_dict"):
@@ -28,29 +33,17 @@ def make_hashable(*args: Any) -> str:
 
 def cached(func: Callable[P, T]) -> Callable[P, T]:
     @wraps(func)
+    @_cached(cache, key=make_hashable)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-        key = make_hashable(func.__name__, args, kwargs)
-        if key in cache:
-            result: T = cache[key]
-        else:
-            result = func(*args, **kwargs)
-            cache[key] = result
-        return result
+        return func(*args, **kwargs)
 
     return wrapper
 
 
 def cached_method(func: Callable[Concatenate[S, P], T]) -> Callable[Concatenate[S, P], T]:
     @wraps(func)
+    @_cachedmethod(lambda _: cache, key=make_hashable)
     def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> T:
-        attrs_to_cache = {k: v for k, v in vars(self).items() if not k.startswith("__")}
-        key = make_hashable(attrs_to_cache, args, kwargs)
-
-        if key in cache:
-            result: T = cache[key]
-        else:
-            result = func(self, *args, **kwargs)
-            cache[key] = result
-        return result
+        return func(self, *args, **kwargs)
 
     return wrapper

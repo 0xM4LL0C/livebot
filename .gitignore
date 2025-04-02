@@ -11,3 +11,4 @@ site/
 .*_cache/
 __pycache__/
 .ropeproject/
+.cache

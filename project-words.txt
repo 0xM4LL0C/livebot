@@ -49,3 +49,4 @@ BotFather
 Скрафтил
 craftable
 Юзнул
+cachedmethod

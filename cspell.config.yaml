@@ -15,5 +15,6 @@ ignorePaths:
   - "project-words.txt"
   - "ruff.toml"
   - "mkdocs.yml"
+  - ".gitignore"
 import:
   - "@cspell/dict-ru_ru/cspell-ext.json"
