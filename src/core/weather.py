@@ -42,7 +42,6 @@ class Weather(DataClassDictMixin):
         return d
 
 
-# @cached
 async def _get_coords_for_region(name: str) -> tuple[float, float]:
     url = "https://geocoding-api.open-meteo.com/v1/search"
 
