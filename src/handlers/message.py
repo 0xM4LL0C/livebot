@@ -1,8 +1,7 @@
 import asyncio
 import random
 
-from aiogram import F, Router
-from aiogram.enums import ContentType
+from aiogram import Router
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
@@ -332,11 +331,3 @@ async def home_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t(user.lang, "home.main"), reply_markup=InlineMarkup.home_main(user))
-
-
-# ---------------------------------------------------------------------------- #
-
-
-@router.message(F.content_type == ContentType.TEXT)
-async def message_handler(message: Message):
-    await message.reply(message.text)  # type: ignore
