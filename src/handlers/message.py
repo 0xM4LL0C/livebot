@@ -338,3 +338,10 @@ async def rules_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t(user.lang, "rules"), reply_markup=InlineMarkup.rules(user))
+
+
+@router.message(Command("time"))
+async def time_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    await message.reply(t(user.lang, "time"))

@@ -227,3 +227,4 @@ too_hungry: Ты слишком голодный
 too_tired: Ты слишком устал
 rules: Правила
 read: читать
+time: Сейчас <code>{func:pretty_datetime(utcnow())}</code> по UTC
