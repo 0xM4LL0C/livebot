@@ -213,3 +213,8 @@ class InlineMarkup:
                 back_text: {"callback_data": HomeCallback(action="actions", user_id=user.id)},
             }
         )
+
+    @classmethod
+    def rules(cls, user: UserModel) -> InlineKeyboardMarkup:
+        read_text: str = t(user.lang, "read")
+        return quick_markup({read_text: {"url": "https://0xM4LL0C.github.io/livebot/rules"}})

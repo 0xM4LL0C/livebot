@@ -331,3 +331,10 @@ async def home_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t(user.lang, "home.main"), reply_markup=InlineMarkup.home_main(user))
+
+
+@router.message(Command("rules"))
+async def rules_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    await message.reply(t(user.lang, "rules"), reply_markup=InlineMarkup.rules(user))
