@@ -70,6 +70,9 @@ async def main(args: Namespace) -> None:
     else:
         aiogram_logger.setLevel(30)  # warning
 
+    for handler in logger.handlers:
+        handler.level = logger.level
+
     await init_bot_admins()
     await init_bot_commands()
     init_middlewares()
