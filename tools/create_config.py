@@ -24,7 +24,7 @@ config.add(tomlkit.comment("config docs: https://0xM4LL0C.github.io/livebot/dev/
 
 
 default_config = Config(
-    general=GeneralConfig(),
+    general=GeneralConfig(weather_region="weather region"),
     database=DatabaseConfig(url="database_url"),
     redis=RedisConfig(url="redis_url"),
     telegram=TelegramConfig(token="bot token from @BotFather", log_chat_id="log chat id"),

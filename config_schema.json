@@ -7,18 +7,24 @@
       "type": "object",
       "title": "GeneralConfig",
       "properties": {
+        "weather_region": {
+          "type": "string"
+        },
+        "debug": {
+          "type": "boolean",
+          "default": false
+        },
         "owners": {
           "type": "array",
           "items": {
             "type": "integer"
           }
-        },
-        "debug": {
-          "type": "boolean",
-          "default": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "weather_region"
+      ]
     },
     "database": {
       "type": "object",

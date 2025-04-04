@@ -5,32 +5,32 @@ import tomlkit
 from mashumaro.mixins.toml import DataClassTOMLMixin
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GeneralConfig:
-    weather_region: str = "moscow"
+    weather_region: str
     debug: bool = False
     owners: list[int] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DatabaseConfig:
     url: str
     name: str = "livebot"
 
 
-@dataclass
+@dataclass(kw_only=True)
 class RedisConfig:
     url: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TelegramConfig:
     token: str
     log_chat_id: int | str
     log_thread_id: Optional[int] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Config(DataClassTOMLMixin):
     general: GeneralConfig
     database: DatabaseConfig
