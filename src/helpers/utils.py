@@ -17,7 +17,7 @@ K = TypeVar("K")  # dict key
 V = TypeVar("V", bound=SupportsLt)  # dict value
 
 
-@cached
+@cached()
 def remove_not_allowed_symbols(text: str) -> str:
     not_allowed_symbols = ["#", "<", ">", "{", "}", '"', "'", "$", "(", ")", "@", "`", "\\"]
     cleaned_text = "".join(char for char in text if char not in not_allowed_symbols)
@@ -25,14 +25,14 @@ def remove_not_allowed_symbols(text: str) -> str:
     return cleaned_text.strip()
 
 
-@cached
+@cached()
 def calc_percentage(part: int, total: int = 100) -> float:
     if total == 0:
         raise ValueError("Общий объем не может быть равен нулю")
     return (part / total) * 100
 
 
-@cached
+@cached()
 def create_progress_bar(percentage: float) -> str:
     percentage = max(0, min(percentage, 100))
 
@@ -46,7 +46,7 @@ def create_progress_bar(percentage: float) -> str:
     return filled_block * filled_length + empty_block * empty_length
 
 
-@cached
+@cached()
 def quick_markup(
     values: dict[str, dict[str, Any]],
     *,
@@ -75,7 +75,7 @@ if sys.version_info >= (3, 12):
     batched = cached(itertools.batched)  # pylint: disable=invalid-name,no-member
 else:
 
-    @cached
+    @cached()
     def batched(iterable: Iterable[T], n: int) -> Generator[tuple[T, ...], None, None]:
         # https://docs.python.org/3.12/library/itertools.html#itertools.batched
         if n < 1:
@@ -85,12 +85,12 @@ else:
             yield batch
 
 
-@cached
+@cached()
 def pretty_datetime(d: datetime) -> str:
     return d.strftime("%H:%M %d.%m.%Y")
 
 
-@cached
+@cached()
 def get_time_difference_string(d: timedelta) -> str:
     years, days_in_year = divmod(d.days, 365)
     months, days = divmod(days_in_year, 30)
@@ -140,21 +140,21 @@ class MessageEditor:
         self.message = await antiflood(self.message.edit_text(text))  # type: ignore
 
 
-@cached
+@cached()
 def pretty_float(num: float) -> str:
     return f"{num:.1f}"
 
 
-@cached
+@cached()
 def pretty_int(num: int) -> str:
     return f"{num:,}".replace(",", " ")
 
 
-@cached
+@cached()
 def sorted_dict(d: dict[K, V], /, *, reverse: bool = False) -> dict[K, V]:
     return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))
 
 
-@cached
+@cached()
 def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
     return {key: dict2[key] for key in dict2 if key in dict1}

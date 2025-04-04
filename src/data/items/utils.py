@@ -11,7 +11,7 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 
-@cached
+@cached()
 def get_item(name: str) -> Item:
     for item in ITEMS:
         if item.name == name:
@@ -23,12 +23,12 @@ def get_item(name: str) -> Item:
     raise ItemNotFoundError(name)
 
 
-@cached
+@cached()
 def get_item_emoji(name: str) -> str:
     return get_item(name).emoji
 
 
-@cached
+@cached()
 def get_item_count_for_rarity(rarity: ItemRarity) -> int:
     match rarity:
         case ItemRarity.COMMON:

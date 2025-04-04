@@ -8,7 +8,7 @@ from helpers.cache import cached
 from helpers.exceptions import MobNotFoundError
 
 
-@cached
+@cached()
 def get_mob(name: str) -> Mob:
     for mob in MOBS:
         if mob.name == name:

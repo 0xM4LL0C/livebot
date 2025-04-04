@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 import transliterate
 from aiogram.types import CallbackQuery
 
-from helpers.cache import cached, cached_method
+from helpers.cache import cached
 from helpers.enums import ItemRarity, ItemType
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ class Item:
     strength_reduction: Optional[tuple[float, float]] = None
     can_equip: bool = False
 
-    @cached_method
+    @cached()
     def translit(self) -> str:
         return transliterate.translit(self.name, reversed=True)
 
@@ -70,7 +70,7 @@ class Achievement:
         progress = user.achievements_info.progress.get(self.key, 0)
         return progress >= self.need
 
-    @cached
+    @cached()
     def translit(self) -> str:
         return transliterate.translit(self.key, reversed=True)
 
@@ -85,6 +85,6 @@ class Mob:
     async def on_meet(self, query: CallbackQuery, user: "UserModel"):
         raise NotImplementedError
 
-    @cached_method
+    @cached()
     def translit(self) -> str:
         return transliterate.translit(self.name, reversed=True)

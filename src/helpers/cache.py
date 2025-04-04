@@ -1,22 +1,24 @@
 import hashlib
 import pickle
+import time
 from functools import wraps
-from typing import Any, Callable, Concatenate, ParamSpec, TypeVar
+from inspect import ismethod
+from typing import Any, Callable, Optional, ParamSpec, TypeVar
 
 from cachetools import LRUCache
-from cachetools import cached as _cached
-from cachetools import cachedmethod as _cachedmethod
 from diskcache import Cache as DiskCache
 
 P = ParamSpec("P")
 T = TypeVar("T")
 S = TypeVar("S")
-cache = LRUCache(16384 * 2)
-hashed_keys_cache = DiskCache(".cache")  # , eviction_policy="least-recently-used")
+
+hash_cache = DiskCache(".cache")
+cache = LRUCache(4048 * 2)
 
 
-@hashed_keys_cache.memoize()
-def make_hashable(*args: Any) -> str:
+@hash_cache.memoize()
+def make_hash(*args: Any) -> str:
+    @hash_cache.memoize()
     def convert(obj: Any) -> Any:
         if hasattr(obj, "to_dict"):
             return obj.to_dict()
@@ -31,19 +33,32 @@ def make_hashable(*args: Any) -> str:
     return hashlib.md5(key).hexdigest()
 
 
-def cached(func: Callable[P, T]) -> Callable[P, T]:
-    @wraps(func)
-    @_cached(cache, key=make_hashable)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-        return func(*args, **kwargs)
+def cached(expire: Optional[int] = None):
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            if ismethod(func):
+                obj = args[0]
+                key = make_hash(func.__name__, obj, args[1:], kwargs)
+            elif isinstance(func, classmethod):
+                cls = args[0]
+                key = make_hash(func.__name__, cls, args[1:], kwargs)
+            elif isinstance(func, staticmethod):
+                key = make_hash(func.__name__, args, kwargs)
+            else:
+                key = make_hash(func.__name__, args, kwargs)
 
-    return wrapper
+            current_time = time.time()
 
+            if key in cache:
+                cached_item, timestamp = cache[key]
+                if expire is None or current_time - timestamp < expire:
+                    return cached_item
 
-def cached_method(func: Callable[Concatenate[S, P], T]) -> Callable[Concatenate[S, P], T]:
-    @wraps(func)
-    @_cachedmethod(lambda _: cache, key=make_hashable)
-    def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> T:
-        return func(self, *args, **kwargs)
+            result = func(*args, **kwargs)
+            cache[key] = (result, current_time)  # Сохраняем результат и время
+            return result
 
-    return wrapper
+        return wrapper
+
+    return decorator

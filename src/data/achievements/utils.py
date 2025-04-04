@@ -4,7 +4,7 @@ from helpers.cache import cached
 from helpers.exceptions import AchievementNotFoundError
 
 
-@cached
+@cached()
 def get_achievement(name: str) -> Achievement:
     for achievement in ACHIEVEMENTS:
         if achievement.name == name:

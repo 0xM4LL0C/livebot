@@ -73,7 +73,7 @@ async def inventory_cmd(message: Message):
         if item.quantity <= 0:
             continue
         items += f"{get_item_emoji(item.name)} {item.name} {item.quantity}"
-
+        print(get_item_emoji(item.name))
         if item.type == ItemType.USABLE:
             assert item.usage is not None  # for linters
             items += f" ({pretty_float(item.usage)} %)"  # pyright: ignore[reportAttributeAccessIssue]
