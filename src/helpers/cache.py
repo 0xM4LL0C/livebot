@@ -1,19 +1,21 @@
 import hashlib
 import pickle
+import reprlib
 import time
 from functools import wraps
-from inspect import ismethod
-from typing import Any, Callable, Optional, ParamSpec, TypeVar
+from inspect import iscoroutinefunction
+from typing import Any, Awaitable, Callable, Optional, ParamSpec, TypeVar
 
 from cachetools import LRUCache
 from diskcache import Cache as DiskCache
 
+from config import logger
+
 P = ParamSpec("P")
 T = TypeVar("T")
-S = TypeVar("S")
 
-hash_cache = DiskCache(".cache")
-cache = LRUCache(4048 * 2)
+hash_cache = DiskCache(".cache", eviction_policy="least-recently-used")
+cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
 
 
 @hash_cache.memoize()
@@ -30,35 +32,69 @@ def make_hash(*args: Any) -> str:
 
     converted_args = tuple(convert(arg) for arg in args)
     key = pickle.dumps(converted_args)
-    return hashlib.md5(key).hexdigest()
+
+    r = reprlib.Repr()
+    r.maxtuple = 20
+    r.maxdict = 20
+    result = hashlib.md5(key).hexdigest()
+    logger.debug(f"make_hash: making hash for {r.repr(converted_args)}, {result = }")
+    return result
 
 
-def cached(expire: Optional[int] = None):
+async def _async_wrapper(
+    func: Callable[P, Awaitable[T]],
+    key: str,
+    expire: Optional[int],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> T:
+    current_time = time.time()
+
+    if key in cache:
+        cached_item, timestamp = cache[key]
+        if expire is None or current_time - timestamp < expire:
+            return cached_item
+
+    result: T = await func(*args, **kwargs)
+    cache[key] = (result, time.time())
+    return result
+
+
+def _sync_wrapper(
+    func: Callable[P, T],
+    key: str,
+    expire: Optional[int],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> T:
+    current_time = time.time()
+
+    if key in cache:
+        cached_item, timestamp = cache[key]
+        if expire is None or current_time - timestamp < expire:
+            return cached_item
+
+    result: T = func(*args, **kwargs)
+    cache[key] = (result, current_time)
+    return result
+
+
+def cached(*, expire: Optional[int] = None) -> Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        if iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+                key = make_hash(func.__name__, *args, kwargs)
+                return await _async_wrapper(func, key, expire, *args, **kwargs)
+
+            return async_wrapper  # type: ignore
+
         @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            if ismethod(func):
-                obj = args[0]
-                key = make_hash(func.__name__, obj, args[1:], kwargs)
-            elif isinstance(func, classmethod):
-                cls = args[0]
-                key = make_hash(func.__name__, cls, args[1:], kwargs)
-            elif isinstance(func, staticmethod):
-                key = make_hash(func.__name__, args, kwargs)
-            else:
-                key = make_hash(func.__name__, args, kwargs)
+        def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            key = make_hash(func.__name__, *args, kwargs)
+            return _sync_wrapper(func, key, expire, *args, **kwargs)
 
-            current_time = time.time()
-
-            if key in cache:
-                cached_item, timestamp = cache[key]
-                if expire is None or current_time - timestamp < expire:
-                    return cached_item
-
-            result = func(*args, **kwargs)
-            cache[key] = (result, current_time)  # Сохраняем результат и время
-            return result
-
-        return wrapper
+        return sync_wrapper
 
     return decorator

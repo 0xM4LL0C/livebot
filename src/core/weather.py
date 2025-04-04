@@ -6,7 +6,19 @@ import aiohttp
 from mashumaro import DataClassDictMixin, field_options
 
 from config import config
+from consts import HOUR
+from helpers.cache import cached
 from helpers.enums import WeatherCode
+
+WEATHER_EMOJIS = {
+    WeatherCode.CLEAR: "☀️",
+    WeatherCode.CLOUDS: "☁️",
+    WeatherCode.FOG: "🌫️",
+    WeatherCode.DRIZZLE: "🌦️",
+    WeatherCode.RAIN: "🌧️",
+    WeatherCode.SNOW: "❄️",
+    WeatherCode.THUNDERSTORM: "⛈️",
+}
 
 
 @dataclass
@@ -15,7 +27,13 @@ class WeatherInfo(DataClassDictMixin):
         metadata=field_options(deserialize=lambda d: datetime.fromisoformat(d).astimezone(UTC))
     )
     temperature: float = field(metadata=field_options(alias="temperature_2m"))
-    code: WeatherCode = field(metadata=field_options(deserialize=lambda c: WeatherCode.get(c)))
+    code: WeatherCode = field(
+        metadata=field_options(alias="weather_code", deserialize=lambda c: WeatherCode.get(c))
+    )
+
+    @property
+    def emoji(self) -> str:
+        return WEATHER_EMOJIS[self.code]
 
 
 @dataclass
@@ -42,6 +60,7 @@ class Weather(DataClassDictMixin):
         return d
 
 
+@cached(expire=HOUR)
 async def _get_coords_for_region(name: str) -> tuple[float, float]:
     url = "https://geocoding-api.open-meteo.com/v1/search"
 
@@ -56,6 +75,7 @@ async def _get_coords_for_region(name: str) -> tuple[float, float]:
     return data["results"][0]["latitude"], data["results"][0]["longitude"]
 
 
+@cached(expire=HOUR)
 async def get_weather() -> Weather:
     coords = await _get_coords_for_region(config.general.weather_region)
     url = "https://api.open-meteo.com/v1/forecast"

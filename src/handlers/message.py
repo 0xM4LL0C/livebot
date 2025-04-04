@@ -6,6 +6,7 @@ from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
 from consts import TELEGRAM_ID
+from core.weather import get_weather
 from data.items.utils import get_item, get_item_emoji
 from database.models import PromoModel, UserModel
 from helpers.enums import ItemType
@@ -317,7 +318,10 @@ async def quest_cmd(message: Message):
 @router.message(Command("weather"))
 async def weather_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
-    await message.reply(t(user.lang, "under-development"))
+
+    weather = await get_weather()
+    weather_type = t(user.lang, f"weather.types.{weather.current.code.name.lower()}")
+    await message.reply(t(user.lang, "weather.info", weather=weather, weather_type=weather_type))
 
 
 @router.message(Command("price"))

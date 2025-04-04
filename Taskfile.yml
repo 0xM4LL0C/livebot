@@ -38,6 +38,7 @@ tasks:
 
   dev-install:
     cmds:
+      - uv pip install --upgrade -r requirements.txt
       - uv pip install --upgrade ruff pyright pre-commit pylint
       - uv pip install "changelog-parser @ git+https://github.com/HamletSargsyan/changelog-parser@main"
       - npm install -g cspell @cspell/dict-ru_ru
