@@ -3,7 +3,7 @@ import pickle
 import time
 from functools import wraps
 from inspect import iscoroutinefunction
-from typing import Any, Awaitable, Callable, Optional, ParamSpec, TypeVar
+from typing import Any, Awaitable, Callable, Literal, Optional, ParamSpec, TypeVar
 
 from cachetools import LRUCache
 from diskcache import Cache as DiskCache
@@ -37,6 +37,7 @@ async def _async_wrapper(
     func: Callable[P, Awaitable[T]],
     key: str,
     expire: Optional[int],
+    storage: Literal["ram", "disk"],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> T:
@@ -48,7 +49,13 @@ async def _async_wrapper(
             return cached_item
 
     result: T = await func(*args, **kwargs)
-    ram_cache[key] = (result, time.time())
+    value = (result, time.time())
+    if storage == "ram":
+        ram_cache[key] = value
+    elif storage == "disk":
+        disk_cache[key] = value
+    else:
+        raise ValueError(f"Unknown storage: {storage}")
     return result
 
 
@@ -56,6 +63,7 @@ def _sync_wrapper(
     func: Callable[P, T],
     key: str,
     expire: Optional[int],
+    storage: Literal["ram", "disk"],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> T:
@@ -67,25 +75,36 @@ def _sync_wrapper(
             return cached_item
 
     result: T = func(*args, **kwargs)
-    ram_cache[key] = (result, current_time)
+
+    value = (result, time.time())
+    if storage == "ram":
+        ram_cache[key] = value
+    elif storage == "disk":
+        disk_cache[key] = value
+    else:
+        raise ValueError(f"Unknown storage: {storage}")
     return result
 
 
-def cached(*, expire: Optional[int] = None) -> Callable[[Callable[P, T]], Callable[P, T]]:
+def cached(
+    *,
+    expire: Optional[int] = None,
+    storage: Literal["ram", "disk"] = "ram",
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
         if iscoroutinefunction(func):
 
             @wraps(func)
             async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 key = make_hash(func.__name__, *args, kwargs)
-                return await _async_wrapper(func, key, expire, *args, **kwargs)
+                return await _async_wrapper(func, key, expire, storage, *args, **kwargs)
 
             return async_wrapper  # type: ignore
 
         @wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             key = make_hash(func.__name__, *args, kwargs)
-            return _sync_wrapper(func, key, expire, *args, **kwargs)
+            return _sync_wrapper(func, key, expire, storage, *args, **kwargs)
 
         return sync_wrapper
 

@@ -2,6 +2,7 @@ import asyncio
 import itertools
 import sys
 from datetime import datetime, timedelta
+from statistics import median
 from typing import Any, Awaitable, Callable, Generator, Iterable, ParamSpec, Self, Sequence, TypeVar
 
 from aiogram.exceptions import TelegramRetryAfter
@@ -9,6 +10,8 @@ from aiogram.types import InlineKeyboardMarkup, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from annotated_types import SupportsLt
 
+from consts import HOUR
+from data.items.utils import get_item
 from helpers.cache import cached
 
 P = ParamSpec("P")
@@ -158,3 +161,13 @@ def sorted_dict(d: dict[K, V], /, *, reverse: bool = False) -> dict[K, V]:
 @cached()
 def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
     return {key: dict2[key] for key in dict2 if key in dict1}
+
+
+@cached(expire=HOUR)
+def get_item_middle_price(name: str) -> int:  # TODO
+    item = get_item(name)
+
+    assert item.price
+    prices: list[int] = [item.price]
+
+    return round(median(prices))
