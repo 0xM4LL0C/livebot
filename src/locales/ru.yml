@@ -243,3 +243,10 @@ weather:
     {obj:weather.current.temperature} °C
 
     {obj:weather.current.emoji} {weather_type}
+violation:
+  none: <i>Нарушений нет</i>
+  until: осталось {func:get_time_difference_string(violation.until_date - utcnow())}
+  info: |
+    <b>Нарушения</b>
+
+    {violations}

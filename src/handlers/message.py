@@ -349,3 +349,20 @@ async def time_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t(user.lang, "time"))
+
+
+@router.message(Command("violations"))
+async def violations_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    violations = ""
+
+    if not user.violations:
+        violations = t(user.lang, "violation.none")
+    else:
+        for i, violation in enumerate(user.violations, start=1):
+            until = t(user.lang, "violation.until", violation=violation) if violation else ""
+            violations += f"{i} {violation.type} {until}"
+            violations += f"    <i>{violation.reason}</i>"
+
+    await message.reply(t(user.lang, "violation.info", violations=violations))
