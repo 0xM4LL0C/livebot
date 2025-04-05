@@ -1,6 +1,5 @@
 import hashlib
 import pickle
-import reprlib
 import time
 from functools import wraps
 from inspect import iscoroutinefunction
@@ -9,18 +8,16 @@ from typing import Any, Awaitable, Callable, Optional, ParamSpec, TypeVar
 from cachetools import LRUCache
 from diskcache import Cache as DiskCache
 
-from config import logger
-
 P = ParamSpec("P")
 T = TypeVar("T")
 
-hash_cache = DiskCache(".cache", eviction_policy="least-recently-used")
-cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
+disk_cache = DiskCache(".cache", eviction_policy="least-recently-used")
+ram_cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
 
 
-@hash_cache.memoize()
+@disk_cache.memoize()
 def make_hash(*args: Any) -> str:
-    @hash_cache.memoize()
+    @disk_cache.memoize()
     def convert(obj: Any) -> Any:
         if hasattr(obj, "to_dict"):
             return obj.to_dict()
@@ -33,12 +30,7 @@ def make_hash(*args: Any) -> str:
     converted_args = tuple(convert(arg) for arg in args)
     key = pickle.dumps(converted_args)
 
-    r = reprlib.Repr()
-    r.maxtuple = 20
-    r.maxdict = 20
-    result = hashlib.md5(key).hexdigest()
-    logger.debug(f"make_hash: making hash for {r.repr(converted_args)}, {result = }")
-    return result
+    return hashlib.md5(key).hexdigest()
 
 
 async def _async_wrapper(
@@ -50,13 +42,13 @@ async def _async_wrapper(
 ) -> T:
     current_time = time.time()
 
-    if key in cache:
-        cached_item, timestamp = cache[key]
+    if key in ram_cache:
+        cached_item, timestamp = ram_cache[key]
         if expire is None or current_time - timestamp < expire:
             return cached_item
 
     result: T = await func(*args, **kwargs)
-    cache[key] = (result, time.time())
+    ram_cache[key] = (result, time.time())
     return result
 
 
@@ -69,13 +61,13 @@ def _sync_wrapper(
 ) -> T:
     current_time = time.time()
 
-    if key in cache:
-        cached_item, timestamp = cache[key]
+    if key in ram_cache:
+        cached_item, timestamp = ram_cache[key]
         if expire is None or current_time - timestamp < expire:
             return cached_item
 
     result: T = func(*args, **kwargs)
-    cache[key] = (result, current_time)
+    ram_cache[key] = (result, current_time)
     return result
 
 
