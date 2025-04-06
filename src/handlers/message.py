@@ -15,7 +15,7 @@ from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.player_utils import get_available_items_for_use, transfer_item
 from helpers.stickers import Stickers
-from helpers.utils import pretty_float, pretty_int, sorted_dict
+from helpers.utils import get_item_middle_price, pretty_float, pretty_int, sorted_dict
 from middlewares.register import register_user
 
 router = Router()
@@ -325,9 +325,23 @@ async def weather_cmd(message: Message):
 
 
 @router.message(Command("price"))
-async def price_cmd(message: Message):
+async def price_cmd(message: Message, command: CommandObject):
     user = await UserModel.get_async(id=message.from_user.id)
-    await message.reply(t(user.lang, "under-development"))
+
+    if not command.args:
+        await message.reply(t(user.lang, "price.help"))
+        return
+
+    item_name = command.args.strip()
+
+    try:
+        item = get_item(item_name)
+    except ItemNotFoundError:
+        await message.reply(t(user.lang, "item-not-exist", item_name=item_name))
+        return
+
+    price = get_item_middle_price(item.name)
+    await message.reply(t(user.lang, "price.price", item=item, price=price))
 
 
 @router.message(Command("home"))

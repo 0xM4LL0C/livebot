@@ -11,7 +11,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from annotated_types import SupportsLt
 
 from consts import HOUR
-from data.items.utils import get_item
 from helpers.cache import cached
 
 P = ParamSpec("P")
@@ -164,7 +163,9 @@ def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
 
 
 @cached(expire=HOUR)
-def get_item_middle_price(name: str) -> int:  # TODO
+def get_item_middle_price(name: str) -> int:  # TODO: implement
+    from data.items.utils import get_item
+
     item = get_item(name)
 
     assert item.price

@@ -250,3 +250,11 @@ violation:
     <b>Нарушения</b>
 
     {violations}
+price:
+  help: |
+    Использование: <code>/price [имя предмета]</code>
+  price: |
+    <b>Средняя цена</b>
+
+    {obj:item.name} {obj:item.emoji} {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+  item-has-not-price: У этого предмета нет цены
