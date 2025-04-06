@@ -1,11 +1,13 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item_emoji
 from database.models import UserItem, UserModel
 from datatypes import UserActionType
 from helpers.callback_factory import (
+    AchievementsCallback,
     ChestCallback,
     CraftCallback,
     HomeCallback,
@@ -216,5 +218,21 @@ class InlineMarkup:
 
     @classmethod
     def rules(cls, user: UserModel) -> InlineKeyboardMarkup:
-        read_text: str = t(user.lang, "read")
+        read_text = t(user.lang, "read")
         return quick_markup({read_text: {"url": "https://0xM4LL0C.github.io/livebot/rules"}})
+
+    @classmethod
+    def achievements(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for user_achievement in user.achievements_info.achievements:
+            achievement = get_achievement(user_achievement.name)
+            builder.button(
+                text=f"{achievement.emoji} {achievement.name}",
+                callback_data=AchievementsCallback(
+                    achievement_name=achievement.translit(),
+                    user_id=user.id,
+                ),
+            )
+
+        return builder.as_markup()

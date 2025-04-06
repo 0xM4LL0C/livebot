@@ -47,3 +47,8 @@ class TraderCallback(CallbackData, prefix="trader"):
 class ChestCallback(CallbackData, prefix="chest"):
     action: Literal["open", "leave"]
     user_id: int
+
+
+class AchievementsCallback(CallbackData, prefix="achievements"):
+    achievement_name: str
+    user_id: int

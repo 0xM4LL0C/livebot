@@ -33,3 +33,9 @@ class WeatherCode(Enum):
             if code in weather_code.value:
                 return weather_code
         raise ValueError(code)
+
+
+class UserAchievementStatus(Enum):
+    COMPLETED = auto()
+    IN_PROGRESS = auto()
+    NOT_STARTED = auto()

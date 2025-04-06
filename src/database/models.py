@@ -180,14 +180,6 @@ class AchievementsInfo(SubModel):
         init=False, repr=False, metadata=field_options(serialize="omit")
     )
 
-    def get_progress_bar(self, name: str) -> str:
-        ach = get_achievement(name)
-        progress = self.progress.get(ach.name, 0)
-        percentage = min(100.0, calc_percentage(progress, ach.need))
-        progress_bar = f"Выполнено: {progress}/{ach.need}"
-        progress_bar += f"[{create_progress_bar(percentage)}] {percentage:.2f}%"
-        return progress_bar
-
     def is_completed(self, name: str) -> bool:
         try:
             self.get(name)
@@ -226,8 +218,9 @@ class AchievementsInfo(SubModel):
                 return achievement
         raise AchievementNotFoundError(name)
 
-    def incr_progress(self, key: str, quantity: int = 1):
-        if self.is_completed(key.replace("-", " ")):
+    def incr_progress(self, name: str, quantity: int = 1):
+        key = get_achievement(name).key
+        if self.is_completed(key):
             return
         if key in self.progress:
             self.progress[key] += quantity

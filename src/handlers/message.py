@@ -380,3 +380,12 @@ async def violations_cmd(message: Message):
             violations += f"    <i>{violation.reason}</i>"
 
     await message.reply(t(user.lang, "violation.info", violations=violations))
+
+
+@router.message(Command("achievements"))
+async def achievements_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    await message.reply(
+        t(user.lang, "achievements.main"), reply_markup=InlineMarkup.achievements(user)
+    )

@@ -258,3 +258,11 @@ price:
 
     {obj:item.name} {obj:item.emoji} {func:pretty_int(price)} {func:get_item_emoji("бабло")}
   item-has-not-price: У этого предмета нет цены
+achievements:
+  main: <b>Достижения</b>
+  info: |
+    {obj:achievement.emoji} {obj:achievement.name}
+
+    Получено в {func:pretty_datetime(user_achievement.completed_at)}
+
+    {obj:achievement.desc}

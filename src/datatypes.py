@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, Optional
 
 import transliterate
@@ -58,13 +58,13 @@ class Achievement:
     desc: str
     need: int
     reward: list[AchievementReward]
-    key: str = field(init=False)
 
-    def __post_init__(self):
-        self.key = self.name.strip().replace(" ", "-")
+    @property
+    def key(self) -> str:
+        return self.name.strip().replace(" ", "-")
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        return f"{self.emoji} {self.name}"
 
     def check(self, user: "UserModel") -> bool:
         progress = user.achievements_info.progress.get(self.key, 0)

@@ -8,10 +8,12 @@ from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
 from core.player_actions import game_action, sleep_action, walk_action, work_action
+from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_count_for_rarity
 from database.models import UserModel
 from helpers.callback_factory import (
+    AchievementsCallback,
     ChestCallback,
     CraftCallback,
     HomeCallback,
@@ -383,3 +385,24 @@ async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
     await query.message.answer(t(user.lang, "mobs.chest.open", user=user, items=items))
     await user.update_async()
     await query.message.delete()
+
+
+@router.callback_query(AchievementsCallback.filter())
+async def achievements_callback(query: CallbackQuery, callback_data: AchievementsCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    achievement = get_achievement(callback_data.achievement_name)
+    user_achievement = user.achievements_info.get(achievement.name)
+
+    await query.answer(
+        t(
+            user.lang,
+            "achievements.info",
+            achievement=achievement,
+            user_achievement=user_achievement,
+        ),
+        show_alert=True,
+    )
