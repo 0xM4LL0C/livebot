@@ -123,7 +123,7 @@ ITEMS: Final = [
     Item(
         name="помидор",
         emoji="🍅",
-        desc="Используется в крафах",
+        desc="Используется в крафтах",
         price=83,
         rarity=ItemRarity.COMMON,
         is_quest_item=True,
