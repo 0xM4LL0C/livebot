@@ -23,6 +23,10 @@ class ActiveMiddleware(BaseMiddleware):
             user_id = event.from_user.id
             user = await UserModel.get_async(id=user_id)
 
+            if (utcnow() - user.last_active_time).days >= 1:
+                user.achievements_info.incr_progress("новичок")
+                user.achievements_info.incr_progress("олд")
+
             user.last_active_time = utcnow()
             await user.update_async()
 

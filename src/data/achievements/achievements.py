@@ -91,7 +91,7 @@ ACHIEVEMENTS: Final = [
         desc="оставайся активным игроком в течение целого года",
         need=365,
         reward=[
-            AchievementReward(name="бабло", quantity=20_000),
+            AchievementReward(name="бабло", quantity=50_000),
         ],
     ),
     Achievement(
@@ -101,7 +101,8 @@ ACHIEVEMENTS: Final = [
         need=50,
         reward=[
             AchievementReward(name="бабло", quantity=15_000),
-            AchievementReward(name="буст", quantity=3),
+            AchievementReward(name="бокс", quantity=3),
+            AchievementReward(name="буст", quantity=1),
         ],
     ),
 ]

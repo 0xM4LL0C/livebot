@@ -260,8 +260,9 @@ async def quest_callback(query: CallbackQuery, callback_data: QuestCallback):
     user.xp += user.quest.xp
     old_quest = user.quest
     user.new_quest()
-    await user.update_async()
+    user.achievements_info.incr_progress("квестоман")
 
+    await user.update_async()
     await query.message.delete()
     await query.message.answer_sticker(Stickers.quest)
     await query.message.reply_to_message.reply(t(user.lang, "quest.complete", quest=old_quest))
@@ -381,9 +382,10 @@ async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
         items += f"+ {pretty_int(quantity)} {item.name} {item.emoji}\n"
 
     user.inventory.remove(key_item.name, 1)
+    user.achievements_info.incr_progress("кладоискатель")
+    await user.update_async()
 
     await query.message.answer(t(user.lang, "mobs.chest.open", user=user, items=items))
-    await user.update_async()
     await query.message.delete()
 
 

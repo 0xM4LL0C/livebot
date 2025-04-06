@@ -88,6 +88,7 @@ async def walk_action(query: CallbackQuery, user: UserModel):
     user.mood -= random.randint(3, 6)
     user.met_mob = False
     user.notification_status.walk = False
+    user.achievements_info.incr_progress("бродяга")
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
@@ -140,6 +141,7 @@ async def work_action(query: CallbackQuery, user: UserModel):
     user.fatigue -= random.randint(10, 20)
     user.mood -= random.randint(3, 6)
     user.notification_status.work = False
+    user.achievements_info.incr_progress("работяга")
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
@@ -190,6 +192,7 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
     user.hunger -= random.randint(1, 3)
     user.mood += random.randint(1, 10)
     user.notification_status.sleep = False
+    user.achievements_info.incr_progress("сонный")
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
@@ -239,8 +242,8 @@ async def game_action(query: CallbackQuery, user: UserModel):
     user.xp += random.uniform(3.0, 5.0)
     user.action = None
     user.hunger -= random.randint(2, 8)
-
     user.notification_status.game = False
+    user.achievements_info.incr_progress("игроман")
 
     await user.check_status(query.message.chat.id)
     await user.update_async()

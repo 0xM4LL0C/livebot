@@ -227,8 +227,6 @@ class AchievementsInfo(SubModel):
         else:
             self.progress[key] = quantity
 
-        self._user().update()
-
 
 @dataclass
 class UserViolation(SubModel):
