@@ -9,6 +9,7 @@ from handlers.callback import router as callback_router
 from handlers.message import router as message_router
 from helpers.localization import t
 
+
 router = Router()
 
 router.include_routers(

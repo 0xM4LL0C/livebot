@@ -6,6 +6,7 @@ from data.items.utils import get_item_emoji
 from helpers.datetime_utils import utcnow
 from helpers.utils import get_time_difference_string, pretty_datetime, pretty_float, pretty_int
 
+
 i18n = I18N("ru", "src/locales")
 
 

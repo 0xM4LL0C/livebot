@@ -13,6 +13,7 @@ from config import config as app_config
 from consts import EMPTY_OBJECTID
 from helpers.exceptions import AlreadyExists, NoResult
 
+
 _client_options = {
     "host": app_config.database.url,
     "tz_aware": True,

@@ -10,6 +10,7 @@ from consts import HOUR
 from helpers.cache import cached
 from helpers.enums import WeatherCode
 
+
 WEATHER_EMOJIS = {
     WeatherCode.CLEAR: "☀️",
     WeatherCode.CLOUDS: "☁️",

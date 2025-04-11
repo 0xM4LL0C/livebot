@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Optional
 
 import tomlkit
 from mashumaro.mixins.toml import DataClassTOMLMixin
 
 from cli import ARGS
+from consts import VERSION
 
 
 @dataclass(kw_only=True)
@@ -50,6 +52,34 @@ class Config(DataClassTOMLMixin):
         return remove_none_values(d)
 
     @classmethod
-    def from_file(cls, path: str) -> "Config":
-        with open(path, "r", encoding="utf-8") as f:
+    def from_file(cls, file: Path) -> "Config":
+        if not file.exists():
+            cls.create(file)
+        with file.open("r", encoding="utf-8") as f:
             return cls.from_toml(f.read(), decoder=tomlkit.loads)
+
+    @classmethod
+    def create(cls, file: Path) -> bool:
+        if file.exists():
+            return False
+
+        config = tomlkit.document()
+        config.add(tomlkit.comment("config docs: https://0xM4LL0C.github.io/livebot/dev/config/"))
+
+        default_config = Config(
+            general=GeneralConfig(weather_region="weather region"),
+            database=DatabaseConfig(url="database_url"),
+            redis=RedisConfig(url="redis_url"),
+            telegram=TelegramConfig(token="bot token from @BotFather", log_chat_id="log chat id"),
+        )
+
+        config.update(default_config.to_dict())
+
+        version = VERSION
+        with file.open("w", encoding="utf-8") as f:
+            f.write(
+                f"#:schema https://raw.githubusercontent.com/0xM4LL0C/livebot/refs/tags/v{version}/config_schema.json\n\n"
+            )
+            f.write(tomlkit.dumps(config))
+
+        return True

@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery
 from helpers.cache import cached
 from helpers.enums import ItemRarity, ItemType
 
+
 if TYPE_CHECKING:
     from database.models import UserModel
 

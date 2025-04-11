@@ -8,10 +8,14 @@ from typing import Any, Awaitable, Callable, Literal, Optional, ParamSpec, TypeV
 from cachetools import LRUCache
 from diskcache import Cache as DiskCache
 
+from consts import CACHE_DIR
+
+
 P = ParamSpec("P")
 T = TypeVar("T")
 
-disk_cache = DiskCache(".cache", eviction_policy="least-recently-used")
+CACHE_DIR.mkdir(exist_ok=True)
+disk_cache = DiskCache(CACHE_DIR, eviction_policy="least-recently-used")
 ram_cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
 
 

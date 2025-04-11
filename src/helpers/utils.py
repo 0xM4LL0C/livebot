@@ -13,6 +13,7 @@ from annotated_types import SupportsLt
 from consts import HOUR
 from helpers.cache import cached
 
+
 P = ParamSpec("P")
 T = TypeVar("T")
 K = TypeVar("K")  # dict key

@@ -33,6 +33,7 @@ disable =
     fixme,
     line-too-long,
     too-many-function-args,
+    wrong-import-order
 
 [DESIGN]
 min-public-methods = 1

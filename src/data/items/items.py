@@ -3,6 +3,7 @@ from typing import Final
 from datatypes import Item, ItemCraft
 from helpers.enums import ItemRarity, ItemType
 
+
 ITEMS: Final = [
     Item(
         name="бабло",

@@ -1,3 +1,5 @@
+from cli import ARGS  # isort: skip
+
 import asyncio
 from argparse import Namespace
 
@@ -6,14 +8,13 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from tinylogging import Level
 
-from cli import ARGS  # isort: skip
-
 from config import aiogram_logger, bot, config, logger
 from database.models import UserModel
 from handlers import router
 from helpers.exceptions import NoResult
 from middlewares import middlewares
 from tasks import run_tasks
+
 
 dp = Dispatcher(state_storage=RedisStorage.from_url(config.redis.url))
 dp.include_router(router)

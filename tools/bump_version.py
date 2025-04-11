@@ -7,6 +7,7 @@ from datetime import date
 import changelog
 from semver import Version
 
+
 with open("version") as f:
     old_version = Version.parse(f.read())
     version = old_version

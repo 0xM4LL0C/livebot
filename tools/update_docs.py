@@ -3,11 +3,13 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 
+
 sys.path.insert(0, "src/")
 
 from data.achievements.achievements import ACHIEVEMENTS
 from data.items.items import ITEMS
 from data.items.utils import get_item_emoji
+
 
 DOCS_PATH = Path("docs/")
 

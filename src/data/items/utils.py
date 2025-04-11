@@ -7,6 +7,7 @@ from helpers.enums import ItemRarity
 from helpers.exceptions import ItemNotFoundError
 from helpers.utils import cached
 
+
 P = ParamSpec("P")
 T = TypeVar("T")
 

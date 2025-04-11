@@ -10,6 +10,7 @@ from helpers.enums import ItemRarity
 from helpers.localization import t
 from helpers.markups import InlineMarkup
 
+
 if TYPE_CHECKING:
     from database.models import UserModel
 

@@ -2,6 +2,7 @@ from typing import Final
 
 from datatypes import Achievement, AchievementReward
 
+
 ACHIEVEMENTS: Final = [
     Achievement(
         name="работяга",

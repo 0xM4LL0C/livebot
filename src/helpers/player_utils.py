@@ -8,6 +8,7 @@ from helpers.enums import ItemType
 from helpers.exceptions import NoResult
 from helpers.localization import t
 
+
 if TYPE_CHECKING:
     from database.models import UserItem, UserModel
 

@@ -18,6 +18,7 @@ from helpers.stickers import Stickers
 from helpers.utils import get_item_middle_price, pretty_float, pretty_int, sorted_dict
 from middlewares.register import register_user
 
+
 router = Router()
 
 
