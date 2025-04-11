@@ -1,6 +1,6 @@
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 version: "0.2"
-enabled: false
+enabled: true
 language: "en,ru"
 useGitignore: true
 failFast: true

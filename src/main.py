@@ -62,13 +62,13 @@ async def init_bot_admins():
 
 
 async def main(args: Namespace) -> None:
-    logger.info("Бот включён")
+    logger.info("bot started")
 
     if args.debug or config.general.debug:
         config.general.debug = True
         logger.level = Level.DEBUG
         aiogram_logger.setLevel(10)  # debug
-        logger.warning("Бот работает в режиме debug")
+        logger.warning("bot running in debug mode")
     else:
         aiogram_logger.setLevel(30)  # warning
 
@@ -89,4 +89,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main(ARGS))
     except KeyboardInterrupt:
-        logger.info("bot stoped")
+        logger.info("bot stopped")
