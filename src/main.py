@@ -92,4 +92,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main(args))
     except KeyboardInterrupt:
-        logger.info("Бот остановлен")
+        logger.info("bot stoped")
