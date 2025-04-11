@@ -78,7 +78,6 @@ async def main(args: Namespace) -> None:
     init_middlewares()
 
     if not args.without_tasks:
-        logger.warning("Фоновые задачи работают нестабильно")
         run_tasks()
 
     await dp.start_polling(bot, handle_signals=False)

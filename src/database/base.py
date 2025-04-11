@@ -118,7 +118,7 @@ class BaseModel(SubModel):
         objs = cls.sync_collection.find(options)
 
         if not objs:
-            raise NoResult
+            return []
         return [cls.from_dict(obj) for obj in objs]
 
     @classmethod
@@ -186,7 +186,7 @@ class BaseModel(SubModel):
         objs = await objs.to_list(length=None)
 
         if not objs:
-            raise NoResult
+            return []
 
         return [cls.from_dict(obj) for obj in objs]
 

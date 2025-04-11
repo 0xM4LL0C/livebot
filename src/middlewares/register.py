@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
@@ -6,6 +7,7 @@ from aiogram.types import Message, TelegramObject
 from config import logger
 from consts import TELEGRAM_ID
 from database.models import UserModel
+from helpers.cache import ram_cache
 from helpers.exceptions import NoResult
 from helpers.utils import remove_not_allowed_symbols
 
@@ -35,10 +37,20 @@ class RegisterMiddleware(BaseMiddleware):
             if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
                 return
 
-            if not event.text.startswith("/start"):
-                await register_user(event)
+            if event.text.startswith("/start"):
+                user = await UserModel.get_async(id=event.from_user.id)
+            else:
+                user = await register_user(event)
 
             if event.reply_to_message:
                 await register_user(event.reply_to_message)
+        else:
+            return
 
-        return await handler(event, data)
+        ev = asyncio.Event()
+        ram_cache[f"lock-{user.id}"] = (ev, 0.0)
+        try:
+            ev.set()
+            return await handler(event, data)
+        finally:
+            ev.clear()
