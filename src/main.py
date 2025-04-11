@@ -1,10 +1,12 @@
 import asyncio
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 
 from aiogram import Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from tinylogging import Level
+
+from cli import ARGS  # isort: skip
 
 from config import aiogram_logger, bot, config, logger
 from database.models import UserModel
@@ -84,12 +86,7 @@ async def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Запуск телеграм-бота.")
-    parser.add_argument("--debug", action="store_true", help="Запуск в режиме отладки")
-    parser.add_argument("--without-tasks", action="store_true", help="Запуск без задач")
-
-    args = parser.parse_args()
     try:
-        asyncio.run(main(args))
+        asyncio.run(main(ARGS))
     except KeyboardInterrupt:
         logger.info("bot stoped")

@@ -4,11 +4,13 @@ from typing import Any, Optional
 import tomlkit
 from mashumaro.mixins.toml import DataClassTOMLMixin
 
+from cli import ARGS
+
 
 @dataclass(kw_only=True)
 class GeneralConfig:
     weather_region: str
-    debug: bool = False
+    debug: bool = ARGS.debug
     owners: list[int] = field(default_factory=list)
 
 
