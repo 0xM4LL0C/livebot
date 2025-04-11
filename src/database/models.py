@@ -1,7 +1,7 @@
 import random
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Literal, Optional
+from typing import ClassVar, Literal, Optional
 from weakref import ReferenceType, ref
 
 from aiogram.types import InlineKeyboardButton
@@ -38,6 +38,10 @@ class UserAction(SubModel):
     type: UserActionType
     end: datetime
     start: datetime = field(default_factory=utcnow)
+
+    @property
+    def is_done(self) -> bool:
+        return self.end < utcnow()
 
 
 @dataclass
@@ -138,7 +142,7 @@ class Inventory(SubModel):
 
     def get_by_id(self, id: ObjectId) -> UserItem:
         try:
-            return [item for item in self.items if item.id == id and item.quantity > 0][0]
+            return next(item for item in self.items if item.id == id and item.quantity > 0)
         except IndexError as e:
             raise NoResult(id) from e
 
@@ -177,7 +181,9 @@ class AchievementsInfo(SubModel):
     achievements: list[UserAchievement] = field(default_factory=list)
     progress: dict[str, int] = field(default_factory=dict)
     _user: ReferenceType["UserModel"] = field(
-        init=False, repr=False, metadata=field_options(serialize="omit")
+        init=False,
+        repr=False,
+        metadata=field_options(serialize="omit"),
     )
 
     def is_completed(self, name: str) -> bool:
@@ -251,7 +257,9 @@ class UserQuest(SubModel):
     reward: int  # coin
     start_time: datetime = field(default_factory=utcnow)
     _user: ReferenceType["UserModel"] = field(
-        init=False, repr=False, metadata=field_options(serialize="omit")
+        init=False,
+        repr=False,
+        metadata=field_options(serialize="omit"),
     )
 
     @property
@@ -272,7 +280,7 @@ class UserQuest(SubModel):
             percent_text = pretty_float(min(100.0, percentage))
             user_item_quantity = min(quantity, user_item_quantity)
             status_lines.append(
-                f"{emoji} {user_item_quantity}/{quantity} [<code>{progress_bar}</code>] {percent_text} %"
+                f"{emoji} {user_item_quantity}/{quantity} [<code>{progress_bar}</code>] {percent_text} %",
             )
 
         return "\n".join(status_lines)
@@ -291,11 +299,12 @@ class UserQuest(SubModel):
 
 @dataclass
 class UserModel(BaseModel):
-    __settings__ = {"collection_name": "users"}
+    __settings__: ClassVar = {"collection_name": "users"}
     id: int
     name: str
     lang: str = "ru"
     registered_at: datetime = field(default_factory=utcnow)
+    last_checked_at: datetime = field(default_factory=utcnow)
     level: int = 1
     coin: int = 0
     xp: float = 0.0
@@ -385,7 +394,7 @@ class UserModel(BaseModel):
 
         for data in btn_data:
             buttons.append(
-                InlineKeyboardButton(text=data[0], callback_data=f"levelup {data[1]} {self.id}")
+                InlineKeyboardButton(text=data[0], callback_data=f"levelup {data[1]} {self.id}"),
             )
 
         builder.add(*buttons)
@@ -399,6 +408,8 @@ class UserModel(BaseModel):
     async def check_status(self, chat_id: Optional[ChatIdType] = None):
         if not chat_id:
             chat_id = self.id
+
+        await self.check_achievements()
 
         if self.xp >= self.max_xp:
             await self._level_up(chat_id)
@@ -426,7 +437,7 @@ class UserModel(BaseModel):
 
 @dataclass
 class PromoModel(BaseModel):
-    __settings__ = {"collection_name": "promos"}
+    __settings__: ClassVar = {"collection_name": "promos"}
 
     code: str
     items: dict[str, int]

@@ -1,9 +1,11 @@
+from contextlib import suppress
+
 from aiogram.exceptions import TelegramAPIError
 
 from config import bot
 from database.models import UserModel
-from helpers.datetime_utils import utcnow
-from helpers.utils import antiflood, quick_markup
+from helpers.localization import t
+from helpers.utils import antiflood
 
 
 async def _notification():
@@ -12,31 +14,33 @@ async def _notification():
     for user in users:
         await user.fetch_async()
 
-        if not user.action:
-            continue
-        try:
-            current_time = utcnow()
-            if user.action.end <= current_time:
-                if user.action.type == "street" and not user.notification_status.walk:
-                    user.notification_status.walk = True
-                    mess = "Ты закончил прогулку"
-                elif user.action.type == "work" and not user.notification_status.work:
-                    user.notification_status.work = True
-                    mess = "Ты закончил работу"
-                elif user.action.type == "sleep" and not user.notification_status.sleep:
-                    user.notification_status.sleep = True
-                    mess = "Ты проснулся"
-                elif user.action.type == "game" and not user.notification_status.game:
-                    user.notification_status.game = True
-                    mess = "Ты проснулся"
-                else:
-                    continue
+        messages: set[str] = set()
 
-                markup = quick_markup({"Дом": {"callback_data": f"open home {user.id}"}})
-                await antiflood(bot.send_message(user.id, mess, reply_markup=markup))
+        if user.action and user.action.is_done:
+            if user.action.type == "walk" and not user.notification_status.walk:
+                user.notification_status.walk = True
+                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+            elif user.action.type == "work" and not user.notification_status.work:
+                user.notification_status.work = True
+                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+            elif user.action.type == "sleep" and not user.notification_status.sleep:
+                user.notification_status.sleep = True
+                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+            elif user.action.type == "game" and not user.notification_status.game:
+                user.notification_status.game = True
+                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+        if user.health < 30:
+            ...
+        if user.fatigue < 30:
+            ...
+        if user.hunger < 30:
+            ...
+        if user.mood < 30:
+            ...
 
-        except TelegramAPIError:
-            continue
+        with suppress(TelegramAPIError):
+            for message in messages:
+                await antiflood(bot.send_message(user.id, message))
 
         await user.update_async()
 

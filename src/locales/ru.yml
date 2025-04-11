@@ -266,3 +266,8 @@ achievements:
     Получено в {func:pretty_datetime(user_achievement.completed_at)}
 
     {obj:achievement.desc}
+notifications:
+  end-walk: Ты закончил прогулку
+  end-work: Ты закончил работу
+  end-sleep: Ты проснулся
+  end-game: Ты закончил играть

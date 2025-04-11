@@ -48,7 +48,7 @@ class SubModel(DataClassDictMixin):
     class Config(BaseConfig):
         serialize_by_alias = True
         allow_deserialization_not_by_alias = True
-        serialization_strategy = {
+        serialization_strategy = {  # noqa
             ObjectId: ObjectIdSerializationStrategy(),
         }
         discriminator = Discriminator(
@@ -188,8 +188,6 @@ class BaseModel(SubModel):
         if not objs:
             raise NoResult
 
-        for obj in objs:
-            print(f"Fetched user: oid={cls.from_dict(obj).oid}, raw _id={obj.get('_id')}")
         return [cls.from_dict(obj) for obj in objs]
 
     @classmethod
@@ -203,7 +201,6 @@ class BaseModel(SubModel):
         return cls.from_dict(obj)
 
     async def fetch_async(self) -> None:
-        print(self.oid)
         updated_instance = await self.get_async(oid=self.oid)
         for field_ in fields(self):
             setattr(self, field_.name, getattr(updated_instance, field_.name))

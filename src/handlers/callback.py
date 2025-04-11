@@ -212,6 +212,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
             raise NotImplementedError(item.name)
 
     user.inventory.remove(user_item.name, 1, id=user_item.id)
+    await user.check_status(chat_id=query.message.chat.id)
     await user.update_async()
 
     items = get_available_items_for_use(user)

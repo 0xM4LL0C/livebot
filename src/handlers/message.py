@@ -290,7 +290,7 @@ async def promo_cmd(message: Message, command: CommandObject):
     for item_name, quantity in promo_items.items():
         item = get_item(item_name)
 
-        if item.name == "бабло":
+        if item.name == "бабло":  # pylint: disable=duplicate-code
             user.coin += quantity
         else:
             user.inventory.add(item.name, quantity)

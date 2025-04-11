@@ -3,12 +3,16 @@ indent-width = 4
 
 target-version = "py311"
 
+
 [lint]
-select = ["E4", "E7", "E9", "F", "I", "N"]
-ignore = ["N818"]
+select = ["E4", "E7", "E9", "F", "I", "N", "TD", "RUF"]
+ignore = ["N818", "TD002", "TD003", "RUF001"]
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[lint.isort]
+combine-as-imports = true
 
 [format]
 quote-style = "double"

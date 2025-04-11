@@ -89,4 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--without-tasks", action="store_true", help="Запуск без задач")
 
     args = parser.parse_args()
-    asyncio.run(main(args))
+    try:
+        asyncio.run(main(args))
+    except KeyboardInterrupt:
+        logger.info("Бот остановлен")
