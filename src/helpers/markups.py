@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from consts import REPO_URL, VERSION
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item_emoji
@@ -236,3 +237,13 @@ class InlineMarkup:
             )
 
         return builder.as_markup()
+
+    @classmethod
+    def version(cls, user: UserModel) -> InlineKeyboardMarkup:
+        return quick_markup(
+            {
+                t(user.lang, "version.buttons.release"): {
+                    "url": REPO_URL + f"releases/tag/v{VERSION}"
+                }
+            }
+        )

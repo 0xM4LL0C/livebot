@@ -271,3 +271,8 @@ notifications:
   end-work: Ты закончил работу
   end-sleep: Ты проснулся
   end-game: Ты закончил играть
+version:
+  buttons:
+    release: Релиз
+  info: |
+    <b>Версия:</b> <code>{const:VERSION}</code> | <i>{status}</i>

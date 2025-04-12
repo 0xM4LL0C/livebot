@@ -2,6 +2,7 @@ from typing import Any
 
 from i18n import I18N
 
+from consts import VERSION
 from data.items.utils import get_item_emoji
 from helpers.datetime_utils import utcnow
 from helpers.utils import get_time_difference_string, pretty_datetime, pretty_float, pretty_int
@@ -22,6 +23,7 @@ i18n.register_function("get_time_difference_string", get_time_difference_string)
 i18n.register_constant("CHANNEL_USERNAME", "@LiveBotOfficial")
 i18n.register_constant("CHAT_USERNAME", "@LiveBotOfficialChat")
 i18n.register_constant("GUIDE_URL", "https://0xM4LL0C.github.io/livebot/guide")
+i18n.register_constant("VERSION", str(VERSION))
 
 
 def t(locale: str, key: str, **kwargs: Any):

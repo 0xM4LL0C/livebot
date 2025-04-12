@@ -15,7 +15,13 @@ from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.player_utils import get_available_items_for_use, transfer_item
 from helpers.stickers import Stickers
-from helpers.utils import get_item_middle_price, pretty_float, pretty_int, sorted_dict
+from helpers.utils import (
+    check_version,
+    get_item_middle_price,
+    pretty_float,
+    pretty_int,
+    sorted_dict,
+)
 from middlewares.register import register_user
 
 
@@ -389,4 +395,14 @@ async def achievements_cmd(message: Message):
 
     await message.reply(
         t(user.lang, "achievements.main"), reply_markup=InlineMarkup.achievements(user)
+    )
+
+
+@router.message(Command("version"))
+async def version_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    await message.reply(
+        t(user.lang, "version.info", status=await check_version()),
+        reply_markup=InlineMarkup.version(user),
     )

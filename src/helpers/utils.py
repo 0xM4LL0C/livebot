@@ -5,12 +5,15 @@ from datetime import datetime, timedelta
 from statistics import median
 from typing import Any, Awaitable, Callable, Generator, Iterable, ParamSpec, Self, Sequence, TypeVar
 
+import aiohttp
 from aiogram.exceptions import TelegramRetryAfter
 from aiogram.types import InlineKeyboardMarkup, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from annotated_types import SupportsLt
+from semver import Version
 
-from consts import HOUR
+from config import logger
+from consts import APP_NAME, AUTHOR, HOUR, MINUTE, VERSION
 from helpers.cache import cached
 
 
@@ -173,3 +176,29 @@ def get_item_middle_price(name: str) -> int:  # TODO: implement
     prices: list[int] = [item.price]
 
     return round(median(prices))
+
+
+@cached(expire=(MINUTE * 15), storage="disk")
+async def check_version() -> str:
+    url = f"https://api.github.com/repos/{AUTHOR}/{APP_NAME}/releases/latest"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                logger.error(await response.text())
+                response.raise_for_status()
+
+            latest_release = await response.json()
+
+    version = Version.parse(latest_release["tag_name"].replace("v", ""))
+    latest_version = version
+
+    match VERSION.compare(latest_version):
+        case -1:
+            return "требуется обновление"
+        case 0:
+            return "актуальная версия"
+        case 1:
+            return "текущая версия бота больше чем в репозитории"
+        case _:
+            return "?"
