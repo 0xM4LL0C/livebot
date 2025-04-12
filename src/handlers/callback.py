@@ -16,6 +16,7 @@ from helpers.callback_factory import (
     AchievementsCallback,
     ChestCallback,
     CraftCallback,
+    DailyGiftCallback,
     HomeCallback,
     QuestCallback,
     ShopCallback,
@@ -23,11 +24,12 @@ from helpers.callback_factory import (
     TransferCallback,
     UseCallback,
 )
+from helpers.datetime_utils import utcnow
 from helpers.enums import ItemRarity
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.player_utils import get_available_items_for_use, transfer_item
+from helpers.player_utils import check_user_subscription, get_available_items_for_use, transfer_item
 from helpers.stickers import Stickers
 from helpers.utils import pretty_int
 
@@ -361,8 +363,6 @@ async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
         await query.answer(t("item-not-found-in-inventory", item_name="ключ"), show_alert=True)
         return
 
-    print(key_item.quantity, key_item.quantity < 1)
-
     items = ""
     items_quantity = random.randint(2, 3)
     available_items = list(
@@ -405,3 +405,54 @@ async def achievements_callback(query: CallbackQuery, callback_data: Achievement
         ),
         show_alert=True,
     )
+
+
+@router.callback_query(DailyGiftCallback.filter())
+async def daily_gift_callback(query: CallbackQuery, callback_data: DailyGiftCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    if not await check_user_subscription(user):
+        await query.answer(t("subscription-required"), show_alert=True)
+        return
+
+    assert isinstance(query.message, Message)  # for liners
+
+    if user.daily_gift.is_claimed:
+        await query.answer(
+            t("daily-gift.already-claimed", daily_gift=user.daily_gift), show_alert=True
+        )
+
+        await query.message.edit_reply_markup(reply_markup=InlineMarkup.daily_gift(user))
+        return
+
+    if not user.daily_gift.last_claimed_at:
+        user.daily_gift.last_claimed_at = utcnow()
+
+    if user.daily_gift.last_claimed_at.date() == (utcnow() - timedelta(days=1)).date():
+        user.daily_gift.streak += 1
+    else:
+        user.daily_gift.streak = 1
+
+    user.daily_gift.last_claimed_at = utcnow()
+    user.daily_gift.is_claimed = True
+
+    items = ""
+    for item_name, quantity in user.daily_gift.items.items():
+        item = get_item(item_name)
+
+        items += f"+{pretty_int(quantity)} {item.name} {item.emoji}\n"
+        if item_name == "бабло":
+            user.coin += quantity
+        else:
+            user.inventory.add(item.name, quantity)
+
+    user.notification_status.daily_gift = False
+    await user.update_async()
+
+    mess = t("daily-gift.claim", user=user, items=items)
+
+    await query.message.answer(mess)
+    await query.message.edit_reply_markup(reply_markup=InlineMarkup.daily_gift(user))

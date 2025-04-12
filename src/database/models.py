@@ -54,6 +54,7 @@ class UserNotificationStatus(SubModel):
     mood: bool = False
     hunger: bool = False
     fatigue: bool = False
+    daily_gift: bool = False
 
 
 @dataclass
@@ -249,18 +250,10 @@ class DailyGift(SubModel):
     items: dict[str, int] = field(default_factory=dict)
 
     @property
-    def is_available(self) -> bool:
-        return (
-            not self.is_claimed
-            or not self.last_claimed_at
-            or utcnow() - self.last_claimed_at <= timedelta(days=1)
-        )
-
-    @property
-    def next_available_at(self) -> datetime:
-        if self.last_claimed_at:
-            return self.last_claimed_at + timedelta(days=1)
-        return utcnow()
+    def next_claim_available_at(self) -> datetime:
+        if not self.last_claimed_at:
+            self.last_claimed_at = utcnow() - timedelta(days=1)
+        return self.last_claimed_at + timedelta(days=1)
 
 
 @dataclass

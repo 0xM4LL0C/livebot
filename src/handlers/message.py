@@ -84,7 +84,6 @@ async def inventory_cmd(message: Message):
         if item.quantity <= 0:
             continue
         items += f"{get_item_emoji(item.name)} {item.name} {item.quantity}"
-        print(get_item_emoji(item.name))
         if item.type == ItemType.USABLE:
             assert item.usage is not None  # for linters
             items += f" ({pretty_float(item.usage)} %)"  # pyright: ignore[reportAttributeAccessIssue]
@@ -409,7 +408,8 @@ async def daily_gift_cmd(message: Message):
         await send_channel_subscribe_message(message)
         return
 
-    if user.daily_gift.next_available_at < utcnow():
+    if user.daily_gift.next_claim_available_at <= utcnow():
         user.new_daily_gift()
+        await user.update_async()
 
-    await message.reply(t("daily-gift.main"))
+    await message.reply(t("daily-gift.main"), reply_markup=InlineMarkup.daily_gift(user))

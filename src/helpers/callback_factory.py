@@ -52,3 +52,7 @@ class ChestCallback(CallbackData, prefix="chest"):
 class AchievementsCallback(CallbackData, prefix="achievements"):
     achievement_name: str
     user_id: int
+
+
+class DailyGiftCallback(CallbackData, prefix="daily_gift"):
+    user_id: int

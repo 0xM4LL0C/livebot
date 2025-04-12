@@ -86,5 +86,5 @@ async def check_user_subscription(user: "UserModel") -> bool:
 async def send_channel_subscribe_message(message: Message):
     chat_info = await message.bot.get_chat(config.telegram.channel_id)
     markup = quick_markup({"Подписаться": {"url": f"t.me/{chat_info.username}"}})
-    mess = "Чтобы использовать эту функцию нужно подписаться на новостной канал"
+    mess = t("subscription-required")
     await message.reply(mess, reply_markup=markup)

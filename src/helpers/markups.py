@@ -11,6 +11,7 @@ from helpers.callback_factory import (
     AchievementsCallback,
     ChestCallback,
     CraftCallback,
+    DailyGiftCallback,
     HomeCallback,
     QuestCallback,
     ShopCallback,
@@ -245,6 +246,10 @@ class InlineMarkup:
         )
 
     @classmethod
-    def daily_gift(cls, _user: UserModel) -> InlineKeyboardMarkup:
-        builder = InlineKeyboardBuilder()
-        return builder.as_markup()
+    def daily_gift(cls, user: UserModel) -> InlineKeyboardMarkup:
+        def get_text():
+            if user.daily_gift.is_claimed:
+                return t("daily-gift.buttons.not-available", user=user)
+            return t("daily-gift.buttons.available")
+
+        return quick_markup({get_text(): {"callback_data": DailyGiftCallback(user_id=user.id)}})

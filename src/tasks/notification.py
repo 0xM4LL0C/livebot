@@ -4,6 +4,7 @@ from aiogram.exceptions import TelegramAPIError
 
 from config import bot
 from database.models import UserModel
+from helpers.datetime_utils import utcnow
 from helpers.localization import t
 from helpers.utils import antiflood
 
@@ -37,6 +38,12 @@ async def _notification():
             ...
         if user.mood < 30:
             ...
+        if (
+            user.daily_gift.next_claim_available_at <= utcnow()
+            and not user.notification_status.daily_gift
+        ):
+            user.notification_status.daily_gift = True
+            messages.add(t("notifications.daily-gift-available"))
 
         with suppress(TelegramAPIError):
             for message in messages:

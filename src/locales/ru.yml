@@ -271,10 +271,20 @@ notifications:
   end-work: Ты закончил работу
   end-sleep: Ты проснулся
   end-game: Ты закончил играть
+  daily-gift-available: Ежедневный подарок уже доступен. Не забудь его получить
 version:
   buttons:
     release: Релиз
   info: |
     <b>Версия:</b> <code>{const:VERSION}</code> | <i>{status}</i>
 daily-gift:
+  buttons:
+    available: 🔹 Получить
+    not-available: 🕐 {func:get_time_difference_string(user.daily_gift.next_claim_available_at - utcnow())}
   main: <b>Ежедневный подарок</b>
+  already-claimed: Ты сегодня уже получил подарок. Жди {func:get_time_difference_string(daily_gift.next_claim_available_at - utcnow())}
+  claim: |
+    <b>{obj:user.tg_tag} получил ежедневный подарок</b>
+
+    {items}
+subscription-required: Для использования этой функции необходимо подписаться на новостной каналЧтобы использовать эту функцию нужно подписаться на новостной канал
