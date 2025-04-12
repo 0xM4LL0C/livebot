@@ -1,3 +1,4 @@
+from argparse import Namespace
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
@@ -5,14 +6,13 @@ from typing import Any, Optional
 import tomlkit
 from mashumaro.mixins.toml import DataClassTOMLMixin
 
-from cli import ARGS
 from consts import VERSION
 
 
 @dataclass(kw_only=True)
 class GeneralConfig:
     weather_region: str
-    debug: bool = ARGS.debug
+    debug: bool = False
     owners: list[int] = field(default_factory=list)
 
 
@@ -83,3 +83,7 @@ class Config(DataClassTOMLMixin):
             f.write(tomlkit.dumps(config))
 
         return True
+
+    def merge(self, args: Namespace) -> None:
+        if args.debug:
+            self.general.debug = args.debug

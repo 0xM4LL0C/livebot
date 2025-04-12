@@ -6,9 +6,9 @@ from argparse import Namespace
 from aiogram import Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
-from tinylogging import Level
 
-from config import aiogram_logger, bot, config, logger
+from config import bot, config, logger
+from consts import APP_NAME, CACHE_DIR, CONFIG_DIR, DATA_DIR, VERSION
 from database.models import UserModel
 from handlers import router
 from helpers.exceptions import NoResult
@@ -21,7 +21,7 @@ dp.include_router(router)
 
 
 def init_middlewares():
-    logger.debug("Инициализация мидлваров")  # cspell: disable-line
+    logger.debug("initializing middlewares")
     for middleware in middlewares:
         dp.message.middleware(middleware())
 
@@ -63,15 +63,14 @@ async def init_bot_admins():
 
 
 async def main(args: Namespace) -> None:
-    logger.info("bot started")
+    logger.info(f"Running {APP_NAME} version {VERSION}")
 
-    if args.debug or config.general.debug:
-        config.general.debug = True
-        logger.level = Level.DEBUG
-        aiogram_logger.setLevel(10)  # debug
+    if config.general.debug:
         logger.warning("bot running in debug mode")
-    else:
-        aiogram_logger.setLevel(30)  # warning
+
+    logger.debug(f"config dir: {CONFIG_DIR}")
+    logger.debug(f"data dir: {DATA_DIR}")
+    logger.debug(f"cache dir: {CACHE_DIR}")
 
     for handler in logger.handlers:
         handler.level = logger.level
