@@ -30,7 +30,6 @@ class Trader(Mob):
         price = quantity * item.price
         await query.message.edit_text(
             t(
-                user.lang,
                 "mobs.trader.on-meet",
                 mob=self,
                 item=item,
@@ -49,7 +48,6 @@ class Chest(Mob):
         assert isinstance(query.message, Message)  # for linters
         await query.message.edit_text(
             t(
-                user.lang,
                 "mobs.chest.on-meet",
                 mob=self,
             ),

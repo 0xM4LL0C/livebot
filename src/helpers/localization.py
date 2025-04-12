@@ -26,6 +26,6 @@ i18n.register_constant("GUIDE_URL", "https://0xM4LL0C.github.io/livebot/guide")
 i18n.register_constant("VERSION", str(VERSION))
 
 
-def t(locale: str, key: str, **kwargs: Any):
+def t(key: str, **kwargs: Any) -> str:
     i18n.load()
-    return i18n.t(locale, key, **kwargs)
+    return i18n.t(i18n.default_locale, key, **kwargs)

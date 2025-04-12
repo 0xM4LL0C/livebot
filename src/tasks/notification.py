@@ -19,16 +19,16 @@ async def _notification():
         if user.action and user.action.is_done:
             if user.action.type == "walk" and not user.notification_status.walk:
                 user.notification_status.walk = True
-                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+                messages.add(t(f"notifications.end-{user.action.type}"))
             elif user.action.type == "work" and not user.notification_status.work:
                 user.notification_status.work = True
-                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+                messages.add(t(f"notifications.end-{user.action.type}"))
             elif user.action.type == "sleep" and not user.notification_status.sleep:
                 user.notification_status.sleep = True
-                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+                messages.add(t(f"notifications.end-{user.action.type}"))
             elif user.action.type == "game" and not user.notification_status.game:
                 user.notification_status.game = True
-                messages.add(t(user.lang, f"notifications.end-{user.action.type}"))
+                messages.add(t(f"notifications.end-{user.action.type}"))
         if user.health < 30:
             ...
         if user.fatigue < 30:

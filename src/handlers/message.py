@@ -53,28 +53,26 @@ async def start_cmd(message: Message, command: CommandObject):
             await from_user.update_async()
 
             user = await register_user(message)
-            mess = t(from_user.lang, "new_referral_joined", name=user.name, coin=coin)
+            mess = t("new_referral_joined", name=user.name, coin=coin)
 
             await message.bot.send_message(from_user.id, mess)
 
     if user is None:
         user = await register_user(message)
 
-    await message.reply(t(user.lang, "welcome", name=user.name))
+    await message.reply(t("welcome", name=user.name))
 
 
 @router.message(Command("help"))
 async def help_cmd(message: Message):
-    user = await UserModel.get_async(id=message.from_user.id)
-
-    await message.reply(t(user.lang, "help"))
+    await message.reply(t("help"))
 
 
 @router.message(Command("profile"))
 async def profile_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
-    await message.reply(t(user.lang, "profile", user=user))
+    await message.reply(t("profile", user=user))
 
 
 @router.message(Command("inventory"))
@@ -92,8 +90,8 @@ async def inventory_cmd(message: Message):
             items += f" ({pretty_float(item.usage)} %)"  # pyright: ignore[reportAttributeAccessIssue]
         items += "\n"
     if not items:
-        items = t(user.lang, "empty-inventory")
-    await message.reply(t(user.lang, "inventory", items=items))
+        items = t("empty-inventory")
+    await message.reply(t("inventory", items=items))
 
 
 @router.message(Command("shop"))
@@ -109,7 +107,7 @@ async def shop_cmd(message: Message, command: CommandObject):
         quantity = 1
 
     await message.reply(
-        t(user.lang, "shop.main", quantity=quantity),
+        t("shop.main", quantity=quantity),
         reply_markup=InlineMarkup.shop_main(quantity, user),
     )
 
@@ -121,7 +119,7 @@ async def casino_cmd(message: Message, command: CommandObject):
     quantity = command.args
 
     if not quantity:
-        await message.reply(t(user.lang, "casino.main"))
+        await message.reply(t("casino.main"))
         return
 
     try:
@@ -132,11 +130,11 @@ async def casino_cmd(message: Message, command: CommandObject):
     try:
         ticket = user.inventory.get("билет")
     except NoResult:
-        await message.reply(t(user.lang, "item-not-found-in-inventory", item_name="билет"))
+        await message.reply(t("item-not-found-in-inventory", item_name="билет"))
         return
 
     if user.coin < quantity:
-        await message.reply(t(user.lang, "item-not-enough", item_name="бабло"))
+        await message.reply(t("item-not-enough", item_name="бабло"))
         return
 
     dice = await message.answer_dice("🎲")
@@ -148,11 +146,11 @@ async def casino_cmd(message: Message, command: CommandObject):
     if dice.dice.value > 3:
         user.coin += quantity * 2
         user.casino_info.win += quantity * 2
-        await message.reply(t(user.lang, "casino.win", quantity=quantity * 2))
+        await message.reply(t("casino.win", quantity=quantity * 2))
     else:
         user.coin -= quantity
         user.casino_info.loose += quantity
-        await message.reply(t(user.lang, "casino.loose", quantity=quantity))
+        await message.reply(t("casino.loose", quantity=quantity))
 
     await user.check_status(message.chat.id)
     await user.update_async()
@@ -170,9 +168,7 @@ async def craft_cmd(message: Message, command: CommandObject):
     else:
         quantity = 1
 
-    await message.reply(
-        t(user.lang, "craft.main"), reply_markup=InlineMarkup.craft_main(quantity, user)
-    )
+    await message.reply(t("craft.main"), reply_markup=InlineMarkup.craft_main(quantity, user))
 
 
 @router.message(Command("transfer"))
@@ -182,7 +178,7 @@ async def transfer_cmd(message: Message, command: CommandObject):
     args = str(command.args).strip().split()
 
     if len(args) < 2:
-        await message.reply(t(user.lang, "transfer.help"))
+        await message.reply(t("transfer.help"))
         return
 
     item_name, quantity = args
@@ -190,7 +186,7 @@ async def transfer_cmd(message: Message, command: CommandObject):
     try:
         item = get_item(item_name)
     except ItemNotFoundError:
-        await message.reply(t(user.lang, "item-not-exist", item_name=item_name))
+        await message.reply(t("item-not-exist", item_name=item_name))
         return
 
     try:
@@ -199,7 +195,7 @@ async def transfer_cmd(message: Message, command: CommandObject):
         quantity = 1
 
     if not message.reply_to_message:
-        await message.reply(t(user.lang, "reply-to-message-required"))
+        await message.reply(t("reply-to-message-required"))
         return
     if (
         message.reply_to_message.from_user.is_bot
@@ -211,12 +207,11 @@ async def transfer_cmd(message: Message, command: CommandObject):
 
     if item.name == "бабло":
         if user.coin < quantity:
-            await message.reply(t(user.lang, "item-not-enough", item_name="бабло"))
+            await message.reply(t("item-not-enough", item_name="бабло"))
             return
         user.coin -= quantity
         target_user.coin += quantity
         mess = t(
-            user.lang,
             "transfer.success",
             from_user=user,
             to_user=target_user,
@@ -225,7 +220,7 @@ async def transfer_cmd(message: Message, command: CommandObject):
         )
     elif item.type == ItemType.USABLE:
         await message.reply(
-            t(user.lang, "select-which-one"),
+            t("select-which-one"),
             reply_markup=InlineMarkup.transfer_usable_items(
                 user=user,
                 to_user=target_user,
@@ -255,7 +250,7 @@ async def use_cmd(message: Message):
         key = "use.not-available-items"
 
     await message.reply(
-        t(user.lang, key),
+        t(key),
         reply_markup=InlineMarkup.use(items, user),
     )
 
@@ -266,7 +261,7 @@ async def ref_cmd(message: Message):
 
     link = f"https://t.me/{(await message.bot.me()).username}?start=ref_{user.id}"
 
-    await message.reply(t(user.lang, "ref", link=link))
+    await message.reply(t("ref", link=link))
 
 
 @router.message(Command("promo"))
@@ -276,22 +271,22 @@ async def promo_cmd(message: Message, command: CommandObject):
     args = command.args
 
     if not args:
-        await message.reply(t(user.lang, "promo.usage"))
+        await message.reply(t("promo.usage"))
         return
 
     try:
         promo = await PromoModel.get_async(code=args)
     except NoResult:
-        await message.reply(t(user.lang, "promo.not-exists"))
+        await message.reply(t("promo.not-exists"))
         return
 
     if promo.is_used:
-        await message.reply(t(user.lang, "promo.already-activated"))
+        await message.reply(t("promo.already-activated"))
         return
 
     await message.delete()
     if user.oid in promo.users:
-        await message.reply(t(user.lang, "promo.user-already-activated"))
+        await message.reply(t("promo.user-already-activated"))
         return
 
     promo.users.add(user.oid)
@@ -313,7 +308,7 @@ async def promo_cmd(message: Message, command: CommandObject):
     await user.update_async()
 
     await message.answer_sticker(Stickers.promo)
-    await message.answer(t(user.lang, "promo.activate", user=user, items=items))
+    await message.answer(t("promo.activate", user=user, items=items))
 
 
 @router.message(Command("quest"))
@@ -323,26 +318,22 @@ async def quest_cmd(message: Message):
     assert user.quest  # for linters
 
     await message.reply(
-        t(user.lang, "quest.main", quest=user.quest),
+        t("quest.main", quest=user.quest),
         reply_markup=InlineMarkup.quest(user),
     )
 
 
 @router.message(Command("weather"))
 async def weather_cmd(message: Message):
-    user = await UserModel.get_async(id=message.from_user.id)
-
     weather = await get_weather()
-    weather_type = t(user.lang, f"weather.types.{weather.current.code.name.lower()}")
-    await message.reply(t(user.lang, "weather.info", weather=weather, weather_type=weather_type))
+    weather_type = t(f"weather.types.{weather.current.code.name.lower()}")
+    await message.reply(t("weather.info", weather=weather, weather_type=weather_type))
 
 
 @router.message(Command("price"))
 async def price_cmd(message: Message, command: CommandObject):
-    user = await UserModel.get_async(id=message.from_user.id)
-
     if not command.args:
-        await message.reply(t(user.lang, "price.help"))
+        await message.reply(t("price.help"))
         return
 
     item_name = command.args.strip()
@@ -350,32 +341,30 @@ async def price_cmd(message: Message, command: CommandObject):
     try:
         item = get_item(item_name)
     except ItemNotFoundError:
-        await message.reply(t(user.lang, "item-not-exist", item_name=item_name))
+        await message.reply(t("item-not-exist", item_name=item_name))
         return
 
     price = get_item_middle_price(item.name)
-    await message.reply(t(user.lang, "price.price", item=item, price=price))
+    await message.reply(t("price.price", item=item, price=price))
 
 
 @router.message(Command("home"))
 async def home_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
-    await message.reply(t(user.lang, "home.main"), reply_markup=InlineMarkup.home_main(user))
+    await message.reply(t("home.main"), reply_markup=InlineMarkup.home_main(user))
 
 
 @router.message(Command("rules"))
 async def rules_cmd(message: Message):
-    user = await UserModel.get_async(id=message.from_user.id)
+    await UserModel.get_async(id=message.from_user.id)
 
-    await message.reply(t(user.lang, "rules"), reply_markup=InlineMarkup.rules(user))
+    await message.reply(t("rules"), reply_markup=InlineMarkup.rules())
 
 
 @router.message(Command("time"))
 async def time_cmd(message: Message):
-    user = await UserModel.get_async(id=message.from_user.id)
-
-    await message.reply(t(user.lang, "time"))
+    await message.reply(t("time"))
 
 
 @router.message(Command("violations"))
@@ -385,32 +374,30 @@ async def violations_cmd(message: Message):
     violations = ""
 
     if not user.violations:
-        violations = t(user.lang, "violation.none")
+        violations = t("violation.none")
     else:
         for i, violation in enumerate(user.violations, start=1):
-            until = t(user.lang, "violation.until", violation=violation) if violation else ""
+            until = t("violation.until", violation=violation) if violation else ""
             violations += f"{i} {violation.type} {until}"
             violations += f"    <i>{violation.reason}</i>"
 
-    await message.reply(t(user.lang, "violation.info", violations=violations))
+    await message.reply(t("violation.info", violations=violations))
 
 
 @router.message(Command("achievements"))
 async def achievements_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
-    await message.reply(
-        t(user.lang, "achievements.main"), reply_markup=InlineMarkup.achievements(user)
-    )
+    await message.reply(t("achievements.main"), reply_markup=InlineMarkup.achievements(user))
 
 
 @router.message(Command("version"))
 async def version_cmd(message: Message):
-    user = await UserModel.get_async(id=message.from_user.id)
+    await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(
-        t(user.lang, "version.info", status=await check_version()),
-        reply_markup=InlineMarkup.version(user),
+        t("version.info", status=await check_version()),
+        reply_markup=InlineMarkup.version(),
     )
 
 
@@ -425,4 +412,4 @@ async def daily_gift_cmd(message: Message):
     if user.daily_gift.next_available_at < utcnow():
         user.new_daily_gift()
 
-    await message.reply(t(user.lang, "daily-gift.main"))
+    await message.reply(t("daily-gift.main"))

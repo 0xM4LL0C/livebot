@@ -45,7 +45,7 @@ async def shop_callback(query: CallbackQuery, callback_data: ShopCallback):
     try:
         item = get_item(callback_data.item_name)
     except ItemNotFoundError as e:
-        await query.answer(t(user.lang, "item-not-exist", item_name=str(e)), show_alert=True)
+        await query.answer(t("item-not-exist", item_name=str(e)), show_alert=True)
         return
 
     assert item.price  # for linters
@@ -53,7 +53,7 @@ async def shop_callback(query: CallbackQuery, callback_data: ShopCallback):
     price = item.price * quantity
 
     if user.coin < price:
-        await query.answer(text=t(user.lang, "item-not-enough", item_name="бабло"), show_alert=True)
+        await query.answer(text=t("item-not-enough", item_name="бабло"), show_alert=True)
         return
 
     user.inventory.add(item.name, quantity)
@@ -63,7 +63,7 @@ async def shop_callback(query: CallbackQuery, callback_data: ShopCallback):
     assert isinstance(query.message, Message)
 
     await query.message.reply_to_message.reply(
-        t(user.lang, "shop.buy-item", quantity=quantity, item_name=item.name, price=price),
+        t("shop.buy-item", quantity=quantity, item_name=item.name, price=price),
     )
 
     await user.update_async()
@@ -81,7 +81,7 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
     try:
         item = get_item(callback_data.item_name)
     except ItemNotFoundError as e:
-        await query.answer(t(user.lang, "item-not-exist", item_name=str(e)), show_alert=True)
+        await query.answer(t("item-not-exist", item_name=str(e)), show_alert=True)
         return
 
     assert item.craft  # for linters
@@ -94,7 +94,7 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
             if user_item.quantity < craft.quantity * quantity:
                 raise NoResult(craft.name)
         except NoResult:
-            await query.answer(t(user.lang, "item-not-enough", item_name=craft.name))
+            await query.answer(t("item-not-enough", item_name=craft.name))
             return
 
         user.inventory.remove(user_item.name, craft.quantity * quantity)
@@ -117,7 +117,6 @@ async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
 
     await query.message.reply_to_message.reply(
         t(
-            user.lang,
             "craft.craft-item",
             quantity=quantity,
             item_name=item.name,
@@ -149,11 +148,11 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
     try:
         user_item = user.inventory.get_by_id(id=ObjectId(callback_data.item_oid))
     except NoResult:
-        await query.answer(t(user.lang, "item-not-found-in-inventory", item_name="?????"))
+        await query.answer(t("item-not-found-in-inventory", item_name="?????"))
         return
 
     if user_item.quantity <= 0:
-        await query.answer(t(user.lang, "item-not-enough", item_name=user_item.name))
+        await query.answer(t("item-not-enough", item_name=user_item.name))
         return
 
     item = get_item(user_item.name)
@@ -161,11 +160,11 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
     match item.name:
         case "трава" | "буханка" | "сэндвич" | "пицца" | "тако" | "суп":
             user.hunger += item.effect  # type: ignore
-            mess = t(user.lang, "use.hunger", item_name=item.name, effect=item.effect)
+            mess = t("use.hunger", item_name=item.name, effect=item.effect)
         case "буст":
             xp = random.randint(100, 150)
             user.xp += xp
-            mess = t(user.lang, "use.boost", item_name=item.name, xp=xp)
+            mess = t("use.boost", item_name=item.name, xp=xp)
         case "бокс":
             num_items_to_get = random.randint(1, 3)
             items = ""
@@ -178,37 +177,37 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
                     user.coin += quantity
                 else:
                     user.inventory.add(item_to_get.name, quantity)
-            mess = t(user.lang, "use.box-opened", items=items)
+            mess = t("use.box-opened", items=items)
         case "энергос" | "чай":
             user.fatigue += item.effect  # type: ignore
-            mess = t(user.lang, "use.fatigue", item_name=item.name, effect=item.effect)
+            mess = t("use.fatigue", item_name=item.name, effect=item.effect)
         case "пилюля":
-            await query.message.reply(t(user.lang, "under-development"))
+            await query.message.reply(t("under-development"))
             return
         case "хелп":
             user.health += item.effect  # type: ignore
-            mess = t(user.lang, "use.health", item_name=item.name, effect=item.effect)
+            mess = t("use.health", item_name=item.name, effect=item.effect)
         case "фиксоманчик":
-            await query.message.reply(t(user.lang, "under-development"))
+            await query.message.reply(t("under-development"))
             return
         case "водка":
             user.fatigue = 100
             user.health -= item.effect  # type: ignore
-            mess = t(user.lang, "use.vodka", item_name=item.name, effect=item.effect)
+            mess = t("use.vodka", item_name=item.name, effect=item.effect)
         case "велик":
             if not user.action or user.action.type != "walk":
                 await query.message.reply("Ты не гуляешь")  # TODO: add translation
                 return
             minutes = random.randint(10, 45)
             user.action.end -= timedelta(minutes=minutes)
-            mess = t(user.lang, "use.bike", item_name=item.name, minutes=minutes)
+            mess = t("use.bike", item_name=item.name, minutes=minutes)
         case "клевер-удачи":
             user.luck += item.effect  # type: ignore
-            mess = t(user.lang, "use.luck", item_name=item.name, effect=item.effect)
+            mess = t("use.luck", item_name=item.name, effect=item.effect)
         case "конфета":
             user.hunger += item.effect  # type: ignore
             user.fatigue += item.effect  # type: ignore
-            mess = t(user.lang, "use.candy", item_name=item.name, effect=item.effect)
+            mess = t("use.candy", item_name=item.name, effect=item.effect)
         case _:
             raise NotImplementedError(item.name)
 
@@ -225,7 +224,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
 
     assert isinstance(query.message, Message)
     await query.message.edit_text(
-        t(user.lang, key),
+        t(key),
         reply_markup=InlineMarkup.use(items, user),
     )
     await query.message.reply(mess)
@@ -241,18 +240,18 @@ async def quest_callback(query: CallbackQuery, callback_data: QuestCallback):
     assert isinstance(query.message, Message)  # for linters
     if callback_data.action == "skip":
         if user.coin < user.new_quest_coin_quantity:
-            await query.answer(t(user.lang, "item-not-enough", item_name="бабло"))
+            await query.answer(t("item-not-enough", item_name="бабло"))
             return
         user.coin -= user.new_quest_coin_quantity
         user.new_quest_coin_quantity += random.randint(10, 20)
         user.new_quest()
         await query.message.delete()
         await user.update_async()
-        await query.answer(t(user.lang, "quest.skipped"), show_alert=True)
+        await query.answer(t("quest.skipped"), show_alert=True)
         return
 
     if not user.quest.is_done:
-        await query.answer(t(user.lang, "quest.quest-not-completed"))
+        await query.answer(t("quest.quest-not-completed"))
         return
 
     for name, quantity in user.quest.needed_items.items():
@@ -267,7 +266,7 @@ async def quest_callback(query: CallbackQuery, callback_data: QuestCallback):
     await user.update_async()
     await query.message.delete()
     await query.message.answer_sticker(Stickers.quest)
-    await query.message.reply_to_message.reply(t(user.lang, "quest.complete", quest=old_quest))
+    await query.message.reply_to_message.reply(t("quest.complete", quest=old_quest))
 
 
 @router.callback_query(HomeCallback.filter())
@@ -282,12 +281,12 @@ async def home_callback(query: CallbackQuery, callback_data: HomeCallback):
     match callback_data.action:
         case "actions":
             await query.message.edit_text(
-                t(user.lang, "home.actions-choice"),
+                t("home.actions-choice"),
                 reply_markup=InlineMarkup.home_actions_choice(user),
             )
         case "main-menu":
             await query.message.edit_text(
-                t(user.lang, "home.main"),
+                t("home.main"),
                 reply_markup=InlineMarkup.home_main(user),
             )
         case "walk":
@@ -311,7 +310,7 @@ async def trader_callback(query: CallbackQuery, callback_data: TraderCallback):
 
     if callback_data.action == "leave":
         await query.message.delete()
-        await query.answer(t(user.lang, "mobs.trader.leave"), show_alert=True)
+        await query.answer(t("mobs.trader.leave"), show_alert=True)
         return
 
     assert callback_data.item_name  # for linters
@@ -322,7 +321,7 @@ async def trader_callback(query: CallbackQuery, callback_data: TraderCallback):
 
     if user.coin < callback_data.price:
         await query.answer(
-            t(user.lang, "item-not-enough", item_name="бабло"),
+            t("item-not-enough", item_name="бабло"),
             show_alert=True,
         )
         return
@@ -333,7 +332,6 @@ async def trader_callback(query: CallbackQuery, callback_data: TraderCallback):
     await query.message.delete()
     await query.message.answer(
         t(
-            user.lang,
             "mobs.trader.trade",
             user=user,
             item=item,
@@ -354,15 +352,13 @@ async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
 
     if callback_data.action == "leave":
         await query.message.delete()
-        await query.answer(t(user.lang, "mobs.chest.leave"), show_alert=True)
+        await query.answer(t("mobs.chest.leave"), show_alert=True)
         return
 
     try:
         key_item = user.inventory.get("ключ")
     except NoResult:
-        await query.answer(
-            t(user.lang, "item-not-found-in-inventory", item_name="ключ"), show_alert=True
-        )
+        await query.answer(t("item-not-found-in-inventory", item_name="ключ"), show_alert=True)
         return
 
     print(key_item.quantity, key_item.quantity < 1)
@@ -387,7 +383,7 @@ async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
     user.achievements_info.incr_progress("кладоискатель")
     await user.update_async()
 
-    await query.message.answer(t(user.lang, "mobs.chest.open", user=user, items=items))
+    await query.message.answer(t("mobs.chest.open", user=user, items=items))
     await query.message.delete()
 
 
@@ -403,7 +399,6 @@ async def achievements_callback(query: CallbackQuery, callback_data: Achievement
 
     await query.answer(
         t(
-            user.lang,
             "achievements.info",
             achievement=achievement,
             user_achievement=user_achievement,

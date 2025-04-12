@@ -5,7 +5,7 @@ target-version = "py311"
 
 
 [lint]
-select = ["E4", "E7", "E9", "F", "I", "N", "TD", "RUF"]
+select = ["E4", "E7", "E9", "F", "I", "N", "TD", "RUF", "ARG"]
 ignore = ["N818", "TD002", "TD003", "RUF001"]
 fixable = ["ALL"]
 unfixable = []

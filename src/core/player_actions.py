@@ -21,16 +21,16 @@ async def walk_action(query: CallbackQuery, user: UserModel):
     current_time = utcnow()
     if user.action is None:
         if user.hunger <= 20:
-            await query.answer(t(user.lang, "too_hungry"), show_alert=True)
+            await query.answer(t("too_hungry"), show_alert=True)
             return
         if user.fatigue <= 20:
-            await query.answer(t(user.lang, "too_tired"), show_alert=True)
+            await query.answer(t("too_tired"), show_alert=True)
             return
 
         user.action = UserAction("walk", end=current_time + timedelta(hours=1))
         await user.update_async()
     elif not user.is_current_action("walk"):
-        await query.answer(t(user.lang, "busy_with_something_else"), show_alert=True)
+        await query.answer(t("busy_with_something_else"), show_alert=True)
         return
 
     if current_time < user.action.end:
@@ -44,7 +44,7 @@ async def walk_action(query: CallbackQuery, user: UserModel):
 
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
-                t(user.lang, "actions.walk.walking", time_left=time_left),
+                t("actions.walk.walking", time_left=time_left),
                 reply_markup=InlineMarkup.update_action(user.action.type, user),
             )
         return
@@ -92,7 +92,7 @@ async def walk_action(query: CallbackQuery, user: UserModel):
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
-    await query.message.edit_text(t(user.lang, "actions.walk.end", items=items))
+    await query.message.edit_text(t("actions.walk.end", items=items))
 
 
 async def work_action(query: CallbackQuery, user: UserModel):
@@ -100,10 +100,10 @@ async def work_action(query: CallbackQuery, user: UserModel):
     current_time = utcnow()
     if user.action is None:
         if user.hunger <= 20:
-            await query.answer(t(user.lang, "too_hungry"), show_alert=True)
+            await query.answer(t("too_hungry"), show_alert=True)
             return
         if user.fatigue <= 20:
-            await query.answer(t(user.lang, "too_tired"), show_alert=True)
+            await query.answer(t("too_tired"), show_alert=True)
             return
 
         user.action = UserAction(
@@ -113,7 +113,7 @@ async def work_action(query: CallbackQuery, user: UserModel):
         )
         await user.update_async()
     elif not user.is_current_action("work"):
-        await query.answer(t(user.lang, "busy_with_something_else"), show_alert=True)
+        await query.answer(t("busy_with_something_else"), show_alert=True)
         return
 
     if current_time < user.action.end:
@@ -127,7 +127,7 @@ async def work_action(query: CallbackQuery, user: UserModel):
 
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
-                t(user.lang, "actions.work.working", time_left=time_left),
+                t("actions.work.working", time_left=time_left),
                 reply_markup=InlineMarkup.update_action(user.action.type, user),
             )
         return
@@ -145,7 +145,7 @@ async def work_action(query: CallbackQuery, user: UserModel):
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
-    await query.message.edit_text(t(user.lang, "actions.work.end", quantity=quantity))
+    await query.message.edit_text(t("actions.work.end", quantity=quantity))
 
 
 async def sleep_action(query: CallbackQuery, user: UserModel):
@@ -153,10 +153,10 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
     current_time = utcnow()
     if user.action is None:
         if user.hunger <= 20:
-            await query.answer(t(user.lang, "too_hungry"), show_alert=True)
+            await query.answer(t("too_hungry"), show_alert=True)
             return
         if user.fatigue <= 20:
-            await query.answer(t(user.lang, "too_tired"), show_alert=True)
+            await query.answer(t("too_tired"), show_alert=True)
             return
 
         user.action = UserAction(
@@ -165,7 +165,7 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
         )
         await user.update_async()
     elif not user.is_current_action("sleep"):
-        await query.answer(t(user.lang, "busy_with_something_else"), show_alert=True)
+        await query.answer(t("busy_with_something_else"), show_alert=True)
         return
 
     if current_time < user.action.end:
@@ -179,7 +179,7 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
 
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
-                t(user.lang, "actions.sleep.sleeping", time_left=time_left),
+                t("actions.sleep.sleeping", time_left=time_left),
                 reply_markup=InlineMarkup.update_action(user.action.type, user),
             )
         return
@@ -196,7 +196,7 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
-    await query.message.edit_text(t(user.lang, "actions.sleep.end", fatigue=fatigue))
+    await query.message.edit_text(t("actions.sleep.end", fatigue=fatigue))
 
 
 async def game_action(query: CallbackQuery, user: UserModel):
@@ -204,10 +204,10 @@ async def game_action(query: CallbackQuery, user: UserModel):
     current_time = utcnow()
     if user.action is None:
         if user.hunger <= 20:
-            await query.answer(t(user.lang, "too_hungry"), show_alert=True)
+            await query.answer(t("too_hungry"), show_alert=True)
             return
         if user.fatigue <= 20:
-            await query.answer(t(user.lang, "too_tired"), show_alert=True)
+            await query.answer(t("too_tired"), show_alert=True)
             return
 
         user.action = UserAction(
@@ -217,7 +217,7 @@ async def game_action(query: CallbackQuery, user: UserModel):
         )
         await user.update_async()
     elif not user.is_current_action("game"):
-        await query.answer(t(user.lang, "busy_with_something_else"), show_alert=True)
+        await query.answer(t("busy_with_something_else"), show_alert=True)
         return
 
     if current_time < user.action.end:
@@ -231,7 +231,7 @@ async def game_action(query: CallbackQuery, user: UserModel):
 
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
-                t(user.lang, "actions.game.gaming", time_left=time_left),
+                t("actions.game.gaming", time_left=time_left),
                 reply_markup=InlineMarkup.update_action(user.action.type, user),
             )
         return
@@ -247,4 +247,4 @@ async def game_action(query: CallbackQuery, user: UserModel):
 
     await user.check_status(query.message.chat.id)
     await user.update_async()
-    await query.message.edit_text(t(user.lang, "actions.game.end", mood=mood))
+    await query.message.edit_text(t("actions.game.end", mood=mood))

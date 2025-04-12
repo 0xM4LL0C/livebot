@@ -123,19 +123,19 @@ class InlineMarkup:
     @classmethod
     def quest(cls, user: UserModel) -> InlineKeyboardMarkup:
         if user.quest.is_done:
-            finish_button_text = t(user.lang, "quest.buttons.done-text")
-            text = t(user.lang, "quest.buttons.done", button_text=finish_button_text)
+            finish_button_text = t("quest.buttons.done-text")
+            text = t("quest.buttons.done", button_text=finish_button_text)
             callback_data = QuestCallback(action="done", user_id=user.id)
         else:
-            finish_button_text = t(user.lang, "quest.buttons.skip")
-            text = t(user.lang, "quest.buttons.done", button_text=finish_button_text)
+            finish_button_text = t("quest.buttons.skip")
+            text = t("quest.buttons.done", button_text=finish_button_text)
             callback_data = QuestCallback(action="skip", user_id=user.id)
 
         return quick_markup({text: {"callback_data": callback_data}})
 
     @classmethod
     def home_main(cls, user: UserModel) -> InlineKeyboardMarkup:
-        actions_button_text = t(user.lang, "home.buttons.open-actions")
+        actions_button_text = t("home.buttons.open-actions")
         return quick_markup(
             {
                 actions_button_text: {
@@ -151,10 +151,10 @@ class InlineMarkup:
                 return f"🔹 {text}"
             return text
 
-        walk_text = active_action_text("walk", t(user.lang, "home.buttons.actions.walk"))
-        work_text = active_action_text("work", t(user.lang, "home.buttons.actions.work"))
-        sleep_text = active_action_text("sleep", t(user.lang, "home.buttons.actions.sleep"))
-        game_text = active_action_text("game", t(user.lang, "home.buttons.actions.game"))
+        walk_text = active_action_text("walk", t("home.buttons.actions.walk"))
+        work_text = active_action_text("work", t("home.buttons.actions.work"))
+        sleep_text = active_action_text("sleep", t("home.buttons.actions.sleep"))
+        game_text = active_action_text("game", t("home.buttons.actions.game"))
         return quick_markup(
             {
                 walk_text: {"callback_data": HomeCallback(action="walk", user_id=user.id)},
@@ -173,8 +173,8 @@ class InlineMarkup:
         price: int,
         quantity: int,
     ) -> InlineKeyboardMarkup:
-        trade_text = t(user.lang, "mobs.trader.buttons.trade")
-        leave_text = t(user.lang, "mobs.buttons.leave")
+        trade_text = t("mobs.trader.buttons.trade")
+        leave_text = t("mobs.buttons.leave")
 
         return quick_markup(
             {
@@ -194,8 +194,8 @@ class InlineMarkup:
 
     @classmethod
     def chest(cls, user: UserModel) -> InlineKeyboardMarkup:
-        open_text = t(user.lang, "mobs.chest.buttons.open")
-        leave_text = t(user.lang, "mobs.buttons.leave")
+        open_text = t("mobs.chest.buttons.open")
+        leave_text = t("mobs.buttons.leave")
 
         return quick_markup(
             {
@@ -207,8 +207,8 @@ class InlineMarkup:
 
     @classmethod
     def update_action(cls, action: UserActionType, user: UserModel) -> InlineKeyboardMarkup:
-        update_text = t(user.lang, "buttons.update")
-        back_text = t(user.lang, "buttons.back")
+        update_text = t("buttons.update")
+        back_text = t("buttons.back")
 
         return quick_markup(
             {
@@ -218,8 +218,8 @@ class InlineMarkup:
         )
 
     @classmethod
-    def rules(cls, user: UserModel) -> InlineKeyboardMarkup:
-        read_text = t(user.lang, "read")
+    def rules(cls) -> InlineKeyboardMarkup:
+        read_text = t("read")
         return quick_markup({read_text: {"url": "https://0xM4LL0C.github.io/livebot/rules"}})
 
     @classmethod
@@ -239,16 +239,12 @@ class InlineMarkup:
         return builder.as_markup()
 
     @classmethod
-    def version(cls, user: UserModel) -> InlineKeyboardMarkup:
+    def version(cls) -> InlineKeyboardMarkup:
         return quick_markup(
-            {
-                t(user.lang, "version.buttons.release"): {
-                    "url": REPO_URL + f"releases/tag/v{VERSION}"
-                }
-            }
+            {t("version.buttons.release"): {"url": REPO_URL + f"releases/tag/v{VERSION}"}}
         )
 
     @classmethod
-    def daily_gift(cls, user: UserModel) -> InlineKeyboardMarkup:
+    def daily_gift(cls, _user: UserModel) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         return builder.as_markup()

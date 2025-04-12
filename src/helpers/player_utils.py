@@ -33,7 +33,7 @@ def transfer_item(
         assert user_item
         item = get_item(user_item.name)
     except NoResult:
-        return t(from_user.lang, "item-not-found-in-inventory", item_name="?????")
+        return t("item-not-found-in-inventory", item_name="?????")
 
     from_user.inventory.remove(user_item.name, quantity, id=user_item.id)
 
@@ -46,7 +46,6 @@ def transfer_item(
         key = "transfer.success"
 
     return t(
-        from_user.lang,
         key,
         from_user=from_user,
         to_user=to_user,
@@ -73,7 +72,7 @@ def get_available_items_for_use(user: "UserModel") -> "list[UserItem]":
     return sorted(available_items, key=lambda item: item.quantity, reverse=True)
 
 
-async def check_user_subscription(user: UserModel) -> bool:
+async def check_user_subscription(user: "UserModel") -> bool:
     tg_user = await bot.get_chat_member(config.telegram.channel_id, user.id)
     if tg_user.status in [
         ChatMemberStatus.MEMBER,
