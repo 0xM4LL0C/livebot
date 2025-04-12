@@ -247,3 +247,8 @@ class InlineMarkup:
                 }
             }
         )
+
+    @classmethod
+    def daily_gift(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        return builder.as_markup()

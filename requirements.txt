@@ -10,3 +10,4 @@ mashumaro[toml]==3.15
 i18n-lib==0.2.0
 diskcache==5.6.3
 aiohttp==3.11.16
+annotated-types==0.7.0

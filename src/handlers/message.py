@@ -9,11 +9,17 @@ from consts import TELEGRAM_ID
 from core.weather import get_weather
 from data.items.utils import get_item, get_item_emoji
 from database.models import PromoModel, UserModel
+from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
 from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.player_utils import get_available_items_for_use, transfer_item
+from helpers.player_utils import (
+    check_user_subscription,
+    get_available_items_for_use,
+    send_channel_subscribe_message,
+    transfer_item,
+)
 from helpers.stickers import Stickers
 from helpers.utils import (
     check_version,
@@ -406,3 +412,17 @@ async def version_cmd(message: Message):
         t(user.lang, "version.info", status=await check_version()),
         reply_markup=InlineMarkup.version(user),
     )
+
+
+@router.message(Command("daily_gift"))
+async def daily_gift_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    if not await check_user_subscription(user):
+        await send_channel_subscribe_message(message)
+        return
+
+    if user.daily_gift.next_available_at < utcnow():
+        user.new_daily_gift()
+
+    await message.reply(t(user.lang, "daily-gift.main"))

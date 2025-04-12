@@ -1,12 +1,16 @@
 from typing import TYPE_CHECKING
 
+from aiogram.enums import ChatMemberStatus
+from aiogram.types import Message
 from bson import ObjectId
 
+from config import bot, config
 from data.items.utils import get_item
 from helpers.cache import cached
 from helpers.enums import ItemType
 from helpers.exceptions import NoResult
 from helpers.localization import t
+from helpers.utils import quick_markup
 
 
 if TYPE_CHECKING:
@@ -67,3 +71,21 @@ def get_available_items_for_use(user: "UserModel") -> "list[UserItem]":
         user_item for user_item in user.inventory.items if is_item_available(user_item)
     ]
     return sorted(available_items, key=lambda item: item.quantity, reverse=True)
+
+
+async def check_user_subscription(user: UserModel) -> bool:
+    tg_user = await bot.get_chat_member(config.telegram.channel_id, user.id)
+    if tg_user.status in [
+        ChatMemberStatus.MEMBER,
+        ChatMemberStatus.ADMINISTRATOR,
+        ChatMemberStatus.CREATOR,
+    ]:
+        return True
+    return False
+
+
+async def send_channel_subscribe_message(message: Message):
+    chat_info = await message.bot.get_chat(config.telegram.channel_id)
+    markup = quick_markup({"Подписаться": {"url": f"t.me/{chat_info.username}"}})
+    mess = "Чтобы использовать эту функцию нужно подписаться на новостной канал"
+    await message.reply(mess, reply_markup=markup)

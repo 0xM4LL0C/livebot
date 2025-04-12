@@ -12,11 +12,11 @@ from mashumaro import field_options
 from config import bot
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
-from data.items.utils import get_item, get_item_emoji
+from data.items.utils import get_item, get_item_count_for_rarity, get_item_emoji
 from database.base import BaseModel, SubModel
 from datatypes import Achievement, ChatIdType, UserActionType
 from helpers.datetime_utils import utcnow
-from helpers.enums import ItemType, Locations
+from helpers.enums import ItemRarity, ItemType, Locations
 from helpers.exceptions import AchievementNotFoundError, NoResult
 from helpers.player_utils import calc_xp_for_level
 from helpers.stickers import Stickers
@@ -245,9 +245,22 @@ class UserViolation(SubModel):
 class DailyGift(SubModel):
     streak: int = 0
     last_claimed_at: Optional[datetime] = None
-    next_claimable_at: datetime = field(default_factory=lambda: utcnow() + timedelta(days=1))
     is_claimed: bool = False
     items: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def is_available(self) -> bool:
+        return (
+            not self.is_claimed
+            or not self.last_claimed_at
+            or utcnow() - self.last_claimed_at <= timedelta(days=1)
+        )
+
+    @property
+    def next_available_at(self) -> datetime:
+        if self.last_claimed_at:
+            return self.last_claimed_at + timedelta(days=1)
+        return utcnow()
 
 
 @dataclass
@@ -328,6 +341,7 @@ class UserModel(BaseModel):
     max_items_count_in_market: int = 2
     new_quest_coin_quantity: int = 5
     met_mob: bool = False
+    daily_gift: DailyGift = field(default_factory=DailyGift)
 
     def __post_init__(self):
         self.achievements_info._user = ref(self)  # pylint: disable=W0212
@@ -433,6 +447,16 @@ class UserModel(BaseModel):
 
             if ach.check(self):
                 await self.achievements_info.award(ach)
+
+    def new_daily_gift(self):
+        items = list(filter(lambda i: i.rarity == ItemRarity.COMMON, ITEMS))
+        items = random.choices(items, k=random.randint(1, 3))
+
+        self.daily_gift.items = {}
+        self.daily_gift.is_claimed = False
+
+        for item in items:
+            self.daily_gift.items[item.name] = get_item_count_for_rarity(item.rarity)
 
 
 @dataclass

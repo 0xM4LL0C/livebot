@@ -276,3 +276,5 @@ version:
     release: Релиз
   info: |
     <b>Версия:</b> <code>{const:VERSION}</code> | <i>{status}</i>
+daily-gift:
+  main: <b>Ежедневный подарок</b>

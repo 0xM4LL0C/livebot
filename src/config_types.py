@@ -31,6 +31,7 @@ class RedisConfig:
 class TelegramConfig:
     token: str
     log_chat_id: int | str
+    channel_id: int
     log_thread_id: Optional[int] = None
 
 
@@ -70,7 +71,11 @@ class Config(DataClassTOMLMixin):
             general=GeneralConfig(weather_region="weather region"),
             database=DatabaseConfig(url="database_url"),
             redis=RedisConfig(url="redis_url"),
-            telegram=TelegramConfig(token="bot token from @BotFather", log_chat_id="log chat id"),
+            telegram=TelegramConfig(
+                token="bot token from @BotFather",
+                log_chat_id="log chat id",
+                channel_id=0,
+            ),
         )
 
         config.update(default_config.to_dict())
