@@ -65,7 +65,9 @@ class UserItem(SubModel):
     id: ObjectId = field(default_factory=ObjectId)
 
     def __post_init__(self):
-        if self.type == ItemType.USABLE and not self.usage:
+        if self.type == ItemType.USABLE and self.usage is None:
+            if self.quantity > 1:
+                raise ValueError("Usable items cannot have a quantity greater than 1")
             self.usage = 0.0
 
     @property
@@ -466,26 +468,25 @@ class PromoModel(BaseModel):
         return len(self.users) > self.max_usage_count
 
 
-# @dataclass
-# class MarketItemModel(BaseModel):
-#     name: str
-#     price: int
-#     quantity: int
-#     owner_oid: ObjectId
-#     usage: Optional[float] = None
-#     publishes_ad: datetime = field(default_factory=utcnow)
+@dataclass
+class MarketItemModel(BaseModel):
+    name: str
+    price: int
+    quantity: int
+    owner_oid: ObjectId
+    usage: Optional[float] = None
+    publishes_ad: datetime = field(default_factory=utcnow)
 
-#     @property
-#     def owner(self) -> UserModel:
-#         return UserModel.get(oid=self.owner_oid)
+    @property
+    def owner(self) -> UserModel:
+        return UserModel.get(oid=self.owner_oid)
 
-#     @property
-#     def type(self) -> ItemType:
-#         return get_item(self.name).type
+    @property
+    def type(self) -> ItemType:
+        return get_item(self.name).type
 
-#     def __post_init__(self):
-#         item = get_item(self.name)
-#         if item.type == ItemType.USABLE and self.quantity > 1:
-#             raise ValueError("Quantity must be 0 or 1 for items with type `ItemType.USABLE`")
-#         if item.type == ItemType.STACKABLE and self.usage is not None:
-#             raise ValueError("Usage must be `None` for items with type `ItemType.STACKABLE`")
+    def __post_init__(self):
+        if self.type == ItemType.USABLE and self.usage is None:
+            if self.quantity > 1:
+                raise ValueError("Usable items cannot have a quantity greater than 1")
+            self.usage = 0.0
