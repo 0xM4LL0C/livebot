@@ -1,11 +1,11 @@
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from consts import REPO_URL, VERSION
+from consts import COIN_EMOJI, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT, REPO_URL, VERSION
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item_emoji
-from database.models import UserItem, UserModel
+from database.models import MarketItemModel, UserItem, UserModel
 from datatypes import UserActionType
 from helpers.callback_factory import (
     AchievementsCallback,
@@ -13,6 +13,7 @@ from helpers.callback_factory import (
     CraftCallback,
     DailyGiftCallback,
     HomeCallback,
+    MarketCallback,
     QuestCallback,
     ShopCallback,
     TraderCallback,
@@ -22,7 +23,7 @@ from helpers.callback_factory import (
 from helpers.enums import ItemType
 from helpers.exceptions import NoResult
 from helpers.localization import t
-from helpers.utils import pretty_float, pretty_int, quick_markup
+from helpers.utils import batched, pretty_float, pretty_int, quick_markup
 
 
 class InlineMarkup:
@@ -253,3 +254,115 @@ class InlineMarkup:
             return t("daily-gift.buttons.available")
 
         return quick_markup({get_text(): {"callback_data": DailyGiftCallback(user_id=user.id)}})
+
+    @classmethod
+    def market_main(
+        cls,
+        page: int,
+        user: UserModel,
+    ) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        items = MarketItemModel.get_all()
+        items.sort(key=lambda i: i.published_at, reverse=True)
+        try:
+            items = batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)[page]
+        except IndexError:
+            items = []
+
+        for item in items:
+            builder.button(
+                text=(
+                    f"{pretty_int(item.quantity)} {get_item_emoji(item.name)} - {pretty_int(item.price)} {COIN_EMOJI}"
+                    + ("(" + pretty_float(item.usage) + ")" if item.usage else "")
+                ),
+                callback_data=MarketCallback(
+                    action="view",
+                    item_oid=str(item.oid),
+                    current_page=page,
+                    user_id=user.id,
+                ),
+            )
+
+        builder.adjust(1)
+        builder.row(
+            InlineKeyboardButton(
+                text="⬅️",
+                callback_data=MarketCallback(
+                    action="back", current_page=page, user_id=user.id
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="🛍",
+                callback_data=MarketCallback(
+                    action="kiosk", current_page=page, user_id=user.id
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="➡️",
+                callback_data=MarketCallback(
+                    action="next", current_page=page, user_id=user.id
+                ).pack(),
+            ),
+        )
+        return builder.as_markup()
+
+    @classmethod
+    def market_item_view(
+        cls, current_page: int, market_item: MarketItemModel, user: UserModel
+    ) -> InlineKeyboardMarkup:
+        return quick_markup(
+            {
+                t("market.buy", item=market_item): {
+                    "callback_data": MarketCallback(
+                        action="buy",
+                        current_page=current_page,
+                        item_oid=str(market_item.oid),
+                        user_id=user.id,
+                    )
+                },
+                t("buttons.back"): {
+                    "callback_data": MarketCallback(
+                        action="goto",
+                        current_page=current_page,
+                        user_id=user.id,
+                    )
+                },
+            }
+        )
+
+    @classmethod
+    def market_kiosk(cls, current_page: int, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        builder.row(
+            InlineKeyboardButton(
+                text="👀",
+                callback_data=MarketCallback(
+                    action="my-items",
+                    current_page=current_page,
+                    user_id=user.id,
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="➕",
+                callback_data=MarketCallback(
+                    action="add",
+                    current_page=current_page,
+                    user_id=user.id,
+                ).pack(),
+            ),
+        )
+
+        builder.row(
+            InlineKeyboardButton(
+                text=t("buttons.back"),
+                callback_data=MarketCallback(
+                    action="goto",
+                    current_page=current_page,
+                    user_id=user.id,
+                ).pack(),
+            )
+        )
+
+        return builder.as_markup()

@@ -7,17 +7,19 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
+from consts import MARKET_ITEMS_LIST_MAX_ITEMS_COUNT
 from core.player_actions import game_action, sleep_action, walk_action, work_action
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_count_for_rarity
-from database.models import UserModel
+from database.models import MarketItemModel, UserModel
 from helpers.callback_factory import (
     AchievementsCallback,
     ChestCallback,
     CraftCallback,
     DailyGiftCallback,
     HomeCallback,
+    MarketCallback,
     QuestCallback,
     ShopCallback,
     TraderCallback,
@@ -31,7 +33,7 @@ from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.player_utils import check_user_subscription, get_available_items_for_use, transfer_item
 from helpers.stickers import Stickers
-from helpers.utils import pretty_int
+from helpers.utils import batched, pretty_float, pretty_int
 
 
 router = Router()
@@ -456,3 +458,106 @@ async def daily_gift_callback(query: CallbackQuery, callback_data: DailyGiftCall
 
     await query.message.answer(mess)
     await query.message.edit_reply_markup(reply_markup=InlineMarkup.daily_gift(user))
+
+
+@router.callback_query(MarketCallback.filter())
+async def market_callback(query: CallbackQuery, callback_data: MarketCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    assert isinstance(query.message, Message)  # for linters
+
+    match callback_data.action:
+        case "view":
+            assert callback_data.current_page is not None  # for linters
+            item = await MarketItemModel.get_async(oid=callback_data.item_oid)
+
+            await query.message.edit_text(
+                t(
+                    "market.item-info",
+                    item=item,
+                ),
+                reply_markup=InlineMarkup.market_item_view(callback_data.current_page, item, user),
+            )
+        case "goto":
+            assert callback_data.current_page is not None  # for linters
+            items = await MarketItemModel.get_all_async()
+            page = callback_data.current_page
+            max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+            await query.message.edit_text(
+                t("market.main", current_page=page + 1, max_page=max_page),
+                reply_markup=InlineMarkup.market_main(page, user),
+            )
+        case "buy":
+            item = await MarketItemModel.get_async(oid=callback_data.item_oid)
+
+            if user.coin < item.price:
+                await query.answer(t("item-not-enough", item_name="бабло"))
+                return
+
+            user.coin -= item.price
+            usage_text = ""
+            if item.usage:
+                usage_text = f"({pretty_float(item.usage)}%)"
+                user.inventory.add(item.name, item.quantity, item.usage)
+            else:
+                user.inventory.add(item.name, item.quantity)
+
+            await item.delete_async()
+            await user.update_async()
+
+            assert callback_data.current_page is not None  # for linters
+            items = await MarketItemModel.get_all_async()
+            page = callback_data.current_page
+            max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+            await query.message.edit_text(
+                t("market.main", current_page=page + 1, max_page=max_page),
+                reply_markup=InlineMarkup.market_main(page, user),
+            )
+
+            await query.message.answer(t("market.buy-item", user=user, usage=usage_text, item=item))
+            await query.bot.send_message(
+                query.message.chat.id,
+                t("market.sold-item", user=user, usage=usage_text, item=item),
+            )
+        case "back" | "next":
+            assert callback_data.current_page is not None
+            items = await MarketItemModel.get_all_async()
+            page = callback_data.current_page
+            max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+            if callback_data.action == "back":
+                page -= 1
+            else:
+                page += 1
+
+            page = max(0, min(max_page - 1, page))
+
+            with suppress(TelegramBadRequest):
+                await query.message.edit_text(
+                    t("market.main", current_page=page + 1, max_page=max_page),
+                    reply_markup=InlineMarkup.market_main(page, user),
+                )
+        case "kiosk":
+            assert callback_data.current_page is not None
+
+            await query.message.edit_text(
+                t("market.kiosk"),
+                reply_markup=InlineMarkup.market_kiosk(callback_data.current_page, user),
+            )
+        case "add":
+            ...
+        case "delete":
+            assert callback_data.item_oid  # for linters
+            item = await MarketItemModel.get_async(oid=callback_data.item_oid)
+
+            if item.usage:
+                user.inventory.add(item.name, item.quantity, item.usage)
+            else:
+                user.inventory.add(item.name, item.quantity)
+
+            await item.delete_async()
+            await user.update_async()
+
+            # TODO: implement

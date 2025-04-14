@@ -25,3 +25,5 @@ with (DATA_DIR / "version").open("r", encoding="utf-8") as f:
 
 AUTHOR = "0xM4LL0C"
 REPO_URL: Final = f"https://github.com/{AUTHOR}/{APP_NAME}/"
+
+MARKET_ITEMS_LIST_MAX_ITEMS_COUNT: Final = 5

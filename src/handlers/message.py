@@ -5,10 +5,10 @@ from aiogram import Router
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
-from consts import TELEGRAM_ID
+from consts import MARKET_ITEMS_LIST_MAX_ITEMS_COUNT, TELEGRAM_ID
 from core.weather import get_weather
 from data.items.utils import get_item, get_item_emoji
-from database.models import PromoModel, UserModel
+from database.models import MarketItemModel, PromoModel, UserModel
 from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
@@ -22,6 +22,7 @@ from helpers.player_utils import (
 )
 from helpers.stickers import Stickers
 from helpers.utils import (
+    batched,
     check_version,
     get_item_middle_price,
     pretty_float,
@@ -413,3 +414,16 @@ async def daily_gift_cmd(message: Message):
         await user.update_async()
 
     await message.reply(t("daily-gift.main"), reply_markup=InlineMarkup.daily_gift(user))
+
+
+@router.message(Command("market"))
+async def market_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)
+
+    items = await MarketItemModel.get_all_async()
+    page = 0
+    max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+    await message.reply(
+        t("market.main", current_page=page + 1, max_page=max_page),
+        reply_markup=InlineMarkup.market_main(page, user),
+    )

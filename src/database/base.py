@@ -9,6 +9,7 @@ from pymongo import AsyncMongoClient, MongoClient
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.collection import Collection
 
+from cli import ARGS
 from config import config as app_config
 from consts import EMPTY_OBJECTID
 from helpers.exceptions import AlreadyExists, NoResult
@@ -26,7 +27,8 @@ async_client = AsyncMongoClient(**_client_options)
 sync_db = sync_client.get_database(app_config.database.name)
 async_db = async_client.get_database(app_config.database.name)
 
-if app_config.general.debug and app_config.database.name == "dev":
+
+if not ARGS.no_interactive and (app_config.general.debug and app_config.database.name == "dev"):
     choice = input(f"Drop database `{app_config.database.name}`? [N/y] ")
     if choice == "y":
         sync_client.drop_database(app_config.database.name)

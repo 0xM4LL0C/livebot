@@ -287,4 +287,21 @@ daily-gift:
     <b>{obj:user.tg_tag} получил ежедневный подарок</b>
 
     {items}
-subscription-required: Для использования этой функции необходимо подписаться на новостной каналЧтобы использовать эту функцию нужно подписаться на новостной канал
+subscription-required: Для использования этой функции необходимо подписаться на новостной канал
+market:
+  main: |
+    <b>Рынок</b>
+
+    <i>{func:pretty_int(current_page)}/{func:pretty_int(max_page)}</i>
+  item-info: |
+    <b>{func:get_item_emoji(item.name)} {obj:item.name} | {func:pretty_int(item.quantity)} шт.</b>
+
+    Продавец: {obj:item.owner.tg_tag}
+  buy: Купить за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
+  buy-item: |
+    {obj:user.tg_tag} купил {func:pretty_int(item.quantity)} {obj:item.name} {func:get_item_emoji(item.name)} {usage} за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
+  sold-item: |
+    {obj:user.tg_tag} купил у тебя {func:pretty_int(item.quantity)} {obj:item.name} {func:get_item_emoji(item.name)} {usage} за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
+  kiosk: Твой киоск
+  add-item:
+    select-item: Выбери предмет

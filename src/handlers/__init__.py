@@ -5,6 +5,7 @@ from aiogram.types import ErrorEvent, Message
 from config import logger
 from handlers.admin import router as admin_router
 from handlers.callback import router as callback_router
+from handlers.fsm import router as fms_router
 from handlers.message import router as message_router
 from helpers.localization import t
 
@@ -15,6 +16,7 @@ router.include_routers(
     callback_router,
     admin_router,
     message_router,
+    fms_router,
 )
 
 

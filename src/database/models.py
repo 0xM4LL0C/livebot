@@ -470,12 +470,14 @@ class PromoModel(BaseModel):
 
 @dataclass
 class MarketItemModel(BaseModel):
+    __settings__: ClassVar = {"collection_name": "market_items"}
+
     name: str
     price: int
     quantity: int
     owner_oid: ObjectId
     usage: Optional[float] = None
-    publishes_ad: datetime = field(default_factory=utcnow)
+    published_at: datetime = field(default_factory=utcnow)
 
     @property
     def owner(self) -> UserModel:

@@ -56,3 +56,10 @@ class AchievementsCallback(CallbackData, prefix="achievements"):
 
 class DailyGiftCallback(CallbackData, prefix="daily_gift"):
     user_id: int
+
+
+class MarketCallback(CallbackData, prefix="market"):
+    action: Literal["back", "next", "buy", "view", "kiosk", "goto", "my-items", "add", "delete"]
+    item_oid: Optional[str] = None
+    current_page: Optional[int] = None
+    user_id: int

@@ -38,17 +38,17 @@ class RegisterMiddleware(BaseMiddleware):
                 return
 
             if event.text.startswith("/start"):
-                user = await UserModel.get_async(id=event.from_user.id)
+                await UserModel.get_async(id=event.from_user.id)
             else:
-                user = await register_user(event)
+                await register_user(event)
 
             if event.reply_to_message:
                 await register_user(event.reply_to_message)
-        else:
-            return
 
+        if not hasattr(event, "from_user"):
+            return
         ev = asyncio.Event()
-        ram_cache[f"lock-{user.id}"] = (ev, 0.0)
+        ram_cache[f"lock-{event.from_user.id}"] = (ev, 0.0)  # type: ignore
         try:
             ev.set()
             return await handler(event, data)

@@ -1,9 +1,8 @@
 import asyncio
 import itertools
-import sys
 from datetime import datetime, timedelta
 from statistics import median
-from typing import Any, Awaitable, Callable, Generator, Iterable, ParamSpec, Self, Sequence, TypeVar
+from typing import Any, Awaitable, Callable, Iterable, ParamSpec, Self, Sequence, TypeVar
 
 import aiohttp
 from aiogram.exceptions import TelegramRetryAfter
@@ -77,18 +76,16 @@ async def antiflood(func: Awaitable[T]) -> T:
     return await func
 
 
-if sys.version_info >= (3, 12):
-    batched = cached(itertools.batched)  # pylint: disable=invalid-name,no-member
-else:
-
-    @cached()
-    def batched(iterable: Iterable[T], n: int) -> Generator[tuple[T, ...], None, None]:
-        # https://docs.python.org/3.12/library/itertools.html#itertools.batched
-        if n < 1:
-            raise ValueError("n must be at least one")
-        iterator = iter(iterable)
-        while batch := tuple(itertools.islice(iterator, n)):
-            yield batch
+@cached()
+def batched(iterable: Iterable[T], n: int) -> list[tuple[T, ...]]:
+    # https://docs.python.org/3.12/library/itertools.html#itertools.batched
+    if n < 1:
+        raise ValueError("n must be at least one")
+    iterator = iter(iterable)
+    batches = []
+    while batch := tuple(itertools.islice(iterator, n)):
+        batches.append(batch)
+    return batches
 
 
 @cached()

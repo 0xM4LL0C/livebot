@@ -15,8 +15,8 @@ async def _check():
         if cached_value := ram_cache.get(f"lock-{user.id}"):
             ev, _ = cached_value
             ev: asyncio.Event
-            while ev.is_set():
-                await asyncio.sleep(0.5)
+            if ev.is_set():
+                continue
 
         if user.last_checked_at >= utcnow() - timedelta(minutes=1):
             continue
@@ -43,6 +43,14 @@ async def _check():
 
 
 async def check():
+    event = asyncio.Event()
     while True:
-        await _check()
-        await asyncio.sleep(60)  # 1 min
+        if event.is_set():
+            continue
+
+        try:
+            event.set()
+            await _check()
+        finally:
+            event.clear()
+        await asyncio.sleep(15)
