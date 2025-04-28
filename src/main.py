@@ -4,7 +4,7 @@ import asyncio
 from argparse import Namespace
 
 from aiogram import Dispatcher
-from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.fsm.storage.memory import MemoryStorage, SimpleEventIsolation
 from aiogram.types import BotCommand
 
 from config import bot, config, logger
@@ -16,7 +16,10 @@ from middlewares import middlewares
 from tasks import run_tasks
 
 
-dp = Dispatcher(state_storage=RedisStorage.from_url(config.redis.url))
+dp = Dispatcher(
+    state_storage=MemoryStorage(),
+    events_isolation=SimpleEventIsolation(),
+)
 dp.include_router(router)
 
 

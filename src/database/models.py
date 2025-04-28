@@ -143,7 +143,8 @@ class Inventory(SubModel):
     def get_all(self, name: str) -> list[UserItem]:
         return [item for item in self.items if item.name == name and item.quantity > 0]
 
-    def get_by_id(self, id: ObjectId) -> UserItem:
+    def get_by_id(self, id: ObjectId | str) -> UserItem:
+        id = ObjectId(id)
         try:
             return next(item for item in self.items if item.id == id and item.quantity > 0)
         except IndexError as e:

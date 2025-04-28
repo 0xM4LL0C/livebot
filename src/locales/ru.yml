@@ -303,5 +303,4 @@ market:
   sold-item: |
     {obj:user.tg_tag} купил у тебя {func:pretty_int(item.quantity)} {obj:item.name} {func:get_item_emoji(item.name)} {usage} за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
   kiosk: Твой киоск
-  add-item:
-    select-item: Выбери предмет
+  no-items: У тебя нет предметов для продажи

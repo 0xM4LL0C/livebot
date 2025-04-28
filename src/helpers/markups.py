@@ -366,3 +366,20 @@ class InlineMarkup:
         )
 
         return builder.as_markup()
+
+    @classmethod
+    def market_add_item__select_item(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for item in user.inventory.items:
+            usage = f" ({pretty_float(item.usage)}%)" if item.usage else ""
+            builder.button(
+                text=f"{get_item_emoji(item.name)}{usage} {pretty_int(item.quantity)}",
+                callback_data=MarketCallback(
+                    action="select-item",
+                    item_oid=str(item.id),
+                    user_id=user.id,
+                ),
+            )
+
+        return builder.as_markup()

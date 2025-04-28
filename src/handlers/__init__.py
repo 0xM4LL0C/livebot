@@ -1,12 +1,14 @@
 from aiogram import F, Router
 from aiogram.filters.exception import ExceptionTypeFilter
+from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import ErrorEvent, Message
 
 from config import logger
 from handlers.admin import router as admin_router
 from handlers.callback import router as callback_router
-from handlers.fsm import router as fms_router
 from handlers.message import router as message_router
+from handlers.scenes import router as scenes_router
+from handlers.scenes.market import AddMarketItemScene
 from helpers.localization import t
 
 
@@ -16,7 +18,12 @@ router.include_routers(
     callback_router,
     admin_router,
     message_router,
-    fms_router,
+    scenes_router,
+)
+
+registry = SceneRegistry(router)
+registry.add(
+    AddMarketItemScene,
 )
 
 

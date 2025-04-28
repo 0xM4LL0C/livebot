@@ -2,8 +2,9 @@ import random
 from contextlib import suppress
 from datetime import timedelta
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.fsm.scene import ScenesManager
 from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
@@ -13,6 +14,7 @@ from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_count_for_rarity
 from database.models import MarketItemModel, UserModel
+from handlers.scenes.market import AddMarketItemScene
 from helpers.callback_factory import (
     AchievementsCallback,
     ChestCallback,
@@ -460,8 +462,12 @@ async def daily_gift_callback(query: CallbackQuery, callback_data: DailyGiftCall
     await query.message.edit_reply_markup(reply_markup=InlineMarkup.daily_gift(user))
 
 
-@router.callback_query(MarketCallback.filter())
-async def market_callback(query: CallbackQuery, callback_data: MarketCallback):
+@router.callback_query(MarketCallback.filter(F.action != "select-item"))
+async def market_callback(
+    query: CallbackQuery,
+    callback_data: MarketCallback,
+    scenes: ScenesManager,
+):
     if callback_data.user_id != query.from_user.id:
         return
 
@@ -547,7 +553,7 @@ async def market_callback(query: CallbackQuery, callback_data: MarketCallback):
                 reply_markup=InlineMarkup.market_kiosk(callback_data.current_page, user),
             )
         case "add":
-            ...
+            await scenes.enter(AddMarketItemScene)
         case "delete":
             assert callback_data.item_oid  # for linters
             item = await MarketItemModel.get_async(oid=callback_data.item_oid)

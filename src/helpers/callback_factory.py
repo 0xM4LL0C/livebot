@@ -59,7 +59,9 @@ class DailyGiftCallback(CallbackData, prefix="daily_gift"):
 
 
 class MarketCallback(CallbackData, prefix="market"):
-    action: Literal["back", "next", "buy", "view", "kiosk", "goto", "my-items", "add", "delete"]
+    action: Literal[
+        "back", "next", "buy", "view", "kiosk", "goto", "my-items", "add", "delete", "select-item"
+    ]
     item_oid: Optional[str] = None
     current_page: Optional[int] = None
     user_id: int
