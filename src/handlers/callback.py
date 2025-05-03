@@ -566,4 +566,6 @@ async def market_callback(
             await item.delete_async()
             await user.update_async()
 
-            # TODO: implement
+            # TODO: implement: add message
+        case "my-items":
+            ...  # TODO: implement
