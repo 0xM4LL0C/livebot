@@ -80,7 +80,7 @@ class BaseModel(SubModel):
         self._setup_model()
 
     @classmethod
-    def __post_deserialize__(cls, obj: Self):
+    def __post_deserialize__(cls, obj: Self):  # pyright: ignore
         if hasattr(obj, "__post_init__"):
             obj.__post_init__()
         return obj
