@@ -8,7 +8,12 @@ from handlers.admin import router as admin_router
 from handlers.callback import router as callback_router
 from handlers.message import router as message_router
 from handlers.scenes import router as scenes_router
-from handlers.scenes.market import AddMarketItemScene
+from handlers.scenes.market import (
+    AddMarketItemFinalScene,
+    AddMarketItemMainScene,
+    AddMarketItemSelectPriceScene,
+    AddMarketItemSelectQuantityScene,
+)
 from helpers.localization import t
 
 
@@ -23,7 +28,10 @@ router.include_routers(
 
 registry = SceneRegistry(router)
 registry.add(
-    AddMarketItemScene,
+    AddMarketItemMainScene,
+    AddMarketItemSelectQuantityScene,
+    AddMarketItemFinalScene,
+    AddMarketItemSelectPriceScene,
 )
 
 

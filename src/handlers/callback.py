@@ -14,7 +14,7 @@ from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
 from data.items.utils import get_item, get_item_count_for_rarity
 from database.models import MarketItemModel, UserModel
-from handlers.scenes.market import AddMarketItemScene
+from handlers.scenes.market import AddMarketItemMainScene
 from helpers.callback_factory import (
     AchievementsCallback,
     ChestCallback,
@@ -553,7 +553,7 @@ async def market_callback(
                 reply_markup=InlineMarkup.market_kiosk(callback_data.current_page, user),
             )
         case "add":
-            await scenes.enter(AddMarketItemScene)
+            await scenes.enter(AddMarketItemMainScene)
         case "delete":
             assert callback_data.item_oid  # for linters
             item = await MarketItemModel.get_async(oid=callback_data.item_oid)

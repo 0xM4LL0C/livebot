@@ -37,9 +37,7 @@ class RegisterMiddleware(BaseMiddleware):
             if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
                 return
 
-            if event.text.startswith("/start"):
-                await UserModel.get_async(id=event.from_user.id)
-            else:
+            if not event.text.startswith("/start"):
                 await register_user(event)
 
             if event.reply_to_message:

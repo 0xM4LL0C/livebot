@@ -163,14 +163,18 @@ def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
     return {key: dict2[key] for key in dict2 if key in dict1}
 
 
-@cached(expire=HOUR)
+@cached(expire=HOUR, storage="disk")
 def get_item_middle_price(name: str) -> int:  # TODO: implement
     from data.items.utils import get_item
+    from database.models import MarketItemModel
 
     item = get_item(name)
 
-    assert item.price
-    prices: list[int] = [item.price]
+    prices: list[int] = [item.price or 0]
+
+    market_items = MarketItemModel.get_all(name=name)
+    for item in market_items:
+        prices.append(item.price)
 
     return round(median(prices))
 

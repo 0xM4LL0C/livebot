@@ -304,3 +304,12 @@ market:
     {obj:user.tg_tag} купил у тебя {func:pretty_int(item.quantity)} {obj:item.name} {func:get_item_emoji(item.name)} {usage} за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
   kiosk: Твой киоск
   no-items: У тебя нет предметов для продажи
+  user-sold-item: |
+    {obj:user.tg_tag} выставил на продажу {func:pretty_int(item.quantity)} {func:get_item_emoji(item.name)} за {obj:item.price} {func:get_item_emoji("бабло")}
+input-quantity: Введи количество
+input-price: Введи прайс
+input-price__with_middle_price: |
+  {func:t("input-price")} (средняя цена: <code>{func:pretty_int(price)}</code>)
+invalid-input: Некоректный ввод
+invalid-input__int_excepted: |
+  {func:t("invalid-input")}. Ожидалось число
