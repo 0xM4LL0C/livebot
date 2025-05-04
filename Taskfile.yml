@@ -72,3 +72,7 @@ tasks:
 
   dev-run:
     cmd: watchfiles "python3 src/main.py --debug --no-interactive" src
+
+  install:
+    cmds:
+      - ./install.sh
