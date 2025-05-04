@@ -1,339 +1,413 @@
-from copy import deepcopy
-from typing import Literal, Optional
-
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from base.achievements import ACHIEVEMENTS
-from base.items import ITEMS
-from base.player import get_available_items_for_use
-from database.funcs import database
-from database.models import DailyGiftModel, ItemModel, MarketItemModel, UserModel
-from helpers.consts import COIN_EMOJI
-from helpers.datetime_utils import utcnow
-from helpers.utils import (
-    achievement_status,
-    batched,
-    get_item,
-    get_item_emoji,
-    get_pager_controllers,
-    get_time_difference_string,
-    is_completed_achievement,
-    quick_markup,
+from config import logger
+from consts import COIN_EMOJI, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT, REPO_URL, VERSION
+from data.achievements.utils import get_achievement
+from data.items.items import ITEMS
+from data.items.utils import get_item_emoji
+from database.models import MarketItemModel, UserItem, UserModel
+from datatypes import UserActionType
+from helpers.callback_factory import (
+    AchievementsCallback,
+    ChestCallback,
+    CraftCallback,
+    DailyGiftCallback,
+    HomeCallback,
+    MarketCallback,
+    QuestCallback,
+    ShopCallback,
+    TraderCallback,
+    TransferCallback,
+    UseCallback,
 )
+from helpers.enums import ItemType
+from helpers.exceptions import NoResult
+from helpers.localization import t
+from helpers.utils import batched, pretty_float, pretty_int, quick_markup
 
 
 class InlineMarkup:
     @classmethod
-    def home_main(cls, user: UserModel) -> InlineKeyboardMarkup:
-        return quick_markup({"Действия": {"callback_data": f"actions choice {user.id}"}})
-
-    @classmethod
-    def actions_choice(cls, user: UserModel) -> InlineKeyboardMarkup:
-        def active_action_emoji(name):
-            return "🔹" if user.action and user.action.type == name else ""
-
-        markup = quick_markup(
-            {
-                f"Прогулка {active_action_emoji('street')}": {
-                    "callback_data": f"actions street {user.id}"
-                },
-                f"Работа {active_action_emoji('work')}": {
-                    "callback_data": f"actions work {user.id}"
-                },
-                f"Спать {active_action_emoji('sleep')}": {
-                    "callback_data": f"actions sleep {user.id}"
-                },
-                f"Играть {active_action_emoji('game')}": {
-                    "callback_data": f"actions game {user.id}"
-                },
-            }
-        )
-        builder = InlineKeyboardBuilder.from_markup(markup)
-        builder.row(InlineKeyboardButton(text="Назад", callback_data=f"actions back {user.id}"))
-        return builder.as_markup()
-
-    @classmethod
-    def update_action(cls, user: UserModel, name: str) -> InlineKeyboardMarkup:
-        return quick_markup(
-            {
-                "Обновить": {"callback_data": f"actions {name} {user.id}"},
-                "Назад": {"callback_data": f"actions choice {user.id}"},
-            }
-        )
-
-    @classmethod
-    def items_pager(cls, user: UserModel, index: int = 0) -> InlineKeyboardMarkup:
-        items = list(batched(ITEMS, 6))
-        buttons = []
-
-        for item in items[index]:
-            buttons.append(
-                InlineKeyboardButton(
-                    text=f"{item.emoji} {item.name}",
-                    callback_data=f"item_info {item.translit()} {index} {user.id}",
-                )
-            )
-
-        builder = InlineKeyboardBuilder()
-        builder.add(*buttons)
-        builder.adjust(2)
-        builder.row(*get_pager_controllers("item_info_main", pos=index, user_id=user.id))
-
-        return builder.as_markup()
-
-    @classmethod
-    def market_pager(cls, user: UserModel, index: int = 0) -> InlineKeyboardMarkup:
-        market_items = sorted(
-            database.market_items.get_all(), key=lambda i: i.published_at, reverse=True
-        )
-        items = list(batched(market_items, 6))
-        buttons = []
-
-        try:
-            for item in items[index]:
-                emoji = get_item_emoji(item.name)
-                buttons.append(
-                    InlineKeyboardButton(
-                        text=f"{item.quantity} {emoji} — {item.price} {get_item_emoji('бабло')}",
-                        callback_data=f"market_item_open {item._id} {user.id}",
-                    )
-                )
-        except IndexError:
-            pass
-
-        # buttons.reverse()
-        builder = InlineKeyboardBuilder()
-        builder.add(*buttons)
-        pager_controllers = get_pager_controllers("market", pos=index, user_id=user.id)
-        pager_controllers.insert(
-            2, InlineKeyboardButton(text="🛍", callback_data=f"open market-profile {user.id}")
-        )
-        builder.adjust(1)
-        builder.row(*pager_controllers)
-
-        return builder.as_markup()
-
-    @classmethod
-    def market_profile(cls, user: UserModel) -> InlineKeyboardMarkup:
-        return quick_markup(
-            {
-                "👀": {"callback_data": f"market view-my-items {user.id}"},
-                "➕": {"callback_data": f"market add {user.id}"},
-                "◀️": {"callback_data": f"market start 0 {user.id}"},
-            }
-        )
-
-    @classmethod
-    def market_item_open(
-        cls, user: UserModel, market_item: MarketItemModel
-    ) -> InlineKeyboardMarkup:
-        return quick_markup(
-            {
-                f"Купить за {market_item.price} {get_item_emoji('бабло')}": {
-                    "callback_data": f"market buy {market_item._id} {user.id}"
-                },
-                "◀️": {"callback_data": f"market start 0 {user.id}"},
-            },
-            row_width=1,
-        )
-
-    @classmethod
-    def market_view_my_items(cls, user: UserModel) -> InlineKeyboardMarkup:
-        market_items = database.market_items.get_all(owner=user._id)
-        buttons = []
-        try:
-            for item in market_items:
-                emoji = get_item_emoji(item.name)
-                buttons.append(
-                    InlineKeyboardButton(
-                        text=f"{item.quantity} {emoji} — {item.price} {COIN_EMOJI}",
-                        callback_data=f"market delete {item._id} {user.id}",
-                    )
-                )
-        except IndexError:
-            pass
-
-        builder = InlineKeyboardBuilder()
-        builder.add(*buttons)
-        builder.row(InlineKeyboardButton(text="◀️", callback_data=f"market start 0 {user.id}"))
-        builder.adjust(1)
-
-        return builder.as_markup()
-
-    @classmethod
-    def delate_state(cls, user: UserModel) -> InlineKeyboardMarkup:
-        return quick_markup({"Отмена": {"callback_data": f"delate_state {user.id}"}})
-
-    @classmethod
-    def profile(cls, user: UserModel) -> InlineKeyboardMarkup:
+    def shop_main(cls, quantity: int, user: UserModel) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
-        builder.add(
-            InlineKeyboardButton(text="🗄️", callback_data=f"open bag {user.id}"),
-            InlineKeyboardButton(text="🎒", callback_data=f"open equipped_items {user.id}"),
-        )
-        builder.adjust(2)
-        return builder.as_markup()
+        items = list(filter(lambda i: i.price, ITEMS))
+        items.sort(key=lambda i: i.price)  # type: ignore
 
-    @classmethod
-    def bag(cls, user: UserModel) -> InlineKeyboardMarkup:
-        builder = InlineKeyboardBuilder()
-
-        items = database.items.get_all(owner=user._id)
-        buttons = []
         for item in items:
-            if item.quantity <= 0:
-                continue
-            buttons.append(
-                InlineKeyboardButton(
-                    text=f"{get_item_emoji(item.name)} {item.quantity}",
-                    callback_data=f"nothing {user.id}",
-                )
+            assert item.price  # for linters
+
+            builder.button(
+                text=f"{item.emoji} — {pretty_int(item.price * quantity)}",
+                callback_data=ShopCallback(
+                    item_name=item.translit(),
+                    quantity=quantity,
+                    user_id=user.id,
+                ),
             )
 
-        builder.add(*buttons)
         builder.adjust(3)
         return builder.as_markup()
 
     @classmethod
-    def daily_gift(cls, user: UserModel, daily_gift: DailyGiftModel) -> InlineKeyboardMarkup:
-        def get_text():
-            if daily_gift.is_claimed:
-                return f"🕐 {get_time_difference_string(daily_gift.next_claimable_at - utcnow())}"
-            return "🔹 Получить"
+    def craft_main(cls, quantity: int, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
 
-        return quick_markup({f"{get_text()}": {"callback_data": f"daily_gift claim {user.id}"}})
+        available_items = list(filter(lambda item: item.craft, ITEMS))
+        for item in available_items:
+            assert item.craft  # for linters
+
+            try:
+                max_craftable = min(
+                    user.inventory.get(craft_item.name).quantity // craft_item.quantity
+                    for craft_item in item.craft
+                )
+            except NoResult:
+                max_craftable = 0
+
+            if max_craftable >= quantity > 0:
+                builder.button(
+                    text=f"{item.emoji} {item.name} ({pretty_int(max_craftable)})",
+                    callback_data=CraftCallback(
+                        item_name=item.translit(),
+                        quantity=quantity,
+                        user_id=user.id,
+                    ),
+                )
+
+        builder.adjust(2)
+        return builder.as_markup()
 
     @classmethod
     def transfer_usable_items(
         cls, user: UserModel, to_user: UserModel, item_name: str
     ) -> InlineKeyboardMarkup:
-        from base.player import get_or_add_user_usable_items
-
         builder = InlineKeyboardBuilder()
-        buttons = []
 
-        items = get_or_add_user_usable_items(user, item_name)
-        items = list(filter(lambda i: i.usage > 0 and i.quantity > 0, items))  # type: ignore
-        items.sort(key=lambda i: i.usage)  # type: ignore
+        items = user.inventory.get_all(item_name)
+        items = list(filter(lambda i: i.type == ItemType.USABLE, items))  # type: ignore
+        items.sort(key=lambda i: i.usage, reverse=True)  # type: ignore
 
         for item in items:
-            buttons.append(
-                InlineKeyboardButton(
-                    text=f"{get_item_emoji(item.name)} ({item.usage}%)",
-                    callback_data=f"transfer {item._id} {to_user.id} {user.id}",
-                )
+            assert item.usage
+            builder.button(
+                text=f"{get_item_emoji(item.name)} {pretty_float(item.usage)}%",
+                callback_data=TransferCallback(
+                    to_user_id=to_user.id,
+                    item_oid=str(item.id),
+                    user_id=user.id,
+                ),
             )
 
-        builder.add(*buttons)
         builder.adjust(3)
         return builder.as_markup()
 
     @classmethod
-    def achievements_view(
-        cls,
-        user: UserModel,
-        status: Literal["all", "in_progress", "completed", "not_started"] = "all",
-    ) -> InlineKeyboardMarkup:
+    def use(cls, items: list[UserItem], user: UserModel) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        buttons = []
 
-        achievements = deepcopy(ACHIEVEMENTS)
-        if status == "in_progress":
-            achievements = [a for a in achievements if achievement_status(user, a) == 0]
-        elif status == "not_started":
-            achievements = [a for a in achievements if achievement_status(user, a) == 1]
-        elif status == "completed":
-            achievements = [a for a in achievements if achievement_status(user, a) == 2]
-
-        else:
-            achievements.sort(key=lambda a: achievement_status(user, a))
-
-        for achievement in achievements:
-            progress = user.achievement_progress.get(achievement.key, 0)
-            is_completed = is_completed_achievement(user, achievement.name)
-            emoji = ""
-
-            if status == "all":
-                if progress > 0 and not is_completed:
-                    emoji = "⏳"
-                elif is_completed:
-                    emoji = "✅"
-                else:
-                    emoji = "❌"
-
-            buttons.append(
-                InlineKeyboardButton(
-                    text=f"{emoji} {achievement.name} {achievement.emoji}",
-                    callback_data=f"achievements view {achievement.translit()} {user.id}",
-                )
+        for item in items:
+            text = f"{get_item_emoji(item.name)} {pretty_int(item.quantity)}"
+            if item.type == ItemType.USABLE:
+                assert item.usage
+                text += f" ({pretty_float(item.usage)}%)"
+            builder.button(
+                text=text,
+                callback_data=UseCallback(
+                    item_oid=str(item.id),
+                    user_id=user.id,
+                ),
             )
 
-        builder.add(*buttons)
-        builder.row(
-            InlineKeyboardButton(text="Назад", callback_data=f"achievements main {user.id}")
-        )
-        builder.adjust(1)
+        builder.adjust(3)
         return builder.as_markup()
 
     @classmethod
-    def achievements(cls, user: UserModel) -> InlineKeyboardMarkup:
+    def quest(cls, user: UserModel) -> InlineKeyboardMarkup:
+        if user.quest.is_done:
+            finish_button_text = t("quest.buttons.done-text")
+            text = t("quest.buttons.done", button_text=finish_button_text)
+            callback_data = QuestCallback(action="done", user_id=user.id)
+        else:
+            finish_button_text = t("quest.buttons.skip")
+            text = t("quest.buttons.done", button_text=finish_button_text)
+            callback_data = QuestCallback(action="skip", user_id=user.id)
+
+        return quick_markup({text: {"callback_data": callback_data}})
+
+    @classmethod
+    def home_main(cls, user: UserModel) -> InlineKeyboardMarkup:
+        actions_button_text = t("home.buttons.open-actions")
         return quick_markup(
             {
-                "Все достижения": {"callback_data": f"achievements filter all {user.id}"},
-                "В прогрессе": {"callback_data": f"achievements filter in_progress {user.id}"},
-                "Не начатие": {"callback_data": f"achievements filter not_started {user.id}"},
-                "Получение": {"callback_data": f"achievements filter completed {user.id}"},
+                actions_button_text: {
+                    "callback_data": HomeCallback(action="actions", user_id=user.id)
+                }
             }
         )
 
     @classmethod
-    def event_shop(cls, user: UserModel) -> InlineKeyboardMarkup:
-        builder = InlineKeyboardBuilder()
-        items: dict[str, int] = {
-            "чай": 15,
-            "суп": 20,
-            "энергос": 25,
-            "велик": 30,
-            "ключ": 40,
-            "пилюля": 50,
-            "водка": 70,
-            "буст": 80,
-            "бокс": 100,
-            "клевер-удачи": 120,
-        }
+    def home_actions_choice(cls, user: UserModel) -> InlineKeyboardMarkup:
+        def active_action_text(action: UserActionType, text: str) -> str:
+            if user.is_current_action(action):
+                return f"🔹 {text}"
+            return text
 
-        for name, quantity in items.items():
-            item = get_item(name)
-            text = f"{get_item_emoji('конфета')} {quantity} -> 1 {name} {get_item_emoji(name)}"
-            builder.row(
-                InlineKeyboardButton(
-                    text=text,
-                    callback_data=f"event_shop buy {item.translit()} {quantity} {user.id}",
-                )
+        walk_text = active_action_text("walk", t("home.buttons.actions.walk"))
+        work_text = active_action_text("work", t("home.buttons.actions.work"))
+        sleep_text = active_action_text("sleep", t("home.buttons.actions.sleep"))
+        game_text = active_action_text("game", t("home.buttons.actions.game"))
+        return quick_markup(
+            {
+                walk_text: {"callback_data": HomeCallback(action="walk", user_id=user.id)},
+                work_text: {"callback_data": HomeCallback(action="work", user_id=user.id)},
+                sleep_text: {"callback_data": HomeCallback(action="sleep", user_id=user.id)},
+                game_text: {"callback_data": HomeCallback(action="game", user_id=user.id)},
+            },
+            sizes=(2,),
+        )
+
+    @classmethod
+    def trader(
+        cls,
+        user: UserModel,
+        item_name: str,
+        price: int,
+        quantity: int,
+    ) -> InlineKeyboardMarkup:
+        trade_text = t("mobs.trader.buttons.trade")
+        leave_text = t("mobs.buttons.leave")
+
+        return quick_markup(
+            {
+                trade_text: {
+                    "callback_data": TraderCallback(
+                        action="trade",
+                        item_name=item_name,
+                        price=price,
+                        quantity=quantity,
+                        user_id=user.id,
+                    )
+                },
+                leave_text: {"callback_data": TraderCallback(action="leave", user_id=user.id)},
+            },
+            sizes=(2,),
+        )
+
+    @classmethod
+    def chest(cls, user: UserModel) -> InlineKeyboardMarkup:
+        open_text = t("mobs.chest.buttons.open")
+        leave_text = t("mobs.buttons.leave")
+
+        return quick_markup(
+            {
+                open_text: {"callback_data": ChestCallback(action="open", user_id=user.id)},
+                leave_text: {"callback_data": ChestCallback(action="leave", user_id=user.id)},
+            },
+            sizes=(2,),
+        )
+
+    @classmethod
+    def update_action(cls, action: UserActionType, user: UserModel) -> InlineKeyboardMarkup:
+        update_text = t("buttons.update")
+        back_text = t("buttons.back")
+
+        return quick_markup(
+            {
+                update_text: {"callback_data": HomeCallback(action=action, user_id=user.id)},
+                back_text: {"callback_data": HomeCallback(action="actions", user_id=user.id)},
+            }
+        )
+
+    @classmethod
+    def rules(cls) -> InlineKeyboardMarkup:
+        read_text = t("read")
+        return quick_markup({read_text: {"url": "https://0xM4LL0C.github.io/livebot/rules"}})
+
+    @classmethod
+    def achievements(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for user_achievement in user.achievements_info.achievements:
+            achievement = get_achievement(user_achievement.name)
+            builder.button(
+                text=f"{achievement.emoji} {achievement.name}",
+                callback_data=AchievementsCallback(
+                    achievement_name=achievement.translit(),
+                    user_id=user.id,
+                ),
             )
+
         return builder.as_markup()
 
     @classmethod
-    def use(cls, user: UserModel, items: Optional[list[ItemModel]] = None) -> InlineKeyboardMarkup:
+    def version(cls) -> InlineKeyboardMarkup:
+        return quick_markup(
+            {t("version.buttons.release"): {"url": REPO_URL + f"releases/tag/v{VERSION}"}}
+        )
+
+    @classmethod
+    def daily_gift(cls, user: UserModel) -> InlineKeyboardMarkup:
+        def get_text():
+            if user.daily_gift.is_claimed:
+                return t("daily-gift.buttons.not-available", user=user)
+            return t("daily-gift.buttons.available")
+
+        return quick_markup({get_text(): {"callback_data": DailyGiftCallback(user_id=user.id)}})
+
+    @classmethod
+    def market_main(
+        cls,
+        page: int,
+        user: UserModel,
+    ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        buttons = []
 
-        if not items:
-            items = get_available_items_for_use(user)
+        items = MarketItemModel.get_all()
+        items.sort(key=lambda i: i.published_at, reverse=True)
+        try:
+            items = batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)[page]
+        except IndexError:
+            items = []
 
-        for user_item in items:
-            item = get_item(user_item.name)
-            buttons.append(
-                InlineKeyboardButton(
-                    text=f"{item.emoji} {user_item.quantity}",
-                    callback_data=f"use {item.translit()} {user.id}",
-                )
+        for item in items:
+            builder.button(
+                text=(
+                    f"{pretty_int(item.quantity)} {get_item_emoji(item.name)} - {pretty_int(item.price)} {COIN_EMOJI}"
+                    + ("(" + pretty_float(item.usage) + ")" if item.usage else "")
+                ),
+                callback_data=MarketCallback(
+                    action="view",
+                    item_oid=str(item.oid),
+                    current_page=page,
+                    user_id=user.id,
+                ),
             )
 
-        builder.add(*buttons)
-        builder.adjust(3)
+        builder.adjust(1)
+        builder.row(
+            InlineKeyboardButton(
+                text="⬅️",
+                callback_data=MarketCallback(
+                    action="back", current_page=page, user_id=user.id
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="🛍",
+                callback_data=MarketCallback(
+                    action="kiosk", current_page=page, user_id=user.id
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="➡️",
+                callback_data=MarketCallback(
+                    action="next", current_page=page, user_id=user.id
+                ).pack(),
+            ),
+        )
+        return builder.as_markup()
+
+    @classmethod
+    def market_item_view(
+        cls, current_page: int, market_item: MarketItemModel, user: UserModel
+    ) -> InlineKeyboardMarkup:
+        return quick_markup(
+            {
+                t("market.buy", item=market_item): {
+                    "callback_data": MarketCallback(
+                        action="buy",
+                        current_page=current_page,
+                        item_oid=str(market_item.oid),
+                        user_id=user.id,
+                    )
+                },
+                t("buttons.back"): {
+                    "callback_data": MarketCallback(
+                        action="goto",
+                        current_page=current_page,
+                        user_id=user.id,
+                    )
+                },
+            }
+        )
+
+    @classmethod
+    def market_kiosk(cls, current_page: int, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        builder.row(
+            InlineKeyboardButton(
+                text="👀",
+                callback_data=MarketCallback(
+                    action="my-items",
+                    current_page=current_page,
+                    user_id=user.id,
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="➕",
+                callback_data=MarketCallback(
+                    action="add",
+                    current_page=current_page,
+                    user_id=user.id,
+                ).pack(),
+            ),
+        )
+
+        builder.row(
+            InlineKeyboardButton(
+                text=t("buttons.back"),
+                callback_data=MarketCallback(
+                    action="goto",
+                    current_page=current_page,
+                    user_id=user.id,
+                ).pack(),
+            )
+        )
+
+        return builder.as_markup()
+
+    @classmethod
+    def market_add_item__select_item(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for item in user.inventory.items:
+            usage = f" ({pretty_float(item.usage)}%)" if item.usage else ""
+            builder.button(
+                text=f"{get_item_emoji(item.name)}{usage} {pretty_int(item.quantity)}",
+                callback_data=MarketCallback(
+                    action="select-item",
+                    item_oid=str(item.id),
+                    user_id=user.id,
+                ),
+            )
+
+        return builder.as_markup()
+
+    @classmethod
+    def market_my_items(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        market_items = MarketItemModel.get_all(
+            owner_oid=str(user.oid)
+        )  # Не знаю почему, но работает только если `user.oid` с типом str
+
+        logger.debug(str(len(market_items)))
+
+        for item in market_items:
+            logger.debug(item.name + "\t" + str(item))
+            builder.button(
+                text=f"{pretty_int(item.quantity)} {get_item_emoji(item.name)} - {pretty_int(item.price)} {COIN_EMOJI}"
+                + ("(" + pretty_float(item.usage) + ")" if item.usage else ""),
+                callback_data=MarketCallback(
+                    action="delete",
+                    item_oid=str(item.oid),
+                    user_id=user.id,
+                ),
+            )
+
+        builder.adjust(1)
         return builder.as_markup()
 
     @classmethod

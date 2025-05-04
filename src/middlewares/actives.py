@@ -3,10 +3,9 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from config import TELEGRAM_ID
-from database.funcs import database
+from consts import TELEGRAM_ID
+from database.models import UserModel
 from helpers.datetime_utils import utcnow
-from helpers.utils import increment_achievement_progress
 
 
 class ActiveMiddleware(BaseMiddleware):
@@ -16,20 +15,24 @@ class ActiveMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ):
-        result = await handler(event, data)
         if isinstance(event, (Message, CallbackQuery)):
             if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
                 return
 
             user_id = event.from_user.id
-            user = await database.users.async_get(id=user_id)
+            user = await UserModel.get_async(id=user_id)
 
-            last_active_time = user.last_active_time
+            if any(violation for violation in user.violations if violation.type == "permanent-ban"):
+                # TODO: add message
+                return
+
+            result = await handler(event, data)
+
+            if (utcnow() - user.last_active_time).days >= 1:
+                user.achievements_info.incr_progress("новичок")
+                user.achievements_info.incr_progress("олд")
 
             user.last_active_time = utcnow()
-            await database.users.async_update(**user.to_dict())
+            await user.update_async()
 
-            if (utcnow() - last_active_time).days >= 1:
-                increment_achievement_progress(user, "новичок")
-                increment_achievement_progress(user, "олд")
             return result

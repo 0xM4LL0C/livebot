@@ -1,7 +1,9 @@
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 version: "0.2"
+enabled: false
 language: "en,ru"
 useGitignore: true
+failFast: true
 dictionaryDefinitions:
   - name: "project-words"
     path: "./project-words.txt"
@@ -14,5 +16,8 @@ ignorePaths:
   - "project-words.txt"
   - "ruff.toml"
   - "mkdocs.yml"
+  - ".gitignore"
 import:
   - "@cspell/dict-ru_ru/cspell-ext.json"
+ignoreRegExpList:
+  - /[^\s]{30,}/

@@ -1,920 +1,578 @@
 import random
-from datetime import UTC, timedelta
+from contextlib import suppress
+from datetime import timedelta
 
 from aiogram import F, Router
-from aiogram.exceptions import TelegramAPIError
-from aiogram.filters import StateFilter
-from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    CallbackQuery,
-    InlineKeyboardButton,
-    Message,
-)
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.fsm.scene import ScenesManager
+from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
-from base.actions import game, sleep, street, work
-from base.items import ITEMS
-from base.player import (
-    add_user_usage_item,
-    check_user_stats,
-    coin_top,
-    dog_level_top,
-    generate_quest,
-    get_available_items_for_use,
-    get_or_add_user_item,
-    karma_top,
-    level_top,
-    use_item,
+from consts import MARKET_ITEMS_LIST_MAX_ITEMS_COUNT
+from core.player_actions import game_action, sleep_action, walk_action, work_action
+from data.achievements.utils import get_achievement
+from data.items.items import ITEMS
+from data.items.utils import get_item, get_item_count_for_rarity
+from database.models import MarketItemModel, UserModel
+from handlers.scenes.market import AddMarketItemMainScene
+from helpers.callback_factory import (
+    AchievementsCallback,
+    ChestCallback,
+    CraftCallback,
+    DailyGiftCallback,
+    HomeCallback,
+    MarketCallback,
+    QuestCallback,
+    ShopCallback,
+    TraderCallback,
+    TransferCallback,
+    UseCallback,
 )
-from database.funcs import database
-from database.models import DogModel
 from helpers.datetime_utils import utcnow
-from helpers.enums import ItemRarity, ItemType
-from helpers.exceptions import ItemIsCoin, NoResult
+from helpers.enums import ItemRarity
+from helpers.exceptions import ItemNotFoundError, NoResult
+from helpers.localization import t
 from helpers.markups import InlineMarkup
-from helpers.utils import (
-    achievement_progress,
-    batched,
-    check_user_subscription,
-    get_achievement,
-    get_item,
-    get_item_count_for_rarity,
-    get_item_emoji,
-    get_middle_item_price,
-    get_time_difference_string,
-    get_user_tag,
-    increment_achievement_progress,
-    quick_markup,
-    safe,
-)
+from helpers.player_utils import check_user_subscription, get_available_items_for_use, transfer_item
+from helpers.stickers import Stickers
+from helpers.utils import batched, pretty_float, pretty_int
+
 
 router = Router()
 
 
-@router.callback_query(F.data.startswith("dog"))
-async def dog_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-    user = await database.users.async_get(id=call.from_user.id)
+@router.callback_query(ShopCallback.filter())
+async def shop_callback(query: CallbackQuery, callback_data: ShopCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
 
     try:
-        dog = await database.dogs.async_get(owner=user._id)
-    except NoResult:
-        dog = None
-
-    if not isinstance(call.message, Message):
+        item = get_item(callback_data.item_name)
+    except ItemNotFoundError as e:
+        await query.answer(t("item-not-exist", item_name=str(e)), show_alert=True)
         return
 
-    if data[-1] != str(user.id):
-        return
-    if data[1] == "leave":
-        await call.message.delete()
-        await call.message.answer_sticker(
-            "CAACAgIAAxkBAAEpvztl21ybsmS9RVqaYhV8ZtA353n4HgACJwEAAjDUnRGOYUDc7Hyw5TQE",
-        )
+    assert item.price  # for linters
+    quantity = callback_data.quantity
+    price = item.price * quantity
 
-        await call.message.answer("Прогнал бедную собачку(")
-        return
-    if data[1] == "friend":
-        date = call.message.date.astimezone(UTC)
-        current_time = utcnow()
-        time_difference = current_time - date
-
-        if time_difference >= timedelta(minutes=1):
-            await call.message.delete()
-            await call.answer("Пока ты думал псина сбежала", show_alert=True)
-            return
-
-        item = get_or_add_user_item(user, "кость")
-
-        if item.quantity <= int(data[2]):
-            await call.answer(
-                f"Тебе не хватает 🦴, нужно {data[2]} а у тебя {item.quantity}", show_alert=True
-            )
-            return
-
-        dog = DogModel(owner=user._id)
-        dog.name = f"Собачка-{user.id}"
-        await database.dogs.async_add(**dog.to_dict())
-
-        await call.message.delete()
-        await call.message.answer_sticker(
-            "CAACAgIAAxkBAAEpvz9l211Kyfi280mwFR6XMKUhzMXbiwACGAEAAjDUnREiQ2-IziTqFTQE"  # cspell:disable-line # pylint: disable=line-too-long
-        )
-
-        await call.message.answer(
-            "Завел собачку 🐶\n\nНапиши /rename_dog [имя] чтобы дать имя пёсику",
-        )
-        return
-    if data[1] == "feed" and dog:
-        if dog.hunger == 0:
-            await call.answer(f"{dog.name} не голоден", show_alert=True)
-            return
-        item = get_or_add_user_item(user, "мясо")
-
-        quantity = dog.level * 2
-
-        if item.quantity < quantity:
-            await call.answer(
-                f"Тебе не хватает мяса, нужно {quantity} а у тебя {item.quantity}",
-                show_alert=True,
-            )
-            return
-        item.quantity -= quantity
-        count = random.randint(1, 10)
-        dog.hunger -= count
-        dog.xp += random.uniform(0.1, 0.3)
-        await call.answer(
-            f"{dog.name} поел мяса и восстановил {count} единиц голода",
-            show_alert=True,
-        )
-        await database.dogs.async_update(**dog.to_dict())
-        await database.items.async_update(**item.to_dict())
-
-        await check_user_stats(user, call.message.chat.id)
-
-        mess = (
-            f"<b>{dog.name}</b>\n\n"
-            f"Здоровье: {dog.health}\n"
-            f"Усталость: {dog.fatigue}\n"
-            f"Голод: {dog.hunger}\n"
-            f"Уровень: {dog.level}\n"
-            f"Опыт {int(dog.xp)}/{int(dog.max_xp)}\n"
-        )
-
-        markup = quick_markup(
-            {
-                "Кормить": {"callback_data": f"dog feed {user.id}"},
-                # "Уложить спать": {"callback_data": f"dog sleep {user.id}"}
-            }
-        )
-
-        await call.message.edit_text(mess, reply_markup=markup)
-    if data[1] == "sleep" and dog:
-        current_time = utcnow()
-        time_difference = current_time - dog.sleep_time
-        if time_difference <= timedelta(minutes=1):
-            time_difference = get_time_difference_string(time_difference - timedelta(minutes=1))
-            await call.answer(
-                f"{dog.name} спит, жди {time_difference}",
-                show_alert=True,
-            )
-            return
-
-        dog.sleep_time = utcnow()
-
-        time_difference = get_time_difference_string(
-            (current_time - dog.sleep_time) - timedelta(hours=1)
-        )
-
-        await call.answer(
-            f"{dog.name} пошел спать, проснется через {time_difference}",
-            show_alert=True,
-        )
-
-    if data[1] == "wakeup" and dog:
-        await call.answer(f"{dog.name} проснулся", show_alert=True)
-        dog.sleep_time = utcnow()
-
-    await database.users.async_update(**user.to_dict())
-    if dog:
-        await database.dogs.async_update(**dog.to_dict())
-    await check_user_stats(user)
-
-
-@router.callback_query(F.data.startswith("skip_quest"))
-async def skip_quest_callback(call: CallbackQuery):
-    if call.data.split(" ")[-1] != str(call.from_user.id):
+    if user.coin < price:
+        await query.answer(text=t("item-not-enough", item_name="бабло"), show_alert=True)
         return
 
-    if not isinstance(call.message, Message):
-        return
+    user.inventory.add(item.name, quantity)
 
-    user = await database.users.async_get(id=call.from_user.id)
+    user.coin -= price
 
-    if not user.new_quest_coin_quantity:
-        user.new_quest_coin_quantity = 2
+    assert isinstance(query.message, Message)
 
-    if user.new_quest_coin_quantity > user.coin:
-        await call.answer(
-            (
-                "У тебя недостаточно бабла."
-                f"Чтобы получить новый квест надо иметь {user.new_quest_coin_quantity}"
-            ),
-            show_alert=True,
-        )
-        return
-
-    generate_quest(user)
-    user.coin -= user.new_quest_coin_quantity
-    user.new_quest_coin_quantity += random.randint(10, 20)
-    await database.users.async_update(**user.to_dict())
-
-    await call.answer(
-        "Ты получил новый квест, напиши /quest чтобы посмотреть",
-        show_alert=True,
+    await query.message.reply_to_message.reply(
+        t("shop.buy-item", quantity=quantity, item_name=item.name, price=price),
     )
 
+    await user.update_async()
 
-@router.callback_query(F.data.startswith("finish_quest"))
-async def finish_quest_callback(call: CallbackQuery):
-    if call.data.split(" ")[-1] != str(call.from_user.id):
+
+@router.callback_query(CraftCallback.filter())
+async def craft_callback(query: CallbackQuery, callback_data: CraftCallback):
+    if callback_data.user_id != query.from_user.id:
         return
 
-    if not isinstance(call.message, Message):
-        return
+    user = await UserModel.get_async(id=query.from_user.id)
 
-    user = await database.users.async_get(id=call.from_user.id)
+    assert callback_data.item_name
 
     try:
-        quest = await database.quests.async_get(**{"owner": user._id})
+        item = get_item(callback_data.item_name)
+    except ItemNotFoundError as e:
+        await query.answer(t("item-not-exist", item_name=str(e)), show_alert=True)
+        return
+
+    assert item.craft  # for linters
+
+    quantity = callback_data.quantity
+
+    for craft in item.craft:
+        try:
+            user_item = user.inventory.get(craft.name)
+            if user_item.quantity < craft.quantity * quantity:
+                raise NoResult(craft.name)
+        except NoResult:
+            await query.answer(t("item-not-enough", item_name=craft.name))
+            return
+
+        user.inventory.remove(user_item.name, craft.quantity * quantity)
+
+    user.inventory.add(item.name, quantity)
+
+    xp = random.uniform(5.0, 10.0)
+
+    if random.randint(1, 100) < user.luck:
+        xp += random.uniform(2.3, 6.7)
+
+    user.xp += xp
+    await user.check_status()
+    await user.update_async()
+
+    assert isinstance(query.message, Message)
+
+    with suppress(TelegramBadRequest):
+        await query.message.edit_reply_markup(reply_markup=InlineMarkup.craft_main(quantity, user))
+
+    await query.message.reply_to_message.reply(
+        t(
+            "craft.craft-item",
+            quantity=quantity,
+            item_name=item.name,
+            xp=xp,
+        )
+    )
+
+
+@router.callback_query(TransferCallback.filter())
+async def transfer_callback(query: CallbackQuery, callback_data: TransferCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+    target_user = await UserModel.get_async(id=callback_data.to_user_id)
+
+    mess = transfer_item(user, target_user, ObjectId(callback_data.item_oid))
+
+    await query.message.answer(mess)
+
+
+@router.callback_query(UseCallback.filter())
+async def use_callback(query: CallbackQuery, callback_data: UseCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    try:
+        user_item = user.inventory.get_by_id(id=ObjectId(callback_data.item_oid))
     except NoResult:
-        quest = generate_quest(user)
-
-    item = get_or_add_user_item(user, quest.name)
-
-    if item.quantity < quest.quantity:
-        await call.answer("Кудааа, тебе не хватает", show_alert=True)  # cspell:ignore Кудааа
+        await query.answer(t("item-not-found-in-inventory", item_name="?????"))
         return
 
-    item.quantity -= quest.quantity
-    user.xp += quest.xp
-    user.coin += quest.reward
-    await database.users.async_update(**user.to_dict())
-    await database.items.async_update(**item.to_dict())
-
-    mess = (
-        "Ураа, ты завершил квест\n"
-        f"+ {int(quest.xp)} хп\n"
-        f"+ {quest.reward} бабло {get_item_emoji('бабло')}\n\n"
-        "Ты выполнил квест за "
-    )
-
-    total_time = utcnow() - quest.start_time
-    mess += get_time_difference_string(total_time)
-
-    generate_quest(user)
-    increment_achievement_progress(user, "квестоман")
-    await call.message.delete()
-
-    user_message = call.message.reply_to_message
-    await call.message.answer_sticker(
-        "CAACAgIAAxkBAAEpslFl2JwAAaZFMa3RM-3fKaHU7RYrOSQAAoIPAAJ73EFKS4aLwGmJ_Ok0BA",  # cspell:disable-line  # pylint: disable=line-too-long
-    )
-    if user_message:
-        await user_message.reply(mess)
-    else:
-        await call.message.answer(mess)
-
-    await check_user_stats(user, call.message.chat.id)
-
-
-@router.callback_query(F.data.startswith("use"))
-async def use_callback(call: CallbackQuery):
-    if call.data.split(" ")[-1] != str(call.from_user.id):
+    if user_item.quantity <= 0:
+        await query.answer(t("item-not-enough", item_name=user_item.name))
         return
 
-    user = await database.users.async_get(id=call.from_user.id)
+    item = get_item(user_item.name)
 
-    item = get_item(call.data.split(" ")[1])
+    match item.name:
+        case "трава" | "буханка" | "сэндвич" | "пицца" | "тако" | "суп":
+            user.hunger += item.effect  # type: ignore
+            mess = t("use.hunger", item_name=item.name, effect=item.effect)
+        case "буст":
+            xp = random.randint(100, 150)
+            user.xp += xp
+            mess = t("use.boost", item_name=item.name, xp=xp)
+        case "бокс":
+            num_items_to_get = random.randint(1, 3)
+            items = ""
 
-    if not call.message.reply_to_message:
-        return
+            for item_to_get in random.choices(ITEMS, k=num_items_to_get):
+                quantity = get_item_count_for_rarity(item_to_get.rarity)
 
-    await use_item(call.message.reply_to_message, item.name)
+                items += f"+ {pretty_int(quantity)} {item_to_get.name} {item_to_get.emoji}\n"
+                if item_to_get.name == "бабло":
+                    user.coin += quantity
+                else:
+                    user.inventory.add(item_to_get.name, quantity)
+            mess = t("use.box-opened", items=items)
+        case "энергос" | "чай":
+            user.fatigue += item.effect  # type: ignore
+            mess = t("use.fatigue", item_name=item.name, effect=item.effect)
+        case "пилюля":
+            await query.message.reply(t("under-development"))
+            return
+        case "хелп":
+            user.health += item.effect  # type: ignore
+            mess = t("use.health", item_name=item.name, effect=item.effect)
+        case "фиксоманчик":
+            await query.message.reply(t("under-development"))
+            return
+        case "водка":
+            user.fatigue = 100
+            user.health -= item.effect  # type: ignore
+            mess = t("use.vodka", item_name=item.name, effect=item.effect)
+        case "велик":
+            if not user.action or user.action.type != "walk":
+                await query.message.reply("Ты не гуляешь")  # TODO: add translation
+                return
+            minutes = random.randint(10, 45)
+            user.action.end -= timedelta(minutes=minutes)
+            mess = t("use.bike", item_name=item.name, minutes=minutes)
+        case "клевер-удачи":
+            user.luck += item.effect  # type: ignore
+            mess = t("use.luck", item_name=item.name, effect=item.effect)
+        case "конфета":
+            user.hunger += item.effect  # type: ignore
+            user.fatigue += item.effect  # type: ignore
+            mess = t("use.candy", item_name=item.name, effect=item.effect)
+        case _:
+            raise NotImplementedError(item.name)
 
-    markup = InlineMarkup.use(user)
+    user.inventory.remove(user_item.name, 1, id=user_item.id)
+    await user.check_status(chat_id=query.message.chat.id)
+    await user.update_async()
 
     items = get_available_items_for_use(user)
 
-    if not items:
-        mess = "Нет доступных предметов для юза"
-        await call.message.edit_text(mess)
+    if items:  # pylint: disable=duplicate-code
+        key = "use.available-items"
+    else:
+        key = "use.not-available-items"
 
-    await call.message.edit_reply_markup(reply_markup=markup)
-
-
-@router.callback_query(F.data.startswith("item_info_main"))
-async def item_info_main_callback(call: CallbackQuery):
-    if call.data.split(" ")[-1] != str(call.from_user.id):
-        return
-
-    try:
-        user = await database.users.async_get(id=call.from_user.id)
-        action = call.data.split(" ")[1]
-        pos = int(call.data.split(" ")[2])
-        max_pos = len(list(batched(ITEMS, 6))) - 1
-
-        if action == "next":
-            pos += 1
-        elif action == "back":
-            pos -= 1
-        elif action == "start":
-            pos = 0
-        elif action == "end":
-            pos = max_pos
-
-        if pos < 0:
-            raise IndexError
-
-        mess = f"<b>Предметы</b>\n\n{pos + 1} / {max_pos + 1}"
-        markup = InlineMarkup.items_pager(user=user, index=int(pos))
-
-        await call.message.edit_text(mess, reply_markup=markup)
-    except (IndexError, TelegramAPIError):
-        await call.answer("Дальше ничо нету", show_alert=True)
-
-
-@router.callback_query(F.data.startswith("item_info"))
-async def item_info_callback(call: CallbackQuery):
-    if call.data.split(" ")[-1] != str(call.from_user.id):
-        return
-
-    item = get_item(call.data.split(" ")[1])
-    pos = call.data.split(" ")[2]
-
-    markup = quick_markup(
-        {"Назад": {"callback_data": f"item_info_main None {pos} {call.from_user.id}"}}
+    assert isinstance(query.message, Message)
+    await query.message.edit_text(
+        t(key),
+        reply_markup=InlineMarkup.use(items, user),
     )
-
-    craft = ""
-    if item.craft:
-        craft = ", ".join(
-            [f"{get_item_emoji(name)} {name} {count}" for name, count in item.craft.items()]
-        )
-
-    mess = (
-        f"<b>{item.emoji} {item.name}</b>\n\n"
-        f"<b>Редкость:</b> {item.rarity.value}\n\n"
-        f"<b>Описание:</b> <i>{item.desc}</i>\n\n"
-        + (f"<b>Крафт:</b> <i>{craft}</i>\n" if item.craft else "")
-    )
-
-    await call.message.edit_text(mess, reply_markup=markup)
+    await query.message.reply(mess)
 
 
-@router.callback_query(F.data.startswith("trader"))
-async def trader_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-    if data[-1] != str(call.from_user.id):
+@router.callback_query(QuestCallback.filter())
+async def quest_callback(query: CallbackQuery, callback_data: QuestCallback):
+    if callback_data.user_id != query.from_user.id:
         return
 
-    if not isinstance(call.message, Message):
-        return
-    user = await database.users.async_get(id=call.from_user.id)
+    user = await UserModel.get_async(id=query.from_user.id)
 
-    if data[1] == "leave":
-        await call.message.delete()
-        await call.message.answer_sticker(
-            "CAACAgEAAxkBAAEpxYVl3KqB7JnvbmYgXQqVAhUQYbnyXwACngIAAv9iMUeUcUiHcCrhSTQE",
-        )
-        await call.message.answer("Пф... не хочешь как хочешь")
-
-    elif data[1] == "trade":
-        item = get_item(data[2])
-        quantity = int(data[3])
-        price = int(data[4])
-        user_item = get_or_add_user_item(user, item.name)
-
-        if user.coin < price:
-            await call.answer(f"Тебе нехватает {price - user.coin} бабла", show_alert=True)
-
+    assert isinstance(query.message, Message)  # for linters
+    if callback_data.action == "skip":
+        if user.coin < user.new_quest_coin_quantity:
+            await query.answer(t("item-not-enough", item_name="бабло"))
             return
-
-        user.coin -= price
-        user_item.quantity += quantity
-        await call.message.delete()
-        await call.message.answer(f"Купил {quantity} {item.name} {item.emoji} за {price}")
-
-
-@router.callback_query(F.data.startswith("top"))
-async def top_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-    if data[-1] != str(call.from_user.id):
+        user.coin -= user.new_quest_coin_quantity
+        user.new_quest_coin_quantity += random.randint(10, 20)
+        user.new_quest()
+        await query.message.delete()
+        await user.update_async()
+        await query.answer(t("quest.skipped"), show_alert=True)
         return
 
-    if not isinstance(call.message, Message):
+    if not user.quest.is_done:
+        await query.answer(t("quest.quest-not-completed"))
         return
 
-    markup = InlineMarkup.top(call.message)
+    for name, quantity in user.quest.needed_items.items():
+        user.inventory.remove(name, quantity)
 
-    tops = {
-        "coin": coin_top(),
-        "level": level_top(),
-        "dog_level": dog_level_top(),
-        "karma": karma_top(),
-    }
+    user.coin += user.quest.reward
+    user.xp += user.quest.xp
+    old_quest = user.quest
+    user.new_quest()
+    user.achievements_info.incr_progress("квестоман")
 
-    try:
-        await call.message.edit_text(tops[data[1]], reply_markup=markup)
-    except TelegramAPIError:
-        pass
+    await user.update_async()
+    await query.message.delete()
+    await query.message.answer_sticker(Stickers.quest)
+    await query.message.reply_to_message.reply(t("quest.complete", quest=old_quest))
 
 
-@router.callback_query(F.data.startswith("chest"))
-async def chest_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
+@router.callback_query(HomeCallback.filter())
+async def home_callback(query: CallbackQuery, callback_data: HomeCallback):
+    if callback_data.user_id != query.from_user.id:
         return
 
-    if not isinstance(call.message, Message):
-        return
-    user = await database.users.async_get(id=call.from_user.id)
+    user = await UserModel.get_async(id=query.from_user.id)
 
-    if data[1] == "open":
-        key = get_or_add_user_item(user, "ключ")
-        if key.quantity < 1:
-            await call.answer("У тебя нет ключа", show_alert=True)
-            return
-        key.quantity -= 1
-        mess = "Открыл сундук\n\n"
-        items = []
-        for _ in range(random.randint(2, 5)):
-            rarity = random.choice(
-                [
-                    ItemRarity.COMMON,
-                    ItemRarity.UNCOMMON,
-                ]
+    assert isinstance(query.message, Message)  # for liners
+
+    match callback_data.action:
+        case "actions":
+            await query.message.edit_text(
+                t("home.actions-choice"),
+                reply_markup=InlineMarkup.home_actions_choice(user),
             )
-            quantity = get_item_count_for_rarity(rarity)
-            item = random.choice(
-                [item for item in ITEMS if item.rarity == rarity and item.name != "бабло"]
+        case "main-menu":
+            await query.message.edit_text(
+                t("home.main"),
+                reply_markup=InlineMarkup.home_main(user),
             )
-            if item.name in items or quantity < 1:
-                continue
-            items.append(item.name)
-            mess += f"+ {quantity} {item.name} {item.emoji}\n"
-            user_item = get_or_add_user_item(user, item.name)
-            user_item.quantity += quantity
-            await database.items.async_update(**user_item.to_dict())
-        increment_achievement_progress(user, "кладоискатель")
-        await call.message.delete()
-        if call.message.reply_to_message:
-            await call.message.reply(mess)
-        else:
-            await call.bot.send_message(user.id, mess)
-
-    elif data[1] == "leave":
-        await call.message.delete()
-        if call.message.reply_to_message:
-            await call.message.reply("*Ушел от сундука*")
+        case "walk":
+            await walk_action(query, user)
+        case "work":
+            await work_action(query, user)
+        case "sleep":
+            await sleep_action(query, user)
+        case "game":
+            await game_action(query, user)
 
 
-@router.callback_query(F.data.startswith("actions"))
-async def actions_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
+@router.callback_query(TraderCallback.filter())
+async def trader_callback(query: CallbackQuery, callback_data: TraderCallback):
+    if callback_data.user_id != query.from_user.id:
         return
 
-    user = await database.users.async_get(id=call.from_user.id)
+    user = await UserModel.get_async(id=query.from_user.id)
 
-    if data[1] == "choice":
-        markup = InlineMarkup.actions_choice(user)
+    assert isinstance(query.message, Message)  # for liners
 
-        mess = "Чем хочешь заняться?"
-
-        await call.message.edit_text(mess, reply_markup=markup)
-    elif data[1] == "back":
-        markup = InlineMarkup.home_main(user)
-        mess = "🏠 Дом милый дом"
-        await call.message.edit_text(mess, reply_markup=markup)
-    elif data[1] == "street":
-        await street(call, user)
-    elif data[1] == "work":
-        await work(call, user)
-    elif data[1] == "sleep":
-        await sleep(call, user)
-    elif data[1] == "game":
-        await game(call, user)
-
-
-@router.callback_query(F.data.startswith("open"))
-async def open_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
+    if callback_data.action == "leave":
+        await query.message.delete()
+        await query.answer(t("mobs.trader.leave"), show_alert=True)
         return
 
-    user = await database.users.async_get(id=call.from_user.id)
+    assert callback_data.item_name  # for linters
+    assert callback_data.price  # for linters
+    assert callback_data.quantity  # for linters
 
-    if data[1] == "home":
-        mess = "🏠 Дом милый дом"
-        markup = InlineMarkup.home_main(user)
-        await call.message.edit_text(mess, reply_markup=markup)
-    elif data[1] == "market-profile":
-        mess = "Твой ларек"
-        markup = InlineMarkup.market_profile(user)
+    item = get_item(callback_data.item_name)
 
-        await call.message.edit_text(mess, reply_markup=markup)
-    elif data[1] == "bag":
-        mess = "Инвентарь"
-        markup = InlineMarkup.bag(user)
-
-        await call.message.edit_text(mess, reply_markup=markup)
-
-
-@router.callback_query(F.data.split(" ")[0] == "market")
-async def market_callback(call: CallbackQuery, state: FSMContext):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    user = await database.users.async_get(id=call.from_user.id)
-
-    if data[1] == "add":
-        user_market_items_len = len(database.market_items.get_all(owner=user._id))
-        if user_market_items_len >= user.max_items_count_in_market:
-            await call.answer("Ты привесил лимит", show_alert=True)
-            return
-        from base.user_input.add_new_market_item import AddNewItemState
-
-        user_items = sorted(
-            await database.items.async_get_all(owner=user._id),
-            key=lambda i: i.quantity,
-            reverse=True,
-        )
-
-        buttons = []
-        for item in user_items:
-            if item.quantity <= 0 or get_item(item.name).type == ItemType.USABLE:
-                continue
-
-            buttons.append(
-                InlineKeyboardButton(
-                    text=f"{get_item_emoji(item.name)} {item.quantity}",
-                    callback_data=f"sell {get_item(item.name).translit()} {user.id}",
-                )
-            )
-
-        builder = InlineKeyboardBuilder()
-        if len(buttons) == 0:
-            await call.message.edit_text("У тебя нет предметов для продажи")
-            return
-
-        builder.add(*buttons)
-        builder.adjust(3)
-
-        await state.set_state(AddNewItemState.name)
-
-        await call.message.edit_text(
-            "<b>Продажа предмета</b>\nВыбери предмет", reply_markup=builder.as_markup()
-        )
-
-    elif data[1] == "buy":
-        try:
-            market_item = database.market_items.get(_id=ObjectId(data[2]))
-        except NoResult:
-            await call.answer(
-                "Этот предмет либо уже купили либо владелец убрал с продажи", show_alert=True
-            )
-            return
-
-        item_owner = await database.users.async_get(_id=market_item.owner)
-
-        if item_owner.id == user.id:
-            await call.answer("Сам у себя будешь покупать?", show_alert=True)
-            return
-
-        if market_item.price > user.coin:
-            await call.answer("Тебе не хватает бабла", show_alert=True)
-            return
-
-        item = get_item(market_item.name)
-
-        item_owner.coin += market_item.price
-        user.coin -= market_item.price
-        if item.type == ItemType.COUNTABLE:
-            user_item = get_or_add_user_item(user, market_item.name)
-            user_item.quantity += market_item.quantity
-        else:
-            user_item = add_user_usage_item(
-                user,
-                market_item.name,
-                market_item.usage,  # type: ignore
-            )
-            user_item.quantity = market_item.quantity
-
-        await database.items.async_update(**user_item.to_dict())
-        await database.users.async_update(**user.to_dict())
-        await database.users.async_update(**item_owner.to_dict())
-        database.market_items.delete(**market_item.to_dict())
-
-        increment_achievement_progress(user, "богач", market_item.price)
-        increment_achievement_progress(item_owner, "продавец")
-
-        usage = f" ({int(market_item.usage)}%)" if market_item.usage else ""
-        emoji = get_item_emoji(market_item.name)
-        mess = f"{get_user_tag(user)} купил {market_item.quantity} {emoji}{usage}"
-        await safe(call.message.answer(mess))
-
-        await safe(
-            call.bot.send_message(
-                item_owner.id,
-                f"{get_user_tag(user)} купил у тебя {market_item.quantity} {emoji}{usage}",
-            )
-        )
-
-        mess = "<b>Рынок</b>\n\n"
-        market_items = database.market_items.get_all()
-        markup = InlineMarkup.market_pager(user)
-        mess += f"1 / {len(list(batched(market_items, 6)))}"
-        await call.message.edit_text(
-            mess,
-            reply_markup=markup,
-        )
-    elif data[1] == "view-my-items":
-        markup = InlineMarkup.market_view_my_items(user)
-
-        mess = "<b>Твои товары</b>"
-        await call.message.edit_text(
-            mess,
-            reply_markup=markup,
-        )
-    elif data[1] == "delete":
-        market_item = database.market_items.get(_id=ObjectId(data[2]))
-        user_item = get_or_add_user_item(user, market_item.name)
-        user_item.quantity += market_item.quantity
-        await database.items.async_update(**user_item.to_dict())
-        database.market_items.delete(**market_item.to_dict())
-        await call.answer(
-            "предмет удален успешно",
+    if user.coin < callback_data.price:
+        await query.answer(
+            t("item-not-enough", item_name="бабло"),
             show_alert=True,
         )
-        markup = InlineMarkup.market_view_my_items(user)
+        return
 
-        await call.message.edit_reply_markup(
-            reply_markup=markup,
+    user.coin -= callback_data.price
+    user.inventory.add(item.name, callback_data.quantity)
+    await user.update_async()
+    await query.message.delete()
+    await query.message.answer(
+        t(
+            "mobs.trader.trade",
+            user=user,
+            item=item,
+            quantity=callback_data.quantity,
+            price=callback_data.price,
+        )
+    )
+
+
+@router.callback_query(ChestCallback.filter())
+async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    assert isinstance(query.message, Message)  # for liners
+
+    if callback_data.action == "leave":
+        await query.message.delete()
+        await query.answer(t("mobs.chest.leave"), show_alert=True)
+        return
+
+    try:
+        key_item = user.inventory.get("ключ")
+    except NoResult:
+        await query.answer(t("item-not-found-in-inventory", item_name="ключ"), show_alert=True)
+        return
+
+    items = ""
+    items_quantity = random.randint(2, 3)
+    available_items = list(
+        filter(lambda i: i.rarity in (ItemRarity.COMMON, ItemRarity.UNCOMMON), ITEMS)
+    )
+    available_items = random.choices(available_items, k=items_quantity)
+
+    for item in available_items:
+        quantity = get_item_count_for_rarity(item.rarity)
+        if item.name == "бабло":
+            user.coin += quantity
+        else:
+            user.inventory.add(item.name, quantity)
+
+        items += f"+ {pretty_int(quantity)} {item.name} {item.emoji}\n"
+
+    user.inventory.remove(key_item.name, 1)
+    user.achievements_info.incr_progress("кладоискатель")
+    await user.update_async()
+
+    await query.message.answer(t("mobs.chest.open", user=user, items=items))
+    await query.message.delete()
+
+
+@router.callback_query(AchievementsCallback.filter())
+async def achievements_callback(query: CallbackQuery, callback_data: AchievementsCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    achievement = get_achievement(callback_data.achievement_name)
+    user_achievement = user.achievements_info.get(achievement.name)
+
+    await query.answer(
+        t(
+            "achievements.info",
+            achievement=achievement,
+            user_achievement=user_achievement,
+        ),
+        show_alert=True,
+    )
+
+
+@router.callback_query(DailyGiftCallback.filter())
+async def daily_gift_callback(query: CallbackQuery, callback_data: DailyGiftCallback):
+    if callback_data.user_id != query.from_user.id:
+        return
+
+    user = await UserModel.get_async(id=query.from_user.id)
+
+    if not await check_user_subscription(user):
+        await query.answer(t("subscription-required"), show_alert=True)
+        return
+
+    assert isinstance(query.message, Message)  # for liners
+
+    if user.daily_gift.is_claimed:
+        await query.answer(
+            t("daily-gift.already-claimed", daily_gift=user.daily_gift), show_alert=True
         )
 
+        await query.message.edit_reply_markup(reply_markup=InlineMarkup.daily_gift(user))
+        return
+
+    if not user.daily_gift.last_claimed_at:
+        user.daily_gift.last_claimed_at = utcnow()
+
+    if user.daily_gift.last_claimed_at.date() == (utcnow() - timedelta(days=1)).date():
+        user.daily_gift.streak += 1
     else:
-        try:
-            action = call.data.split(" ")[1]
-            pos = int(call.data.split(" ")[2])
-            market_items = database.market_items.get_all()
-            max_pos = len(list(batched(market_items, 6))) - 1
+        user.daily_gift.streak = 1
 
-            if action == "next":
-                pos += 1
-            elif action == "back":
-                pos -= 1
-            elif action == "start":
-                pos = 0
-            elif action == "end":
-                pos = max_pos
+    user.daily_gift.last_claimed_at = utcnow()
+    user.daily_gift.is_claimed = True
 
-            if pos < 0 or pos > max_pos:
-                raise IndexError
+    items = ""
+    for item_name, quantity in user.daily_gift.items.items():
+        item = get_item(item_name)
 
-            mess = f"<b>Рынок</b>\n\n{pos + 1} / {max_pos + 1}"
-            markup = InlineMarkup.market_pager(user=user, index=pos)
-
-            await call.message.edit_text(mess, reply_markup=markup)
-        except IndexError:
-            await call.answer("Дальше ничо нету", show_alert=True)
-
-
-@router.callback_query(F.data.startswith("market_item_open"))
-async def market_item_open_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    user = await database.users.async_get(id=call.from_user.id)
-    item_id = ObjectId(data[1])
-
-    market_item = database.market_items.get(_id=item_id)
-
-    item_owner = await database.users.async_get(_id=market_item.owner)
-    emoji = get_item_emoji(market_item.name)
-    mess = (
-        f"<b>{emoji} {market_item.name} | {market_item.quantity} шт.</b>\n"
-        f"Продавец: {get_user_tag(item_owner)}\n"
-        f"Средней прайс: {get_middle_item_price(market_item.name)}/шт"
-    )
-
-    markup = InlineMarkup.market_item_open(user, market_item)
-    await call.message.edit_text(mess, reply_markup=markup)
-
-
-@router.callback_query(F.data.startswith("delate_state"), StateFilter("*"))
-async def delate_state_callback(call: CallbackQuery, state: FSMContext):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    if not await state.get_state():
-        await call.answer("Что отменять собрался?", show_alert=True)
-        return
-    await state.delete()
-    if call.message.id:
-        await call.message.delete()
-    await call.answer("Отменил")
-
-
-@router.callback_query(F.data.startswith("levelup"))
-async def levelup_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    user = await database.users.async_get(id=call.from_user.id)
-
-    if data[1] == "luck":
-        user.luck += 1
-    elif data[1] == "market":
-        user.max_items_count_in_market += 1
-
-    user.karma += 2
-
-    await database.users.async_update(**user.to_dict())
-    await call.answer("Поздравляю 🎉🎉", show_alert=True)
-    await call.message.edit_reply_markup(reply_markup=None)
-
-
-@router.callback_query(F.data.startswith("daily_gift"))
-async def daily_gift_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    user = await database.users.async_get(id=call.from_user.id)
-
-    if data[1] == "claim":
-        if not await check_user_subscription(user):
-            await call.answer(
-                "Чтобы использовать эту функцию нужно подписаться на новостной канал",
-                show_alert=True,
-            )
-            return
-        now = utcnow()
-
-        daily_gift = database.daily_gifts.get(owner=user._id)
-        if daily_gift.is_claimed:
-            time_difference = get_time_difference_string(daily_gift.next_claimable_at - now)
-            await call.answer(
-                f"Ты сегодня уже получил подарок. Жди {time_difference}",
-                show_alert=True,
-            )
-            markup = InlineMarkup.daily_gift(user, daily_gift)
-            await call.message.edit_reply_markup(reply_markup=markup)
-            return
-
-        if not daily_gift.last_claimed_at:
-            daily_gift.last_claimed_at = now
-
-        if daily_gift.last_claimed_at.date() == (now - timedelta(days=1)).date():
-            daily_gift.streak += 1
+        items += f"+{pretty_int(quantity)} {item.name} {item.emoji}\n"
+        if item_name == "бабло":
+            user.coin += quantity
         else:
-            daily_gift.streak = 1
+            user.inventory.add(item.name, quantity)
 
-        daily_gift.last_claimed_at = now
-        daily_gift.next_claimable_at = now + timedelta(days=1)
-        daily_gift.is_claimed = True
-        database.daily_gifts.update(**daily_gift.to_dict())
+    user.notification_status.daily_gift = False
+    await user.update_async()
 
-        mess = f"<b>{get_user_tag(user)} получил ежедневный подарок</b>\n\n"
-        for item_name in daily_gift.items:
-            item = get_item(item_name)
-            quantity = get_item_count_for_rarity(item.rarity)
-            try:
-                user_item = get_or_add_user_item(user, item.name)
-                user_item.quantity += quantity
-                await database.items.async_update(**user_item.to_dict())
-            except ItemIsCoin:
-                user.coin += quantity
-            mess += f"+{quantity} {item.name} {item.emoji}\n"
+    mess = t("daily-gift.claim", user=user, items=items)
 
-        markup = InlineMarkup.daily_gift(user, daily_gift)
-        await call.message.answer(mess)
-        await call.message.edit_reply_markup(reply_markup=markup)
+    await query.message.answer(mess)
+    await query.message.edit_reply_markup(reply_markup=InlineMarkup.daily_gift(user))
 
 
-@router.callback_query(F.data.startswith("transfer"))
-async def transfer_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
+@router.callback_query(MarketCallback.filter(F.action != "select-item"))
+async def market_callback(
+    query: CallbackQuery,
+    callback_data: MarketCallback,
+    scenes: ScenesManager,
+):
+    if callback_data.user_id != query.from_user.id:
         return
 
-    user = await database.users.async_get(id=call.from_user.id)
-    reply_user = await database.users.async_get(id=int(data[-2]))
+    user = await UserModel.get_async(id=query.from_user.id)
 
-    item = await database.items.async_get(_id=ObjectId(data[1]))
+    assert isinstance(query.message, Message)  # for linters
 
-    if item.quantity <= 0:
-        await call.answer("У тебя нет такого предмета")
-        return
+    match callback_data.action:
+        case "view":
+            assert callback_data.current_page is not None  # for linters
+            item = await MarketItemModel.get_async(oid=callback_data.item_oid)
 
-    item.owner = reply_user._id
+            await query.message.edit_text(
+                t(
+                    "market.item-info",
+                    item=item,
+                ),
+                reply_markup=InlineMarkup.market_item_view(callback_data.current_page, item, user),
+            )
+        case "goto":
+            assert callback_data.current_page is not None  # for linters
+            items = await MarketItemModel.get_all_async()
+            page = callback_data.current_page
+            max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+            await query.message.edit_text(
+                t("market.main", current_page=page + 1, max_page=max_page),
+                reply_markup=InlineMarkup.market_main(page, user),
+            )
+        case "buy":
+            item = await MarketItemModel.get_async(oid=callback_data.item_oid)
 
-    await database.items.async_update(**item.to_dict())
-    mess = (
-        f"{user.name} подарил {reply_user.name}\n"
-        "----------------\n"
-        f"{get_item_emoji(item.name)} {item.name} ({int(item.usage)}%)"  # type: ignore
-    )
+            if user.coin < item.price:
+                await query.answer(t("item-not-enough", item_name="бабло"))
+                return
 
-    await database.users.async_update(**user.to_dict())
-    await database.users.async_update(**reply_user.to_dict())
+            user.coin -= item.price
+            usage_text = ""
+            if item.usage:
+                usage_text = f"({pretty_float(item.usage)}%)"
+                user.inventory.add(item.name, item.quantity, item.usage)
+            else:
+                user.inventory.add(item.name, item.quantity)
 
-    await call.message.answer(mess)
+            await item.delete_async()
+            await user.update_async()
 
+            assert callback_data.current_page is not None  # for linters
+            items = await MarketItemModel.get_all_async()
+            page = callback_data.current_page
+            max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+            await query.message.edit_text(
+                t("market.main", current_page=page + 1, max_page=max_page),
+                reply_markup=InlineMarkup.market_main(page, user),
+            )
 
-@router.callback_query(F.data.startswith("achievements"))
-async def achievements_callback(call: CallbackQuery):
-    data = call.data.split(" ")
+            await query.message.answer(t("market.buy-item", user=user, usage=usage_text, item=item))
+            await query.bot.send_message(
+                query.message.chat.id,
+                t("market.sold-item", user=user, usage=usage_text, item=item),
+            )
+        case "back" | "next":
+            assert callback_data.current_page is not None
+            items = await MarketItemModel.get_all_async()
+            page = callback_data.current_page
+            max_page = len(list(batched(items, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT)))
+            if callback_data.action == "back":
+                page -= 1
+            else:
+                page += 1
 
-    if data[-1] != str(call.from_user.id):
-        return
+            page = max(0, min(max_page - 1, page))
 
-    user = await database.users.async_get(id=call.from_user.id)
+            with suppress(TelegramBadRequest):
+                await query.message.edit_text(
+                    t("market.main", current_page=page + 1, max_page=max_page),
+                    reply_markup=InlineMarkup.market_main(page, user),
+                )
+        case "kiosk":
+            assert callback_data.current_page is not None
 
-    if data[1] == "view":
-        ach = get_achievement(data[2])
-        mess = f"<b>{ach.emoji} {ach.name}</b>\n\n"
-        mess += f"<i>{ach.desc}</i>\n\n"
-        mess += f"{achievement_progress(user, ach.name)}"
+            await query.message.edit_text(
+                t("market.kiosk"),
+                reply_markup=InlineMarkup.market_kiosk(callback_data.current_page, user),
+            )
+        case "add":
+            await scenes.enter(AddMarketItemMainScene)
+        case "delete":
+            assert callback_data.item_oid  # for linters
+            item = await MarketItemModel.get_async(oid=callback_data.item_oid)
 
-        markup = quick_markup({"Назад": {"callback_data": f"achievements main {user.id}"}})
+            if item.usage:
+                user.inventory.add(item.name, item.quantity, item.usage)
+            else:
+                user.inventory.add(item.name, item.quantity)
 
-        await call.message.edit_text(mess, reply_markup=markup)
-    elif data[1] == "main":
-        mess = "Достижения"
+            await item.delete_async()
+            await user.update_async()
 
-        markup = InlineMarkup.achievements(user)
+            await query.answer(t("market.item-removed", item=item), show_alert=True)
 
-        await call.message.edit_text(mess, reply_markup=markup)
-
-    elif data[1] == "filter":
-        filter = data[2]
-        markup = InlineMarkup.achievements_view(user, filter)  # type: ignore
-
-        await call.message.edit_reply_markup(reply_markup=markup)
-
-
-@router.callback_query(F.data.startswith("accept_rules"))
-async def accept_rules_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    user = await database.users.async_get(id=call.from_user.id)
-    user.accepted_rules = True
-    user.karma += 3
-    await database.users.async_update(**user.to_dict())
-
-    await call.answer(
-        "Теперь можешь спокойно пользовался ботом",
-        show_alert=True,
-    )
-
-    await call.message.delete()  # type: ignore
-
-
-@router.callback_query(F.data.startswith("event_shop"))
-async def event_shop_callback(call: CallbackQuery):
-    data = call.data.split(" ")
-
-    if data[-1] != str(call.from_user.id):
-        return
-
-    if data[1] != "buy":
-        return
-
-    user = await database.users.async_get(id=call.from_user.id)
-
-    candy = get_or_add_user_item(user, "конфета")
-
-    item = get_item(data[2])
-    quantity = int(data[3])
-
-    if candy.quantity < quantity:
-        await call.answer("Недостаточно конфет", show_alert=True)
-        return
-
-    user_item = get_or_add_user_item(user, item.name)
-    user_item.quantity += 1
-    candy.quantity -= quantity
-
-    await database.items.async_update(**user_item.to_dict())
-    await database.items.async_update(**candy.to_dict())
-
-    mess = "<b>Ивентовый магазин</b>\n\n"
-    mess += f"У тебя {candy.quantity} {get_item_emoji(candy.name)}"
-
-    markup = InlineMarkup.event_shop(user)
-
-    await call.message.edit_text(mess, reply_markup=markup)
-
-    await call.answer(
-        f"Ты купил 1 {item.emoji} за {quantity} {get_item_emoji(candy.name)}",
-        show_alert=True,
-    )
+            await query.message.edit_reply_markup(
+                reply_markup=InlineMarkup.market_my_items(user),
+            )
+        case "my-items":
+            await query.message.edit_text(
+                t("market.my-items"),
+                reply_markup=InlineMarkup.market_my_items(user),
+            )

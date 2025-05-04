@@ -1,5 +1,5 @@
 site_name: Livebot
-repo_url: https://github.com/HamletSargsyan/livebot
+repo_url: https://github.com/0xM4LL0C/livebot
 edit_uri: blob/main/docs/
 
 plugins:
@@ -15,11 +15,10 @@ markdown_extensions:
   - tables
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
-  - toc:
-      slugify: !!python/object/apply:pymdownx.slugs.slugify
-        kwds:
-          case: lower
+
+hooks:
+  - docs/hooks.py
+
 theme:
   features:
     - content.code.copy

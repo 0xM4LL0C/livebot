@@ -17,10 +17,12 @@ tasks:
       - rm .pid
 
   lint:
+    vars:
+      paths: "{{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}src/ tools/{{end}}"
     cmds:
-      - ruff check --respect-gitignore src tools
-      - pylint -f colorized src
-      - pyright src tools
+      - ruff check --respect-gitignore {{.paths}}
+      - pylint -f colorized {{.paths}}
+      - pyright {{.paths}}
 
   format:
     ignore_error: true
@@ -30,11 +32,15 @@ tasks:
     cmd: ruff check --respect-gitignore --fix src tools
 
   spell-check:
-    cmd: cspell lint "**"
+    vars:
+      paths: "{{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}.{{end}}"
+    cmd: cspell lint {{.paths}}
 
   dev-install:
     cmds:
-      - pip install --upgrade ruff pyright pre-commit pylint
+      - uv pip install --upgrade -r requirements.txt
+      - uv pip install --upgrade ruff pyright pre-commit pylint watchfiles
+      - uv pip install "changelog-parser @ git+https://github.com/0xM4LL0C/changelog-parser@main"
       - npm install -g cspell @cspell/dict-ru_ru
       - cspell link add @cspell/dict-ru_ru
 
@@ -59,4 +65,10 @@ tasks:
       - pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin
 
   release:
-    cmd: python3 tools/bump_version.py {{.CLI_ARGS}}
+    cmd: python3 tools/release.py {{.CLI_ARGS}}
+
+  scan-comments:
+    cmd: rg -I -n -H -e "# TODO" -e "# FIXME" -e "# NOTE" --glob "!Taskfile.yml" --ignore-file .gitignore || true
+
+  dev-run:
+    cmd: watchfiles "python3 src/main.py --debug --no-interactive" src

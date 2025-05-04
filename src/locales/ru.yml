@@ -1,0 +1,345 @@
+locale-info:
+  name: "русский"
+  emoji: "🇷🇺"
+  author:
+    name: "0xM4LL0C"
+
+buttons:
+  update: Обновить
+  back: Назад
+
+error-while-handling-update: "Ой-ой, кажется произошла неизвестная ошибка при обработке данных :_("
+welcome: "Привет {name}, добро пожаловать в livebot"
+new_referral_joined: |
+  {name} присоединился к игре благодаря твой реферальной ссылке
+
+  Ты получил {func:pretty_int(coin)} бабла {func:get_item_emoji("бабло")}
+help: |
+  <b>Помощь</b>
+
+  <b>Канал:</b> {const:CHANNEL_USERNAME}
+  <b>Чат</b>: {const:CHAT_USERNAME}
+  <b>Гайд</b>: {const:GUIDE_URL}
+profile: |
+  <b>Профиль {obj:user.name}</b>
+
+  <b>❤️ Здоровье:</b> <code>{obj:user.health}/100</code>
+  <b>🎭 Настроение:</b> <code>{obj:user.mood}/100</code>
+  <b>💤 Усталость:</b> <code>{obj:user.fatigue}/100</code>
+  <b>🍞 Голод:</b> <code>{obj:user.hunger}/100</code>
+  <b>🪙 Бабло:</b> <code>{func:pretty_int(user.coin)}</code>
+  <b>🍀 Удача:</b> <code>{obj:user.luck}</code>
+  <b>🏵 Уровень:</b> <code>{obj:user.level}</code>
+  <b>🎗 Опыт:</b> <code>{func:pretty_float(user.xp)}/{func:pretty_float(user.max_xp)}</code>
+inventory: |
+  <b>Инвентарь</b>
+
+  {items}
+empty-inventory: <i>Инвентарь пуст</i>
+casino:
+  main: |
+    <b>🎰 Казино</b>
+
+    Решил заработать легкие деньги?
+    Ну давай, шансы 50 на 50
+
+    Чтобы сыграть напиши <code>/casino [кол-во]</code>
+  win: 🎉 Ураа, ты выиграл {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
+  loose: 😢 Ой, ты проиграл {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
+item-not-found-in-inventory: У тебя нет {item_name} {func:get_item_emoji(item_name)}
+item-not-exist: Предмет `{item_name}` не существует 🤔
+item-not-enough: У тебя недостаточно `{item_name}` {func:get_item_emoji(item_name)}
+shop:
+  main: |
+    <b>🛍 Магазин</b>
+
+    * <i>Кол-во: {func:pretty_int(quantity)}</i>
+  buy-item: Купил {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)} за {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+craft:
+  main: |
+    <b>🧰 Верстак</b>
+
+    <i>Доступные крафты</i>
+  craft-item: |
+    Скрафтил {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)}
+
+    + {func:pretty_float(xp)} хп
+transfer:
+  help: <code>/transfer [имя предмета] [кол-во]</code>
+  success: |
+    {obj:from_user.tg_tag} подарил {obj:to_user.tg_tag}
+    ---------------------------
+    {func:pretty_int(quantity)} {item_name} {func:get_item_emoji(item_name)}
+  success-usable: |
+    {obj:from_user.tg_tag} подарил {obj:to_user.tg_tag}
+    ---------------------------
+    {item_name} ({func:pretty_float(usage)}) {func:get_item_emoji(item_name)}
+reply-to-message-required: Для этой команды нужно ответить на сообщение
+select-which-one: Выбери какой
+use:
+  available-items: <b>Доступные предметы для юза</b>
+  not-available-items: <i>Нет доступных предметов для юза</i>
+  hunger: |
+    {func:get_item_emoji(item_name)} Поел
+    + {func:pretty_int(effect)} голода
+  boost: |
+    {func:get_item_emoji(item_name)} Юзнул буст
+    + {func:pretty_float(xp)} опыта
+  box-opened: |
+    Ты открыл бокс и получил
+    ---------------------------
+    {items}
+  fatigue: |
+    {func:get_item_emoji(item_name)} Юзнул {item_name}
+    + {func:pretty_int(effect)} усталости
+  help-item: |
+    {func:get_item_emoji(item_name)} Юзнул хелп
+    + {func:pretty_int(effect)} здоровья
+  vodka: |
+    {func:get_item_emoji(item_name)} Юзнул водку
+    - {func:pretty_int(effect)} здоровья
+    сбросил усталость
+  bike: |
+    {func:get_item_emoji(item_name)} Юзнул велик и сократил время прогулки на {func:pretty_int(minutes)} минут
+  luck: |
+    {func:get_item_emoji(item_name)} Увеличил удачу на {func:pretty_int(effect)}
+  candy: |
+    {func:get_item_emoji(item_name)} Юзнул конфету
+    + {func:pretty_int(effect)}% голода
+    + {func:pretty_int(effect)}% усталости
+under-development: 🔜 В разработке
+ref: |
+  <b>Зови друзей – получай до {func:pretty_int(15000)} {func:get_item_emoji("бабло")}!</b>
+
+  Делись реферальной ссылкой, и если друг впервые зарегистрируется, ты получишь от {func:pretty_int(15000)} до {func:pretty_int(15000)} {func:get_item_emoji("бабло")}
+
+  Твоя ссылка: {link}
+promo:
+  usage: |
+    Чтобы активировать промокод напиши:
+
+    <code>/promo [код]</code>
+  not-exists: Такого промокода не существует
+  user-already-activated: Ты уже активировал этот промокод
+  already-activated: Этот промокод уже активировали
+  activate: |
+    Ухты, {obj:user.tg_tag} активировал промокод и получил
+
+    {items}
+quest:
+  buttons:
+    done: |
+      {button_text}
+    skip: Пропустить
+    done-text: Завершить
+    in-progress: В прогрессе
+  main: |
+    <b>Квест</b>
+
+    {obj:quest.status}
+
+    <b>Награда:</b> {obj:quest.reward} {func:get_item_emoji("бабло")}
+  skipped: Пропустил квест. Новый квест уже доступен
+  quest-not-completed: Не хватает предметов для завершения задачи
+  complete: |
+    Ураа, ты завершил квест
+
+    + {func:pretty_float(quest.xp)} хп
+    + {func:pretty_int(quest.reward)} бабла {func:get_item_emoji("бабло")}
+
+    Ты выполнил квест за {func:get_time_difference_string(utcnow() - quest.start_time)}
+home:
+  buttons:
+    open-actions: Действия
+    actions:
+      walk: Прогулка
+      work: Работа
+      sleep: Спать
+      game: Играть
+  main: <b>🏠 Дом милый дом</b>
+  actions-choice: Чем хочешь заняться?
+mobs:
+  buttons:
+    leave: Уйти
+  trader:
+    buttons:
+      trade: Обменять
+    on-meet: |
+      <b>{obj:mob.emoji} {obj:mob.name}</b>
+
+      Эй дружок, у меня для тебя есть выгодное предложение
+
+      Я даю тебе {func:pretty_int(quantity)} {obj:item.name} {obj:item.emoji} за {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+    leave: Пф... не хочешь как хочешь
+    trade: |
+      {obj:user.tg_tag} купил {func:pretty_int(quantity)} {obj:item.name} {obj:item.emoji} за {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+  chest:
+    buttons:
+      open: Открыть
+    on-meet: |
+      <b>{obj:mob.emoji} {obj:mob.name}</b>
+
+      - Ой а что это такое...?
+    leave: |
+      *Ушел от сундука*
+    open: |
+      <b>{obj:user.tg_tag} открыл сундук</b>
+
+      {items}
+busy_with_something_else: Ты занят чем то другим
+actions:
+  walk:
+    walking: |
+      <b>Прогулка</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты прогулялся
+
+      {items}
+  work:
+    working: |
+      <b>Работа</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты закончил работу
+
+      + {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
+  sleep:
+    sleeping: |
+      <b>Сон</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты проснулся
+
+      + {func:pretty_int(fatigue)} усталость
+  game:
+    gaming: |
+      <b>Игра</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты поиграл
+
+      + {func:pretty_int(mood)} настроения
+too_hungry: Ты слишком голодный
+too_tired: Ты слишком устал
+rules: Правила
+read: читать
+time: Сейчас <code>{func:pretty_datetime(utcnow())}</code> по UTC
+weather:
+  types:
+    clear: ясно
+    clouds: облачно
+    fog: туман
+    drizzle: морось
+    rain: дождь
+    snow: снег
+    thunderstorm: гроза
+  info: |
+    <b>Прогноз погоды</b>
+
+    {obj:weather.current.temperature} °C
+
+    {obj:weather.current.emoji} {weather_type}
+violation:
+  none: <i>Нарушений нет</i>
+  until: осталось {func:get_time_difference_string(violation.until_date - utcnow())}
+  info: |
+    <b>Нарушения</b>
+
+    {violations}
+price:
+  help: |
+    Использование: <code>/price [имя предмета]</code>
+  price: |
+    <b>Средняя цена</b>
+
+    {obj:item.name} {obj:item.emoji} {func:pretty_int(price)} {func:get_item_emoji("бабло")}
+  item-has-not-price: У этого предмета нет цены
+achievements:
+  main: <b>Достижения</b>
+  info: |
+    {obj:achievement.emoji} {obj:achievement.name}
+
+    Получено в {func:pretty_datetime(user_achievement.completed_at)}
+
+    {obj:achievement.desc}
+notifications:
+  end-walk: Ты закончил прогулку
+  end-work: Ты закончил работу
+  end-sleep: Ты проснулся
+  end-game: Ты закончил играть
+  daily-gift-available: Ежедневный подарок уже доступен. Не забудь его получить
+version:
+  buttons:
+    release: Релиз
+  info: |
+    <b>Версия:</b> <code>{const:VERSION}</code> | <i>{status}</i>
+daily-gift:
+  buttons:
+    available: 🔹 Получить
+    not-available: 🕐 {func:get_time_difference_string(user.daily_gift.next_claim_available_at - utcnow())}
+  main: <b>Ежедневный подарок</b>
+  already-claimed: Ты сегодня уже получил подарок. Жди {func:get_time_difference_string(daily_gift.next_claim_available_at - utcnow())}
+  claim: |
+    <b>{obj:user.tg_tag} получил ежедневный подарок</b>
+
+    {items}
+subscription-required: Для использования этой функции необходимо подписаться на новостной канал
+market:
+  main: |
+    <b>Рынок</b>
+
+    <i>{func:pretty_int(current_page)}/{func:pretty_int(max_page)}</i>
+  item-info: |
+    <b>{func:get_item_emoji(item.name)} {obj:item.name} | {func:pretty_int(item.quantity)} шт.</b>
+
+    Продавец: {obj:item.owner.tg_tag}
+  buy: Купить за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
+  buy-item: |
+    {obj:user.tg_tag} купил {func:pretty_int(item.quantity)} {obj:item.name} {func:get_item_emoji(item.name)} {usage} за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
+  sold-item: |
+    {obj:user.tg_tag} купил у тебя {func:pretty_int(item.quantity)} {obj:item.name} {func:get_item_emoji(item.name)} {usage} за {func:pretty_int(item.price)} {func:get_item_emoji("бабло")}
+  kiosk: Твой киоск
+  no-items: У тебя нет предметов для продажи
+  user-sold-item: |
+    {obj:user.tg_tag} выставил на продажу {func:pretty_int(item.quantity)} {func:get_item_emoji(item.name)} за {obj:item.price} {func:get_item_emoji("бабло")}
+  item-removed: Убрал {obj:item.name} {func:get_item_emoji(item.name)} из продажы
+  my-items: |
+    <b>Твои предметы</b>
+
+    <i>нажми на предмет чтобы убрать с продажы</i>
+input-quantity: Введи количество
+input-price: Введи прайс
+input-price__with_middle_price: |
+  {func:t("input-price")} (средняя цена: <code>{func:pretty_int(price)}</code>)
+invalid-input: Некоректный ввод
+invalid-input__int_excepted: |
+  {func:t("invalid-input")}. Ожидалось число
+warn: |
+  {obj:user.tg_tag} получил варн
+
+  <b>причина:</b>
+  <i>{reason}</i>
+mute: |
+  {obj:user.tg_tag} получил мут до {func:pretty_datetime(until_date)} по UTC
+
+  <b>причина:</b>
+  <i>{reason}</i>
+ban: |
+  {obj:user.tg_tag} получил бан до {func:pretty_datetime(until_date)} по UTC
+
+  <b>причина:</b>
+  <i>{reason}</i>
+permanent-ban: |
+  {obj:user.tg_tag} получил перманентный бан
+
+  <b>причина:</b>
+  <i>{reason}</i>
+unmute: |
+  {obj:user.tg_tag} получил размут
+unban: |
+  {obj:user.tg_tag} получил разбан
