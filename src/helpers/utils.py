@@ -173,8 +173,8 @@ def get_item_middle_price(name: str) -> int:
     prices: list[int] = []
 
     market_items = MarketItemModel.get_all(name=name)
-    for item in market_items:
-        prices.append(item.price)
+    for market_item in market_items:
+        prices.append(market_item.price)
 
     if item.price:
         prices.append(item.price)
