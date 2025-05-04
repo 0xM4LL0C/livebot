@@ -243,6 +243,7 @@ class UserViolation(SubModel):
     reason: str
     type: Literal["warn", "mute", "ban", "permanent-ban"]
     until_date: Optional[datetime] = None
+    created_at: datetime = field(default_factory=utcnow)
 
 
 @dataclass

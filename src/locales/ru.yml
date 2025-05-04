@@ -319,3 +319,27 @@ input-price__with_middle_price: |
 invalid-input: Некоректный ввод
 invalid-input__int_excepted: |
   {func:t("invalid-input")}. Ожидалось число
+warn: |
+  {obj:user.tg_tag} получил варн
+
+  <b>причина:</b>
+  <i>{reason}</i>
+mute: |
+  {obj:user.tg_tag} получил мут до {func:pretty_datetime(until_date)} по UTC
+
+  <b>причина:</b>
+  <i>{reason}</i>
+ban: |
+  {obj:user.tg_tag} получил бан до {func:pretty_datetime(until_date)} по UTC
+
+  <b>причина:</b>
+  <i>{reason}</i>
+permanent-ban: |
+  {obj:user.tg_tag} получил перманентный бан
+
+  <b>причина:</b>
+  <i>{reason}</i>
+unmute: |
+  {obj:user.tg_tag} получил размут
+unban: |
+  {obj:user.tg_tag} получил разбан

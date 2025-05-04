@@ -209,3 +209,22 @@ async def check_version() -> str:
             return "текущая версия бота больше чем в репозитории"
         case _:
             return "?"
+
+
+@cached(storage="disk")
+def parse_time_duration(time_str: str) -> timedelta:
+    """
+    Parse time duration in the format like 2d, 3h, 15m and return the timedelta.
+    """
+    value = int(time_str[:-1])
+    unit = time_str[-1]
+
+    match unit:
+        case "m":
+            return timedelta(minutes=value)
+        case "h":
+            return timedelta(hours=value)
+        case "d":
+            return timedelta(days=value)
+
+    raise ValueError(f"Invalid time unit. Excepted on of {{m,h,d}}, got `{unit}`")
