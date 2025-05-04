@@ -28,6 +28,7 @@ def remove_not_allowed_symbols(text: str) -> str:
     cleaned_text = "".join(char for char in text if char not in not_allowed_symbols)
 
     return cleaned_text.strip()
+    return cleaned_text.strip()
 
 
 @cached()

@@ -409,3 +409,14 @@ class InlineMarkup:
 
         builder.adjust(1)
         return builder.as_markup()
+
+    @classmethod
+    def top(cls, message: Message) -> InlineKeyboardMarkup:
+        return quick_markup(
+            {
+                "🪙": {"callback_data": f"top coin {message.from_user.id}"},
+                "🏵": {"callback_data": f"top level {message.from_user.id}"},
+                "⚡": {"callback_data": f"top karma {message.from_user.id}"},
+                "🐶": {"callback_data": f"top dog_level {message.from_user.id}"},
+            }
+        )
