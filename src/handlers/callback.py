@@ -566,6 +566,13 @@ async def market_callback(
             await item.delete_async()
             await user.update_async()
 
-            # TODO: implement: add message
+            await query.answer(t("market.item-removed", item=item), show_alert=True)
+
+            await query.message.edit_reply_markup(
+                reply_markup=InlineMarkup.market_my_items(user),
+            )
         case "my-items":
-            ...  # TODO: implement
+            await query.message.edit_text(
+                t("market.my-items"),
+                reply_markup=InlineMarkup.market_my_items(user),
+            )

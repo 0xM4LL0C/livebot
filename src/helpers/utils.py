@@ -170,11 +170,17 @@ def get_item_middle_price(name: str) -> int:  # TODO: implement
 
     item = get_item(name)
 
-    prices: list[int] = [item.price or 0]
+    prices: list[int] = []
 
     market_items = MarketItemModel.get_all(name=name)
     for item in market_items:
         prices.append(item.price)
+
+    if item.price:
+        prices.append(item.price)
+
+    if not prices:
+        prices.append(0)
 
     return round(median(prices))
 

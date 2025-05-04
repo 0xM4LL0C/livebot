@@ -70,20 +70,21 @@ class AddMarketItemSelectPriceScene(
 
         await message.reply(t(key, price=price))
 
-    @on.message(after=After.goto(AddMarketItemFinalScene))
+    @on.message()
     async def select_price(self, message: Message, state: FSMContext):
         try:
             if not message.text:
                 raise ValueError
             price = int(message.text)
         except ValueError:
-            await message.reply("invalid-input__int_excepted")
+            await message.reply(t("invalid-input__int_excepted"))
             return
 
         if price == 0:
             price = 1
 
         await state.update_data(price=price)
+        await self.wizard.goto(AddMarketItemFinalScene)
 
 
 class AddMarketItemSelectQuantityScene(
@@ -114,7 +115,7 @@ class AddMarketItemSelectQuantityScene(
 
         await message.reply(t("input-quantity"))
 
-    @on.message(after=After.goto(AddMarketItemSelectPriceScene))
+    @on.message()
     async def input_quantity(self, message: Message, state: FSMContext):
         try:
             if not message.text:
@@ -137,6 +138,7 @@ class AddMarketItemSelectQuantityScene(
             return
 
         await state.update_data(quantity=quantity)
+        await self.wizard.goto(AddMarketItemSelectPriceScene)
 
 
 class AddMarketItemMainScene(

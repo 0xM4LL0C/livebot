@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from config import logger
 from consts import COIN_EMOJI, MARKET_ITEMS_LIST_MAX_ITEMS_COUNT, REPO_URL, VERSION
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
@@ -382,4 +383,29 @@ class InlineMarkup:
                 ),
             )
 
+        return builder.as_markup()
+
+    @classmethod
+    def market_my_items(cls, user: UserModel) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        market_items = MarketItemModel.get_all(
+            owner_oid=str(user.oid)
+        )  # Не знаю почему, но работает только если `user.oid` с типом str
+
+        logger.debug(str(len(market_items)))
+
+        for item in market_items:
+            logger.debug(item.name + "\t" + str(item))
+            builder.button(
+                text=f"{pretty_int(item.quantity)} {get_item_emoji(item.name)} - {pretty_int(item.price)} {COIN_EMOJI}"
+                + ("(" + pretty_float(item.usage) + ")" if item.usage else ""),
+                callback_data=MarketCallback(
+                    action="delete",
+                    item_oid=str(item.oid),
+                    user_id=user.id,
+                ),
+            )
+
+        builder.adjust(1)
         return builder.as_markup()

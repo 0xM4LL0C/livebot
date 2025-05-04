@@ -1,7 +1,8 @@
 locale-info:
   name: "русский"
   emoji: "🇷🇺"
-  author: "0xM4LL0C"
+  author:
+    name: "0xM4LL0C"
 
 buttons:
   update: Обновить
@@ -306,6 +307,11 @@ market:
   no-items: У тебя нет предметов для продажи
   user-sold-item: |
     {obj:user.tg_tag} выставил на продажу {func:pretty_int(item.quantity)} {func:get_item_emoji(item.name)} за {obj:item.price} {func:get_item_emoji("бабло")}
+  item-removed: Убрал {obj:item.name} {func:get_item_emoji(item.name)} из продажы
+  my-items: |
+    <b>Твои предметы</b>
+
+    <i>нажми на предмет чтобы убрать с продажы</i>
 input-quantity: Введи количество
 input-price: Введи прайс
 input-price__with_middle_price: |
