@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Добавлено
 
-- Карма для игроков ([#39](https://github.com/0xM4LL0C/livebot/issues/39))
-- [#124](https://github.com/0xM4LL0C/livebot/issues/124)
+- Добавлено сообщение об ошибках ([#124](https://github.com/0xM4LL0C/livebot/issues/124))
 - В командах `/shop` и `/craft` добавлены инлайн кнопки ([#12](https://github.com/0xM4LL0C/livebot/issues/12), [#26][https://github.com/0xM4LL0C/livebot/issues/26])
 
 ### Исправлено
