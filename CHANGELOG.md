@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Добавлено
 
-- Карма для игроков ([#39](https://github.com/HamletSargsyan/livebot/issues/39))
-- [#124](https://github.com/HamletSargsyan/livebot/issues/124)
+- Карма для игроков ([#39](https://github.com/0xM4LL0C/livebot/issues/39))
+- [#124](https://github.com/0xM4LL0C/livebot/issues/124)
 
 ### Исправлено
 
-- Баг [#125](https://github.com/HamletSargsyan/livebot/issues/125)
+- Баг [#125](https://github.com/0xM4LL0C/livebot/issues/125)
 
 ## [11.0.1] - 2025-02-07
 
