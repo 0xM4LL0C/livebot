@@ -11,10 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Карма для игроков ([#39](https://github.com/0xM4LL0C/livebot/issues/39))
 - [#124](https://github.com/0xM4LL0C/livebot/issues/124)
+- В командах `/shop` и `/craft` добавлены инлайн кнопки ([#12](https://github.com/0xM4LL0C/livebot/issues/12), [#26][https://github.com/0xM4LL0C/livebot/issues/26])
 
 ### Исправлено
 
-- Баг [#125](https://github.com/0xM4LL0C/livebot/issues/125)
+- Исправлен баг, когда из бокса иногда не выподал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137)
+- Исправлен баг с реферальной системой ([#139](https://github.com/0xM4LL0C/livebot/issues/139))
+
+### Изменено
+
+- Полностю переписан весь проект ([#128](https://github.com/0xM4LL0C/livebot/issues/128))
+- Изменена логика показателей игрока ([#138](https://github.com/0xM4LL0C/livebot/issues/138))
+- Доработана система для ограничения игроков ([#145](https://github.com/0xM4LL0C/livebot/issues/145))
+
+### Удалено
+
+- Удалены некоторые команды ([#131](https://github.com/0xM4LL0C/livebot/issues/131))
 
 ## [11.0.1] - 2025-02-07
 
