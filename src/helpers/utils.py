@@ -164,7 +164,7 @@ def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
 
 
 @cached(expire=HOUR, storage="disk")
-def get_item_middle_price(name: str) -> int:  # TODO: implement
+def get_item_middle_price(name: str) -> int:
     from data.items.utils import get_item
     from database.models import MarketItemModel
 

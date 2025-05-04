@@ -15,13 +15,18 @@ class ActiveMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ):
-        result = await handler(event, data)
         if isinstance(event, (Message, CallbackQuery)):
             if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
                 return
 
             user_id = event.from_user.id
             user = await UserModel.get_async(id=user_id)
+
+            if any(violation for violation in user.violations if violation.type == "permanent-ban"):
+                # TODO: add message
+                return
+
+            result = await handler(event, data)
 
             if (utcnow() - user.last_active_time).days >= 1:
                 user.achievements_info.incr_progress("новичок")
