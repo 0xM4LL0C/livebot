@@ -2,7 +2,6 @@ import random
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import ClassVar, Literal, Optional
-from weakref import ReferenceType, ref
 
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -184,7 +183,7 @@ class UserAchievement(SubModel):
 class AchievementsInfo(SubModel):
     achievements: list[UserAchievement] = field(default_factory=list)
     progress: dict[str, int] = field(default_factory=dict)
-    _user: ReferenceType["UserModel"] = field(
+    _user: "UserModel" = field(
         init=False,
         repr=False,
         metadata=field_options(serialize="omit"),
@@ -198,8 +197,6 @@ class AchievementsInfo(SubModel):
             return False
 
     async def award(self, achievement: Achievement):
-        if not self._user():
-            return
         if self.is_completed(achievement.name):
             return
 
@@ -212,15 +209,15 @@ class AchievementsInfo(SubModel):
             reward += f" + {item.quantity} {item.name} {get_item_emoji(item.name)}"
 
             if item.name == "бабло":
-                self._user().coin += item.quantity
+                self._user.coin += item.quantity
             else:
-                self._user().inventory.add(item.name, item.quantity)
+                self._user.inventory.add(item.name, item.quantity)
 
         await bot.send_message(
-            self._user().id,
+            self._user.id,
             f'Поздравляю🎉, ты получил достижение "{user_achievement.name}"\n\nЗа это ты получил:\n{reward}',
         )
-        await self._user().update_async()
+        await self._user.update_async()
 
     def get(self, name: str) -> UserAchievement:
         for achievement in self.achievements:
@@ -266,7 +263,7 @@ class UserQuest(SubModel):
     xp: float
     reward: int  # coin
     start_time: datetime = field(default_factory=utcnow)
-    _user: ReferenceType["UserModel"] = field(
+    _user: "UserModel" = field(
         init=False,
         repr=False,
         metadata=field_options(serialize="omit"),
@@ -280,7 +277,7 @@ class UserQuest(SubModel):
 
         for name, quantity in needed_items.items():
             try:
-                user_item = self._user().inventory.get(name)
+                user_item = self._user.inventory.get(name)
                 user_item_quantity = user_item.quantity
             except NoResult:
                 user_item_quantity = 0
@@ -299,7 +296,7 @@ class UserQuest(SubModel):
     def is_done(self) -> bool:
         for name, quantity in self.needed_items.items():
             try:
-                user_item = self._user().inventory.get(name)
+                user_item = self._user.inventory.get(name)
             except NoResult:
                 return False
             if user_item.quantity < quantity:
@@ -341,10 +338,10 @@ class UserModel(BaseModel):
     daily_gift: DailyGift = field(default_factory=DailyGift)
 
     def __post_init__(self):
-        self.achievements_info._user = ref(self)  # pylint: disable=W0212
+        self.achievements_info._user = self  # pylint: disable=W0212
         if not self.quest:
             self.new_quest()
-        self.quest._user = ref(self)  # pylint: disable=W0212 # type: ignore
+        self.quest._user = self  # pylint: disable=W0212 # type: ignore
 
     @property
     def tg_tag(self) -> str:

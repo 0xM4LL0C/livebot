@@ -499,6 +499,9 @@ async def market_callback(
         case "buy":
             item = await MarketItemModel.get_async(oid=callback_data.item_oid)
 
+            if item.owner == user.oid:
+                return  # TODO: Add message
+
             if user.coin < item.price:
                 await query.answer(t("item-not-enough", item_name="бабло"))
                 return
