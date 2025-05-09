@@ -3,22 +3,20 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from config import TELEGRAM_ID
-from database.funcs import database
+from consts import TELEGRAM_ID
 from database.models import UserModel
-from helpers.utils import get_user_tag, quick_markup
+from helpers.utils import quick_markup
 
 
 async def send_rules_message(message: Message, user: UserModel):
-    mess = f"{get_user_tag(user)}, перед там как использовать бота, ты должен прочитать правила"
+    mess = f"{user.tg_tag}, перед тем как использовать бота, ты должен прочитать правила"
     markup = quick_markup(
         {
-            "Читать": {"url": "https://hamletsargsyan.github.io/livebot/rules"},
+            "Читать": {"url": "https://0xM4LL0C.github.io/livebot/rules"},
             "Я прочитал и полностью согласен с правилами": {
                 "callback_data": f"accept_rules {user.id}"
             },
         },
-        row_width=1,
     )
 
     await message.answer(mess, reply_markup=markup)
@@ -31,18 +29,22 @@ class RuleCheckMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ):
-        if isinstance(event, (Message, CallbackQuery)):
-            if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
-                return
+        if not isinstance(event, (Message, CallbackQuery)):
+            return
+        if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
+            return
 
-            user = await database.users.async_get(id=event.from_user.id)
+        user = await UserModel.get_async(id=event.from_user.id)
 
-            if user.accepted_rules:
-                return await handler(event, data)
+        if user.accepted_rules:
+            return await handler(event, data)
 
-            if isinstance(event, Message):
-                await send_rules_message(event, user)
-                return
-            if isinstance(event, CallbackQuery) and not event.data.startswith("accept_rules"):
-                await send_rules_message(event.message, user)  # pyright: ignore
-                return
+        message: Message
+        if isinstance(event, Message):
+            message = event
+        elif isinstance(event, CallbackQuery):
+            message = event.message  # type: ignore
+        else:
+            return
+
+        await send_rules_message(message, user)

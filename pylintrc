@@ -6,7 +6,8 @@ source-roots = src
 const-naming-style = any
 
 ignore-paths =
-    src/test*.py
+    src/test*.py,
+    tools/*
 
 disable =
     missing-module-docstring,
@@ -15,7 +16,6 @@ disable =
     redefined-outer-name,
     unspecified-encoding,
     import-outside-toplevel,
-    protected-access, # TODO: delete
     broad-exception-caught,
     super-init-not-called,
     too-few-public-methods,
@@ -30,8 +30,10 @@ disable =
     too-many-statements,
     too-many-lines,
     inconsistent-return-statements,
-    fixme
+    fixme,
+    line-too-long,
+    too-many-function-args,
+    wrong-import-order
 
 [DESIGN]
-
 min-public-methods = 1

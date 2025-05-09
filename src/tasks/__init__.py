@@ -14,4 +14,4 @@ async def setup_tasks():
 
 
 def run_tasks():
-    asyncio.create_task(setup_tasks())
+    asyncio.create_task(setup_tasks())  # noqa

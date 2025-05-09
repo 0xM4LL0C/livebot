@@ -1,23 +1,29 @@
+import asyncio
 from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
 
-from config import TELEGRAM_ID, logger
-from database.funcs import database
+from config import logger
+from consts import TELEGRAM_ID
 from database.models import UserModel
+from helpers.cache import ram_cache
+from helpers.exceptions import NoResult
 from helpers.utils import remove_not_allowed_symbols
 
 
-def register_user(message: Message):
-    user = database.users.check_exists(id=message.from_user.id)
-    if not user:
+async def register_user(message: Message) -> UserModel:
+    try:
+        return await UserModel.get_async(id=message.from_user.id)
+    except NoResult:
         user = UserModel(
             id=message.from_user.id,
             name=remove_not_allowed_symbols(message.from_user.full_name),
         )
-        database.users.add(**user.to_dict())
+        await user.add_async()
         logger.info(f"Новый пользователь: {user.name} ({user.id})")
+
+        return user
 
 
 class RegisterMiddleware(BaseMiddleware):
@@ -31,7 +37,18 @@ class RegisterMiddleware(BaseMiddleware):
             if event.from_user.id == TELEGRAM_ID or event.from_user.is_bot:
                 return
 
-            register_user(event)
+            if not event.text.startswith("/start"):
+                await register_user(event)
+
             if event.reply_to_message:
-                register_user(event.reply_to_message)
-        return await handler(event, data)
+                await register_user(event.reply_to_message)
+
+        if not hasattr(event, "from_user"):
+            return
+        ev = asyncio.Event()
+        ram_cache[f"lock-{event.from_user.id}"] = (ev, 0.0)  # type: ignore
+        try:
+            ev.set()
+            return await handler(event, data)
+        finally:
+            ev.clear()

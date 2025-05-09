@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Config",
+  "properties": {
+    "general": {
+      "type": "object",
+      "title": "GeneralConfig",
+      "properties": {
+        "weather_region": {
+          "type": "string"
+        },
+        "debug": {
+          "type": "boolean",
+          "default": false
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "weather_region"
+      ]
+    },
+    "database": {
+      "type": "object",
+      "title": "DatabaseConfig",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "default": "livebot"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "url"
+      ]
+    },
+    "redis": {
+      "type": "object",
+      "title": "RedisConfig",
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "url"
+      ]
+    },
+    "telegram": {
+      "type": "object",
+      "title": "TelegramConfig",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "log_chat_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "channel_id": {
+          "type": "integer"
+        },
+        "log_thread_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "token",
+        "log_chat_id",
+        "channel_id"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "general",
+    "database",
+    "redis",
+    "telegram"
+  ]
+}

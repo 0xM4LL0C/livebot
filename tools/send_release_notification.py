@@ -1,11 +1,11 @@
 import os
-from typing import Any, NoReturn, Union
+from typing import Any
 
 import httpx
 
 
-def get_github_release_info(version) -> Union[dict[Any, Any], NoReturn]:
-    url = f"https://api.github.com/repos/HamletSargsyan/livebot/releases/tags/{version}"
+def get_github_release_info(version) -> dict[Any, Any]:
+    url = f"https://api.github.com/repos/0xM4LL0C/livebot/releases/tags/{version}"
     response = httpx.get(url)
 
     response.raise_for_status()

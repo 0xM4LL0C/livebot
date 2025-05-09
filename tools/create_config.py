@@ -1,44 +1,14 @@
-import os
-
-import toml
-
-config = {
-    "general": {
-        "debug": False,
-    },
-    "database": {
-        "url": "your_db_url",
-        "name": "livebot",
-    },
-    "redis": {
-        "url": "your_redis_url",
-    },
-    "telegram": {
-        "token": "your_bot_token",
-        "log_chat_id": "",
-        "log_thread_id": 2,
-        "owners": [5161392463],
-    },
-    "weather": {
-        "region": "",
-    },
-    "event": {
-        "start_time": "",
-        "end_time": "",
-        "open": False,
-    },
-    "channel": {
-        "id": "",
-        "chat_id": "",
-    },
-}
+import sys
 
 
-if os.path.exists("config.toml"):
-    print("Конфигурационный файл существует")
-    exit(1)
+sys.path.insert(0, "src")
 
-with open("config.toml", "w") as f:
-    toml.dump(config, f)
+from config_types import Config
+from consts import CONFIG_DIR
 
-print("Конфигурационный файл успешно создан.")
+
+file = CONFIG_DIR / "config.toml"
+if Config.create(file):
+    print(f"Config file created successfully at {file}")
+else:
+    print("Config file already exists")

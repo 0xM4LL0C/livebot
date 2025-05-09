@@ -1,0 +1,6 @@
+#!/bin/env bash
+
+DATA_DIR=${XDG_DATA_HOME:-$HOME/.local/share}/livebot
+
+source $DATA_DIR/.venv/bin/activate
+$DATA_DIR/.venv/bin/python3 $DATA_DIR/main.py $@
