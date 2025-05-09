@@ -3,20 +3,16 @@ import pickle
 import time
 from functools import wraps
 from inspect import iscoroutinefunction
+from pathlib import Path
 from typing import Any, Awaitable, Callable, Literal, Optional, ParamSpec, TypeVar
 
 from cachetools import LRUCache
-from diskcache import Cache as DiskCache
 
 from consts import CACHE_DIR
 
 
 P = ParamSpec("P")
 T = TypeVar("T")
-
-CACHE_DIR.mkdir(exist_ok=True)
-disk_cache = DiskCache(CACHE_DIR, eviction_policy="least-recently-used")
-ram_cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
 
 
 def make_hash(*args: Any) -> str:
@@ -31,8 +27,63 @@ def make_hash(*args: Any) -> str:
 
     converted_args = tuple(convert(arg) for arg in args)
     key = pickle.dumps(converted_args)
-
     return hashlib.md5(key).hexdigest()
+
+
+class DiskCache:
+    def __init__(self, path: Path, max_items: int = 2048):
+        self.path = path
+        self.path.mkdir(exist_ok=True)
+        self.index_file = self.path / "index.pkl"
+        self.index = self._load_index()
+        self.max_items = max_items
+
+    def _load_index(self) -> dict[str, float]:
+        if self.index_file.exists():
+            with open(self.index_file, "rb") as f:
+                return pickle.load(f)
+        return {}
+
+    def _save_index(self) -> None:
+        with open(self.index_file, "wb") as f:
+            pickle.dump(self.index, f)
+
+    def _item_path(self, key: str) -> Path:
+        return self.path / f"{key}.pkl"
+
+    def get(self, key: str, expire: Optional[int]) -> Optional[Any]:
+        if key not in self.index:
+            return None
+        now = time.time()
+        if expire is not None and now - self.index[key] > expire:
+            self.delete(key)
+            return None
+        item_path = self._item_path(key)
+        if not item_path.exists():
+            return None
+        with open(item_path, "rb") as f:
+            return pickle.load(f)
+
+    def set(self, key: str, value: Any) -> None:
+        if len(self.index) >= self.max_items:
+            oldest_key = min(self.index.items(), key=lambda x: x[1])[0]
+            self.delete(oldest_key)
+        item_path = self._item_path(key)
+        with open(item_path, "wb") as f:
+            pickle.dump(value, f)
+        self.index[key] = time.time()
+        self._save_index()
+
+    def delete(self, key: str) -> None:
+        self.index.pop(key, None)
+        path = self._item_path(key)
+        if path.exists():
+            path.unlink()
+        self._save_index()
+
+
+ram_cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
+disk_cache = DiskCache(CACHE_DIR)
 
 
 async def _async_wrapper(
@@ -43,21 +94,23 @@ async def _async_wrapper(
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> T:
-    current_time = time.time()
+    now = time.time()
 
-    if key in ram_cache:
-        cached_item, timestamp = ram_cache[key]
-        if expire is None or current_time - timestamp < expire:
-            return cached_item
-
-    result: T = await func(*args, **kwargs)
-    value = (result, time.time())
     if storage == "ram":
-        ram_cache[key] = value
+        if key in ram_cache:
+            val, timestamp = ram_cache[key]
+            if expire is None or now - timestamp < expire:
+                return val
     elif storage == "disk":
-        disk_cache[key] = value
-    else:
-        raise ValueError(f"Unknown storage: {storage}")
+        cached = disk_cache.get(key, expire)
+        if cached is not None:
+            return cached
+
+    result = await func(*args, **kwargs)
+    if storage == "ram":
+        ram_cache[key] = (result, now)
+    elif storage == "disk":
+        disk_cache.set(key, result)
     return result
 
 
@@ -69,22 +122,23 @@ def _sync_wrapper(
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> T:
-    current_time = time.time()
+    now = time.time()
 
-    if key in ram_cache:
-        cached_item, timestamp = ram_cache[key]
-        if expire is None or current_time - timestamp < expire:
-            return cached_item
-
-    result: T = func(*args, **kwargs)
-
-    value = (result, time.time())
     if storage == "ram":
-        ram_cache[key] = value
+        if key in ram_cache:
+            val, timestamp = ram_cache[key]
+            if expire is None or now - timestamp < expire:
+                return val
     elif storage == "disk":
-        disk_cache[key] = value
-    else:
-        raise ValueError(f"Unknown storage: {storage}")
+        cached = disk_cache.get(key, expire)
+        if cached is not None:
+            return cached
+
+    result = func(*args, **kwargs)
+    if storage == "ram":
+        ram_cache[key] = (result, now)
+    elif storage == "disk":
+        disk_cache.set(key, result)
     return result
 
 
