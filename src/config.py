@@ -4,7 +4,8 @@ from typing import Final
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.types import LinkPreviewOptions
-from tinylogging import Level, Logger, LoggingAdapterHandler
+from tinylogging import Level, Logger, LoggingAdapterHandler, TelegramHandler
+from tinylogging.helpers import TelegramFormatter
 
 from cli import ARGS
 from config_types import Config
@@ -19,15 +20,15 @@ config.merge(ARGS)
 
 logger: Final = Logger(APP_NAME, Level.DEBUG if config.general.debug else Level.INFO)
 
-# logger.handlers.add(
-#     TelegramHandler(
-#         chat_id=config.telegram.log_chat_id,
-#         token=config.telegram.token,
-#         message_thread_id=config.telegram.log_thread_id,
-#         formatter=TelegramFormatter(),
-#         ignore_errors=True,
-#     )
-# )
+logger.handlers.add(
+    TelegramHandler(
+        chat_id=config.telegram.log_chat_id,
+        token=config.telegram.token,
+        message_thread_id=config.telegram.log_thread_id,
+        formatter=TelegramFormatter(),
+        ignore_errors=True,
+    )
+)
 
 aiogram_logger = logging.getLogger("aiogram")
 

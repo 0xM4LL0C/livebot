@@ -45,7 +45,6 @@ async def init_bot_commands():
         BotCommand(command="weather", description="Погода"),
         BotCommand(command="casino", description="Казино"),
         BotCommand(command="ref", description="Реферальная система"),
-        BotCommand(command="stats", description="Статистика"),
         BotCommand(command="help", description="Помощь"),
     ]
 
