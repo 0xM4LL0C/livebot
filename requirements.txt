@@ -11,3 +11,5 @@ i18n-lib==0.2.0
 diskcache==5.6.3
 aiohttp==3.11.18
 annotated-types==0.7.0
+semver==3.0.4
+xdg-base-dirs==6.0.2
