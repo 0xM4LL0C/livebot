@@ -50,3 +50,4 @@ BotFather
 craftable
 Юзнул
 cachedmethod
+инлайн

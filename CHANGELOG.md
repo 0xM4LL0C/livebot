@@ -15,12 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Исправлен баг, когда из бокса иногда не выподал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137))
+- Исправлен баг, когда из бокса иногда не выпадал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137))
 - Исправлен баг с реферальной системой ([#139](https://github.com/0xM4LL0C/livebot/issues/139))
 
 ### Изменено
 
-- Полностю переписан весь проект ([#128](https://github.com/0xM4LL0C/livebot/issues/128))
+- Полностью переписан весь проект ([#128](https://github.com/0xM4LL0C/livebot/issues/128))
 - Изменена логика показателей игрока ([#138](https://github.com/0xM4LL0C/livebot/issues/138))
 - Доработана система для ограничения игроков ([#145](https://github.com/0xM4LL0C/livebot/issues/145))
 
