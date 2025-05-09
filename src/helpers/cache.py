@@ -19,9 +19,7 @@ disk_cache = DiskCache(CACHE_DIR, eviction_policy="least-recently-used")
 ram_cache: LRUCache[str, tuple[Any, float]] = LRUCache(4048 * 2)
 
 
-@disk_cache.memoize()
 def make_hash(*args: Any) -> str:
-    @disk_cache.memoize()
     def convert(obj: Any) -> Any:
         if hasattr(obj, "to_dict"):
             return obj.to_dict()
