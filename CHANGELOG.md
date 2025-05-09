@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [12.1.0] - 2025-05-09
+
+### Исправлено
+
+- В `requirements.txt` добавлены недостающые зависимости
+
+### Удалено
+
+- Команда `/stats` из списка команд
+- Декоратор для кеширования из функции `make_hash`
+
 ## [12.0.0] - 2025-05-09
 
 ### Добавлено
