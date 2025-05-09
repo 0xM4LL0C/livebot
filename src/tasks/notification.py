@@ -1,3 +1,5 @@
+# pylint: disable=R0801
+
 import asyncio
 from contextlib import suppress
 
