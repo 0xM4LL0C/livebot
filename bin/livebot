@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 DATA_DIR=${XDG_DATA_HOME:-$HOME/.local/share}/livebot
 
