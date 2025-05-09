@@ -10,12 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Добавлено
 
 - Добавлено сообщение об ошибках ([#124](https://github.com/0xM4LL0C/livebot/issues/124))
-- В командах `/shop` и `/craft` добавлены инлайн кнопки ([#12](https://github.com/0xM4LL0C/livebot/issues/12), [#26][https://github.com/0xM4LL0C/livebot/issues/26])
+- В командах `/shop` и `/craft` добавлены инлайн кнопки ([#12](https://github.com/0xM4LL0C/livebot/issues/12), [#26](https://github.com/0xM4LL0C/livebot/issues/26))
 - Добавлен скрипт для установки бота
 
 ### Исправлено
 
-- Исправлен баг, когда из бокса иногда не выподал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137)
+- Исправлен баг, когда из бокса иногда не выподал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137))
 - Исправлен баг с реферальной системой ([#139](https://github.com/0xM4LL0C/livebot/issues/139))
 
 ### Изменено
