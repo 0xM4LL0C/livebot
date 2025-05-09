@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Исправлено
+
+- Исправлена проблема с кешом ([#152](https://github.com/0xM4LL0C/livebot/issues/152))
+
 ## [12.1.0] - 2025-05-09
 
 ### Исправлено
