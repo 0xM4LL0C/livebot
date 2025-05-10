@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [12.1.2] - 2025-05-10
+
 ### Исправлено
 
 - Сообщение о покупке предмета отправлялось в чат покупки, а нужно было чтобы он отправлялся в час продавца
