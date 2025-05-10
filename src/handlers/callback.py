@@ -528,7 +528,7 @@ async def market_callback(
 
             await query.message.answer(t("market.buy-item", user=user, usage=usage_text, item=item))
             await query.bot.send_message(
-                query.message.chat.id,
+                item.owner.id,
                 t("market.sold-item", user=user, usage=usage_text, item=item),
             )
         case "back" | "next":
