@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Изменено
+
+- Цена на билет увеличена
+
 ## [12.1.2] - 2025-05-10
 
 ### Исправлено
