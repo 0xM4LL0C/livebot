@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Цена на билет увеличена
 
+### Исправлено
+
+- Исправлено выпадание предметов в боксе ([#162](https://github.com/0xM4LL0C/livebot/issues/162))
+
 ## [12.1.2] - 2025-05-10
 
 ### Исправлено
