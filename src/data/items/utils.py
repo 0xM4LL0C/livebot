@@ -1,5 +1,5 @@
 import random
-from typing import ParamSpec, TypeVar
+from typing import Optional, ParamSpec, TypeVar
 
 from data.items.items import ITEMS
 from datatypes import Item
@@ -10,6 +10,14 @@ from helpers.utils import cached
 
 P = ParamSpec("P")
 T = TypeVar("T")
+
+RARITY_WEIGHTS = {
+    ItemRarity.COMMON: 60,
+    ItemRarity.UNCOMMON: 25,
+    ItemRarity.RARE: 10,
+    ItemRarity.EPIC: 4,
+    ItemRarity.LEGENDARY: 1,
+}
 
 
 @cached()
@@ -45,3 +53,22 @@ def get_item_count_for_rarity(rarity: ItemRarity) -> int:
         case _:
             raise NotImplementedError(f"Unknown rarity: {rarity}")
     return quantity
+
+
+@cached(storage="disk")
+def get_weights_for_items(items: list[Item]) -> list[int]:
+    return [RARITY_WEIGHTS[item.rarity] for item in items]
+
+
+def get_random_items(
+    quantity: int,
+    unique: bool = False,
+    items: Optional[list[Item]] = None,
+) -> list[Item]:
+    items = items or ITEMS
+    weights = get_weights_for_items(items)
+    if unique:
+        if quantity > len(items):
+            raise ValueError("Cannot select more unique items than available in the list.")
+        return random.sample(items, k=quantity)
+    return random.choices(items, weights=weights, k=quantity)

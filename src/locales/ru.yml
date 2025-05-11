@@ -41,7 +41,7 @@ casino:
     <b>🎰 Казино</b>
 
     Решил заработать легкие деньги?
-    Ну давай, шансы 50 на 50
+    Ну давай, только шанс 4 из 64 😉
 
     Чтобы сыграть напиши <code>/casino [кол-во]</code>
   win: 🎉 Ураа, ты выиграл {func:pretty_int(quantity)} {func:get_item_emoji("бабло")}
@@ -264,7 +264,8 @@ achievements:
   info: |
     {obj:achievement.emoji} {obj:achievement.name}
 
-    Получено в {func:pretty_datetime(user_achievement.completed_at)}
+
+    Получено в {func:pretty_datetime(user_achievement.completed_at)} по UTC
 
     {obj:achievement.desc}
 notifications:

@@ -25,6 +25,7 @@ from helpers.utils import (
     batched,
     check_version,
     get_item_middle_price,
+    is_win_in_slot_machine,
     pretty_float,
     pretty_int,
     sorted_dict,
@@ -137,13 +138,13 @@ async def casino_cmd(message: Message, command: CommandObject):
         await message.reply(t("item-not-enough", item_name="бабло"))
         return
 
-    dice = await message.answer_dice("🎲")
+    dice = await message.answer_dice("🎰")
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(2)
 
     ticket.quantity -= 1
 
-    if dice.dice.value > 3:
+    if is_win_in_slot_machine(dice.dice.value):
         user.coin += quantity * 2
         user.casino_info.win += quantity * 2
         await message.reply(t("casino.win", quantity=quantity * 2))

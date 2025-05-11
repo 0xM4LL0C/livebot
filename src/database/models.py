@@ -69,6 +69,8 @@ class UserItem(SubModel):
                 raise ValueError("Usable items cannot have a quantity greater than 1")
             self.usage = 0.0
 
+        self.name = get_item(self.name).name
+
     @property
     def type(self) -> ItemType:
         return get_item(self.name).type
@@ -101,8 +103,7 @@ class Inventory(SubModel):
     items: list[UserItem] = field(default_factory=list)
 
     def __pre_serialize__(self):
-        items = list(filter(lambda i: i.quantity > 0, self.items))
-        self.items = items
+        self.items = [item for item in self.items if item.quantity > 0]
         return self
 
     def add(self, name: str, count: int = 1, usage: float = 100.0):
@@ -110,13 +111,13 @@ class Inventory(SubModel):
 
         if item.type == ItemType.USABLE:
             for _ in range(count):
-                self.items.append(UserItem(name=name, quantity=1, usage=usage))
+                self.items.append(UserItem(name=item.name, quantity=1, usage=usage))
         elif item.type == ItemType.STACKABLE:
             for inv_item in self.items:
                 if inv_item.name == name:
                     inv_item.quantity += count
                     return
-            self.items.append(UserItem(name=name, quantity=count))
+            self.items.append(UserItem(name=item.name, quantity=count))
 
     def remove(
         self,
