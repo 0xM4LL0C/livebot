@@ -12,7 +12,7 @@ from consts import MARKET_ITEMS_LIST_MAX_ITEMS_COUNT
 from core.player_actions import game_action, sleep_action, walk_action, work_action
 from data.achievements.utils import get_achievement
 from data.items.items import ITEMS
-from data.items.utils import get_item, get_item_count_for_rarity
+from data.items.utils import get_item, get_item_count_for_rarity, get_random_items
 from database.models import MarketItemModel, UserModel
 from handlers.scenes.market import AddMarketItemMainScene
 from helpers.callback_factory import (
@@ -175,7 +175,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
             num_items_to_get = random.randint(1, 3)
             items = ""
 
-            for item_to_get in random.choices(ITEMS, k=num_items_to_get):
+            for item_to_get in get_random_items(num_items_to_get, unique=True):
                 quantity = get_item_count_for_rarity(item_to_get.rarity)
 
                 items += f"+ {pretty_int(quantity)} {item_to_get.name} {item_to_get.emoji}\n"
@@ -372,7 +372,7 @@ async def chest_callback(query: CallbackQuery, callback_data: ChestCallback):
     available_items = list(
         filter(lambda i: i.rarity in (ItemRarity.COMMON, ItemRarity.UNCOMMON), ITEMS)
     )
-    available_items = random.choices(available_items, k=items_quantity)
+    available_items = get_random_items(items_quantity, items=available_items)
 
     for item in available_items:
         quantity = get_item_count_for_rarity(item.rarity)
