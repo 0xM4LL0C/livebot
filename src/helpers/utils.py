@@ -12,7 +12,7 @@ from annotated_types import SupportsLt
 from semver import Version
 
 from config import logger
-from consts import APP_NAME, AUTHOR, HOUR, MINUTE, VERSION
+from consts import APP_NAME, AUTHOR, HOUR, MINUTE, SLOT_MACHINE_VALUE, VERSION
 from helpers.cache import cached
 
 
@@ -228,3 +228,10 @@ def parse_time_duration(time_str: str) -> timedelta:
             return timedelta(days=value)
 
     raise ValueError(f"Invalid time unit. Excepted on of {{m,h,d}}, got `{unit}`")
+
+
+@cached(storage="disk")
+def is_win_in_slot_machine(value: int) -> bool:
+    a, b, c = SLOT_MACHINE_VALUE[value]
+
+    return a == b == c
