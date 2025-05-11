@@ -264,7 +264,8 @@ achievements:
   info: |
     {obj:achievement.emoji} {obj:achievement.name}
 
-    Получено в {func:pretty_datetime(user_achievement.completed_at)}
+
+    Получено в {func:pretty_datetime(user_achievement.completed_at)} по UTC
 
     {obj:achievement.desc}
 notifications:
