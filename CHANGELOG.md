@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Исправлено
+
+- Исправлена рандомная генерация кол-во предметов (раньше не работало из за кеширования)
+
 ## [12.2.0] - 2025-05-11
 
 ### Изменено

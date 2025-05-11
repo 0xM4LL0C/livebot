@@ -37,7 +37,6 @@ def get_item_emoji(name: str) -> str:
     return get_item(name).emoji
 
 
-@cached()
 def get_item_count_for_rarity(rarity: ItemRarity) -> int:
     match rarity:
         case ItemRarity.COMMON:
