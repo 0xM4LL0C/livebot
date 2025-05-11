@@ -144,7 +144,6 @@ async def casino_cmd(message: Message, command: CommandObject):
 
     ticket.quantity -= 1
 
-    print(dice.dice.value)
     if is_win_in_slot_machine(dice.dice.value):
         user.coin += quantity * 2
         user.casino_info.win += quantity * 2
