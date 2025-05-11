@@ -20,16 +20,16 @@ tasks:
     vars:
       paths: "{{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}src/ tools/{{end}}"
     cmds:
-      - ruff check --respect-gitignore {{.paths}}
-      - pylint -f colorized {{.paths}}
-      - pyright {{.paths}}
+      - uv run ruff check --respect-gitignore {{.paths}}
+      - uv run pylint -f colorized {{.paths}}
+      - uv run pyright {{.paths}}
 
   format:
     ignore_error: true
-    cmd: ruff format --respect-gitignore src tools
+    cmd: uv run ruff format --respect-gitignore src tools
 
   fix:
-    cmd: ruff check --respect-gitignore --fix src tools
+    cmd: uv run ruff check --respect-gitignore --fix src tools
 
   spell-check:
     vars:
@@ -50,7 +50,7 @@ tasks:
       - dev-install
       - create-config
     cmds:
-      - pre-commit install
+      - uv run pre-commit install
 
   clean:
     cmds:
@@ -63,7 +63,8 @@ tasks:
 
   docs-setup:
     cmds:
-      - pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin transliterate python-slugify
+      - uv venv
+      - uv pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin transliterate python-slugify
 
   release:
     cmd: python3 tools/release.py {{.CLI_ARGS}}
