@@ -141,6 +141,9 @@ async def transfer_callback(query: CallbackQuery, callback_data: TransferCallbac
 
     mess = transfer_item(user, target_user, ObjectId(callback_data.item_oid))
 
+    await user.update_async()
+    await target_user.update_async()
+
     await query.message.answer(mess)
 
 
