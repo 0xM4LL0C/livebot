@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [12.1.2] - 2025-05-10
+
+### Исправлено
+
+- Сообщение о покупке предмета отправлялось в чат покупки, а нужно было чтобы он отправлялся в час продавца
+
+## [12.1.1] - 2025-05-09
+
+### Исправлено
+
+- Исправлена проблема с кешом ([#152](https://github.com/0xM4LL0C/livebot/issues/152))
+
+## [12.1.0] - 2025-05-09
+
+### Исправлено
+
+- В `requirements.txt` добавлены недостающые зависимости
+
+### Удалено
+
+- Команда `/stats` из списка команд
+- Декоратор для кеширования из функции `make_hash`
+
+## [12.0.0] - 2025-05-09
+
 ### Добавлено
 
 - Добавлено сообщение об ошибках ([#124](https://github.com/0xM4LL0C/livebot/issues/124))
@@ -15,12 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Исправлен баг, когда из бокса иногда не выподал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137))
+- Исправлен баг, когда из бокса иногда не выпадал предмет ([#137](https://github.com/0xM4LL0C/livebot/issues/137))
 - Исправлен баг с реферальной системой ([#139](https://github.com/0xM4LL0C/livebot/issues/139))
 
 ### Изменено
 
-- Полностю переписан весь проект ([#128](https://github.com/0xM4LL0C/livebot/issues/128))
+- Полностью переписан весь проект ([#128](https://github.com/0xM4LL0C/livebot/issues/128))
 - Изменена логика показателей игрока ([#138](https://github.com/0xM4LL0C/livebot/issues/138))
 - Доработана система для ограничения игроков ([#145](https://github.com/0xM4LL0C/livebot/issues/145))
 
