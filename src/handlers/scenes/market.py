@@ -42,7 +42,7 @@ class AddMarketItemFinalScene(
             usage=user_item.usage,
         )
 
-        user.inventory.remove(name=user_item.name, id=user_item.id)
+        user.inventory.remove(name=user_item.name, count=quantity, id=user_item.id)
         await market_item.add_async()
         await user.update_async()
 
