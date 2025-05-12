@@ -346,7 +346,13 @@ async def price_cmd(message: Message, command: CommandObject):
         return
 
     price = get_item_middle_price(item.name)
-    await message.reply(t("price.price", item=item, price=price))
+
+    if price:
+        mess = t("price.price", item=item, price=price)
+    else:
+        mess = t("price.item-has-not-price", item=item)
+
+    await message.reply(mess)
 
 
 @router.message(Command("home"))
