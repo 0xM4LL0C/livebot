@@ -157,8 +157,18 @@ class AddMarketItemMainScene(
         if not user.inventory.items:
             await query.answer(t("market.no-items"), show_alert=True)
             await self.wizard.exit()
+            return
 
         assert isinstance(query.message, Message)  # for linters
+
+        market_items = await MarketItemModel.get_all_async(owner_oid=user.oid)
+
+        if len(market_items) >= user.max_items_count_in_market:
+            await query.answer(
+                t("market.limit-reached", limit=user.max_items_count_in_market), show_alert=True
+            )
+            await self.wizard.exit()
+            return
 
         await query.message.edit_text(
             t("select-which-one"),
