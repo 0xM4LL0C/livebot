@@ -4,7 +4,7 @@ tomlkit==0.13.2
 tinylogging==5.0.1
 dacite==1.9.2
 cachetools==5.5.2
-redis==5.2.1
+redis==6.1.0
 transliterate==1.10.2
 mashumaro[toml]==3.15
 i18n-lib==0.2.0
