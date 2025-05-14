@@ -313,6 +313,7 @@ market:
     <b>Твои предметы</b>
 
     <i>нажми на предмет чтобы убрать с продажы</i>
+  limit-reached: Ты достиг лимита ({func:pretty_int(limit)} предметов)
 input-quantity: Введи количество
 input-price: Введи прайс
 input-price__with_middle_price: |

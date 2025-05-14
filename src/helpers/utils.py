@@ -12,7 +12,7 @@ from annotated_types import SupportsLt
 from semver import Version
 
 from config import logger
-from consts import APP_NAME, AUTHOR, HOUR, MINUTE, SLOT_MACHINE_VALUE, VERSION
+from consts import APP_NAME, AUTHOR, MINUTE, SLOT_MACHINE_VALUE, VERSION
 from helpers.cache import cached
 
 
@@ -163,7 +163,7 @@ def remove_extra_keys(dict1: dict[str, Any], dict2: dict[K, V]) -> dict[K, V]:
     return {key: dict2[key] for key in dict2 if key in dict1}
 
 
-@cached(expire=HOUR, storage="disk")
+@cached(expire=(15 * MINUTE), storage="disk")
 def get_item_middle_price(name: str) -> int:
     from data.items.utils import get_item
     from database.models import MarketItemModel
@@ -174,7 +174,7 @@ def get_item_middle_price(name: str) -> int:
 
     market_items = MarketItemModel.get_all(name=name)
     for market_item in market_items:
-        prices.append(market_item.price)
+        prices.append(round(market_item.quantity / market_item.price))
 
     if item.price:
         prices.append(item.price)

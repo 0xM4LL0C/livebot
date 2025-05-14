@@ -12,6 +12,7 @@ from database.models import MarketItemModel, PromoModel, UserModel
 from helpers.datetime_utils import utcnow
 from helpers.enums import ItemType
 from helpers.exceptions import ItemNotFoundError, NoResult
+from helpers.filters import TextOrCommandFilter
 from helpers.localization import t
 from helpers.markups import InlineMarkup
 from helpers.player_utils import (
@@ -70,14 +71,14 @@ async def help_cmd(message: Message):
     await message.reply(t("help"))
 
 
-@router.message(Command("profile"))
+@router.message(TextOrCommandFilter("profile", "профиль"))
 async def profile_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t("profile", user=user))
 
 
-@router.message(Command("inventory"))
+@router.message(TextOrCommandFilter("inventory", "inv", "инв", "инвентарь"))
 async def inventory_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
     items = ""
@@ -95,7 +96,7 @@ async def inventory_cmd(message: Message):
     await message.reply(t("inventory", items=items))
 
 
-@router.message(Command("shop"))
+@router.message(TextOrCommandFilter("shop", "шоп", "магазин"))
 async def shop_cmd(message: Message, command: CommandObject):
     user = await UserModel.get_async(id=message.from_user.id)
 
@@ -113,7 +114,7 @@ async def shop_cmd(message: Message, command: CommandObject):
     )
 
 
-@router.message(Command("casino"))
+@router.message(TextOrCommandFilter("casino", "казино"))
 async def casino_cmd(message: Message, command: CommandObject):
     user = await UserModel.get_async(id=message.from_user.id)
 
@@ -157,7 +158,7 @@ async def casino_cmd(message: Message, command: CommandObject):
     await user.update_async()
 
 
-@router.message(Command("craft"))
+@router.message(TextOrCommandFilter("craft", "крафт"))
 async def craft_cmd(message: Message, command: CommandObject):
     user = await UserModel.get_async(id=message.from_user.id)
 
@@ -172,7 +173,7 @@ async def craft_cmd(message: Message, command: CommandObject):
     await message.reply(t("craft.main"), reply_markup=InlineMarkup.craft_main(quantity, user))
 
 
-@router.message(Command("transfer"))
+@router.message(TextOrCommandFilter("transfer", "передать"))
 async def transfer_cmd(message: Message, command: CommandObject):
     user = await UserModel.get_async(id=message.from_user.id)
 
@@ -239,7 +240,7 @@ async def transfer_cmd(message: Message, command: CommandObject):
     await message.reply(mess)
 
 
-@router.message(Command("use"))
+@router.message(TextOrCommandFilter("use", "юз"))
 async def use_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
@@ -312,7 +313,7 @@ async def promo_cmd(message: Message, command: CommandObject):
     await message.answer(t("promo.activate", user=user, items=items))
 
 
-@router.message(Command("quest"))
+@router.message(TextOrCommandFilter("quest", "квест"))
 async def quest_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
@@ -324,14 +325,14 @@ async def quest_cmd(message: Message):
     )
 
 
-@router.message(Command("weather"))
+@router.message(TextOrCommandFilter("weather", "погода"))
 async def weather_cmd(message: Message):
     weather = await get_weather()
     weather_type = t(f"weather.types.{weather.current.code.name.lower()}")
     await message.reply(t("weather.info", weather=weather, weather_type=weather_type))
 
 
-@router.message(Command("price"))
+@router.message(TextOrCommandFilter("price", "прайс"))
 async def price_cmd(message: Message, command: CommandObject):
     if not command.args:
         await message.reply(t("price.help"))
@@ -346,24 +347,30 @@ async def price_cmd(message: Message, command: CommandObject):
         return
 
     price = get_item_middle_price(item.name)
-    await message.reply(t("price.price", item=item, price=price))
+
+    if price:
+        mess = t("price.price", item=item, price=price)
+    else:
+        mess = t("price.item-has-not-price", item=item)
+
+    await message.reply(mess)
 
 
-@router.message(Command("home"))
+@router.message(TextOrCommandFilter("home", "дом"))
 async def home_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t("home.main"), reply_markup=InlineMarkup.home_main(user))
 
 
-@router.message(Command("rules"))
+@router.message(TextOrCommandFilter("rules", "правила"))
 async def rules_cmd(message: Message):
     await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t("rules"), reply_markup=InlineMarkup.rules())
 
 
-@router.message(Command("time"))
+@router.message(TextOrCommandFilter("time", "время"))
 async def time_cmd(message: Message):
     await message.reply(t("time"))
 
@@ -385,14 +392,14 @@ async def violations_cmd(message: Message):
     await message.reply(t("violation.info", violations=violations))
 
 
-@router.message(Command("achievements"))
+@router.message(TextOrCommandFilter("achievements", "достижения"))
 async def achievements_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
     await message.reply(t("achievements.main"), reply_markup=InlineMarkup.achievements(user))
 
 
-@router.message(Command("version"))
+@router.message(TextOrCommandFilter("version", "версия"))
 async def version_cmd(message: Message):
     await UserModel.get_async(id=message.from_user.id)
 
@@ -417,7 +424,7 @@ async def daily_gift_cmd(message: Message):
     await message.reply(t("daily-gift.main"), reply_markup=InlineMarkup.daily_gift(user))
 
 
-@router.message(Command("market"))
+@router.message(TextOrCommandFilter("market", "рынок"))
 async def market_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
