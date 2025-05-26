@@ -1,5 +1,4 @@
 from livebot.cli import ARGS  # isort: skip
-
 import asyncio
 from argparse import Namespace
 

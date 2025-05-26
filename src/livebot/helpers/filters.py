@@ -1,11 +1,28 @@
-from aiogram.filters import BaseFilter
-from aiogram.types import Message
+from aiogram.filters import Command, CommandObject
+from aiogram.filters.command import CommandException, CommandPatternType
 
 
-class TextOrCommandFilter(BaseFilter):
-    def __init__(self, *aliases: str):
-        self.aliases = [a.lower() for a in aliases]
+class CustomCommandFilter(Command):
+    def __init__(self, *values: CommandPatternType, **kwargs):
+        super().__init__(
+            *values,
+            prefix="",
+            **kwargs,
+        )
 
-    async def __call__(self, message: Message) -> bool:
-        text = message.text.lower()
-        return text in self.aliases or (text.startswith("/") and text[1:] in self.aliases)
+    def extract_command(self, text: str) -> CommandObject:
+        # First step: separate command with arguments
+        # "/command@mention arg1 arg2" -> "/command@mention", ["arg1 arg2"]
+        try:
+            full_command, *args = text.split(maxsplit=1)
+        except ValueError:
+            raise CommandException("not enough values to unpack")
+
+        command, _, mention = full_command.partition("@")
+
+        return CommandObject(
+            prefix=self.prefix,
+            command=command,
+            mention=mention or None,
+            args=args[0] if args else None,
+        )
