@@ -1,4 +1,4 @@
-from livebot.cli import ARGS  # isort: skip
+from livebot.cli import ARGS  # isort: skip # pylint: disable=C0412
 import asyncio
 from argparse import Namespace
 

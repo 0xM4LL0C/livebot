@@ -11,12 +11,10 @@ class CustomCommandFilter(Command):
         )
 
     def extract_command(self, text: str) -> CommandObject:
-        # First step: separate command with arguments
-        # "/command@mention arg1 arg2" -> "/command@mention", ["arg1 arg2"]
         try:
             full_command, *args = text.split(maxsplit=1)
         except ValueError:
-            raise CommandException("not enough values to unpack")
+            raise CommandException("not enough values to unpack")  # pylint: disable=W0707
 
         command, _, mention = full_command.partition("@")
 
