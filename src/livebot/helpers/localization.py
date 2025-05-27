@@ -13,7 +13,7 @@ from livebot.helpers.utils import (
 )
 
 
-i18n = I18N("ru", "src/locales")
+i18n = I18N("ru", "src/livebot/locales")
 
 
 i18n.register_function("int", int)
