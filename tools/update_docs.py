@@ -1,4 +1,6 @@
+import shutil
 import sys
+from contextlib import suppress
 from pathlib import Path
 
 
@@ -10,6 +12,12 @@ from livebot.data.items.utils import get_item_emoji
 
 
 DOCS_PATH = Path("docs/")
+
+with suppress(shutil.SameFileError):
+    shutil.copy("README.md", DOCS_PATH / "index.md")
+
+with suppress(shutil.SameFileError):
+    shutil.copy("CHANGELOG.md", DOCS_PATH / "changelog.md")
 
 
 items_text = "# Информация о предметах\n\n"

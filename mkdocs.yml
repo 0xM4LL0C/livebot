@@ -10,6 +10,7 @@ plugins:
       type: timeago
       exclude:
         - index.md
+        - changelog.md
 
 markdown_extensions:
   - tables
