@@ -30,7 +30,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Install requirements
-        run: pip install -r requirements.txt
+        run: uv pip install .
 
       - name: Install dev requirements
         run: task dev-install

@@ -58,3 +58,10 @@ dev = [
     "ruff>=0.11.10",
     "watchfiles>=1.0.5",
 ]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-git-revision-date-localized-plugin>=1.4.6",
+    "mkdocs-material>=9.6.14",
+    "python-slugify>=8.0.4",
+    "transliterate>=1.10.2",
+]
