@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Изменено
+
+- Изменена структура проекта
+
+### Исправлено
+
+- Исправлена работа текстовых команда
+
 ## [12.3.0] - 2025-05-14
 
 ### Добавлено
