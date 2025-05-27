@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 keywords = []
-authors = [{ name = "0xM4LL0C", email = "0xmll0c@proton.me" }]
+authors = [{ name = "0xM4LL0C", email = "0xm4ll0c@proton.me" }]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
