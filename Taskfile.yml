@@ -2,10 +2,10 @@ version: "3"
 
 tasks:
   default:
+    - task: format
     - task: lint
     - task: fix
     - task: spell-check
-    - task: format
 
   run:
     cmd: bash ./run.sh
@@ -39,9 +39,7 @@ tasks:
   dev-install:
     cmds:
       - uv venv
-      - uv pip install --upgrade -r requirements.txt
-      - uv pip install --upgrade ruff pyright pre-commit pylint watchfiles
-      - uv pip install "changelog-parser @ git+https://github.com/0xM4LL0C/changelog-parser@main"
+      - uv sync --group dev
       - npm install -g cspell @cspell/dict-ru_ru
       - cspell link add @cspell/dict-ru_ru
 
@@ -64,7 +62,7 @@ tasks:
   docs-setup:
     cmds:
       - uv venv
-      - uv pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin transliterate python-slugify
+      - uv sync --group docs
 
   release:
     cmd: python3 tools/release.py {{.CLI_ARGS}}
