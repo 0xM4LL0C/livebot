@@ -5,12 +5,14 @@ import sys
 from datetime import date
 
 import changelog
+import tomlkit
 from semver import Version
 
 
-with open("version") as f:
-    old_version = Version.parse(f.read())
-    version = old_version
+with open("pyproject.toml") as f:
+    raw_old_version = tomlkit.parse(f.read()).unwrap()["version"]
+old_version = Version.parse(raw_old_version)
+version = old_version
 
 
 def usage(exit_code: int = 0):

@@ -4,7 +4,7 @@ from typing import Any
 import httpx
 
 
-def get_github_release_info(version) -> dict[Any, Any]:
+def get_github_release_info(version: str) -> dict[Any, Any]:
     url = f"https://api.github.com/repos/0xM4LL0C/livebot/releases/tags/{version}"
     response = httpx.get(url)
 
