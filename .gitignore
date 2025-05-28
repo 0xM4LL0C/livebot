@@ -12,3 +12,4 @@ site/
 __pycache__/
 .ropeproject/
 .cache
+uv.lock

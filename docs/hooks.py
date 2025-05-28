@@ -6,7 +6,7 @@ from mkdocs.config.defaults import MkDocsConfig
 from slugify import slugify
 
 
-def on_pre_build(config: MkDocsConfig):
+def on_pre_build(config: MkDocsConfig):  # noqa
     os.system("python3 tools/update_docs.py")
 
 

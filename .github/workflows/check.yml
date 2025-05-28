@@ -29,8 +29,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
+      - name: setup venv
+        run: uv venv
+
       - name: Install requirements
-        run: pip install -r requirements.txt
+        run: uv pip install .
 
       - name: Install dev requirements
         run: task dev-install

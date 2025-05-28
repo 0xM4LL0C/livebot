@@ -35,7 +35,6 @@ main() {
     say "${BLUE}Starting installation of $NAME...${NC}"
     need_cmd curl
     need_cmd tar
-    need_cmd install
     need_cmd python3
 
     say "${YELLOW}Fetching release information...${NC}"
@@ -62,16 +61,12 @@ main() {
     rm -rf "$DATA_DIR"/*
     cp -r "$unpacked_dir"/* "$DATA_DIR/" | tee -a "$LOG_FILE"
 
-    BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
-    say "${YELLOW}Setting up binary directory at $BIN_DIR...${NC}"
-    mkdir -p "$BIN_DIR"
-    install "$DATA_DIR/bin/"* "$BIN_DIR/" | tee -a "$LOG_FILE"
-
-    say "${YELLOW}Creating Python virtual environment...${NC}"
-    python3 -m venv "$DATA_DIR/.venv" | tee -a "$LOG_FILE"
-    $DATA_DIR/.venv/bin/python -m pip install -r "$DATA_DIR/requirements.txt" | tee -a "$LOG_FILE"
+    python3 -m pip install --upgrade pip
+    python3 -m pip install "$DATA_DIR" | tee -a "$LOG_FILE"
 
     say "${GREEN}Installation of $NAME completed successfully!${NC}"
+
+    rm -rf $TMP_DIR
 }
 
 main
