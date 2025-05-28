@@ -22,7 +22,7 @@ DAY: Final = HOUR * 24
 WEEK: Final = DAY * 7
 
 with (DATA_DIR / "pyproject.toml").open("r", encoding="utf-8") as f:
-    _raw_version = tomlkit.parse(f.read()).unwrap()["projects"]["version"]
+    _raw_version = tomlkit.parse(f.read()).unwrap()["project"]["version"]
 VERSION: Final = Version.parse(_raw_version)
 
 AUTHOR = "0xM4LL0C"
