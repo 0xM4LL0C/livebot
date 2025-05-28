@@ -10,7 +10,7 @@ from semver import Version
 
 
 with open("pyproject.toml") as f:
-    raw_old_version = tomlkit.parse(f.read()).unwrap()["version"]
+    raw_old_version = tomlkit.parse(f.read()).unwrap()["project"]["version"]
 old_version = Version.parse(raw_old_version)
 version = old_version
 
