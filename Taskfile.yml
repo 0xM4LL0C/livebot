@@ -26,7 +26,9 @@ tasks:
 
   format:
     ignore_error: true
-    cmd: uv run ruff format --respect-gitignore src tools
+    cmds:
+      - uv run ruff format --respect-gitignore src tools
+      - taplo fmt
 
   fix:
     cmd: uv run ruff check --respect-gitignore --fix src tools
@@ -41,6 +43,7 @@ tasks:
       - uv venv
       - uv sync --group dev
       - npm install -g cspell @cspell/dict-ru_ru
+      - npm install -g @taplo/cli
       - cspell link add @cspell/dict-ru_ru
 
   dev-setup:
