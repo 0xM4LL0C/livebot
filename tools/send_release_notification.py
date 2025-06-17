@@ -1,19 +1,20 @@
+import asyncio
 import os
 from typing import Any
 
-import httpx
+import aiohttp
 
 
-def get_github_release_info(version: str) -> dict[Any, Any]:
+async def get_github_release_info(version: str) -> dict[Any, Any]:
     url = f"https://api.github.com/repos/0xM4LL0C/livebot/releases/tags/{version}"
-    response = httpx.get(url)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response.raise_for_status()
+            release_info = await response.json()  # type: dict
+            return release_info
 
-    response.raise_for_status()
-    release_info = response.json()  # type: dict
-    return release_info
 
-
-def send_release_notification():
+async def send_release_notification():
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("CHAT_ID")
     release_version = os.getenv("GITHUB_REF")
@@ -23,7 +24,7 @@ def send_release_notification():
 
     release_version = release_version.split("/")[-1]
 
-    release = get_github_release_info(release_version)  # type: dict
+    release = await get_github_release_info(release_version)  # type: dict
     body: str = release["body"]
 
     for line in body.splitlines():
@@ -45,11 +46,12 @@ def send_release_notification():
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    response = httpx.post(url, json=payload)
-    if not response.is_success:
-        print(response.text)
-    response.raise_for_status()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=payload) as response:
+            if response.status != 200:
+                print(await response.text())
+            response.raise_for_status()
 
 
 if __name__ == "__main__":
-    send_release_notification()
+    asyncio.run(send_release_notification())
