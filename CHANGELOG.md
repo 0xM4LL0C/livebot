@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Исправлено
+
+- Исправлено проблема, когда уведомления о новых релизах не отправлялся в канал
+
 ## [13.1.2] - 2025-06-17
 
 ### Исправлено
