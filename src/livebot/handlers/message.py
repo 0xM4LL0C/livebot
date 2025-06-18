@@ -377,8 +377,6 @@ async def home_cmd(message: Message):
 @router.message(CustomCommandFilter("правила"))
 @router.message(Command("rules"))
 async def rules_cmd(message: Message):
-    await UserModel.get_async(id=message.from_user.id)
-
     await message.reply(t("rules"), reply_markup=InlineMarkup.rules())
 
 
@@ -416,8 +414,6 @@ async def achievements_cmd(message: Message):
 @router.message(CustomCommandFilter("версия"))
 @router.message(Command("version"))
 async def version_cmd(message: Message):
-    await UserModel.get_async(id=message.from_user.id)
-
     await message.reply(
         t("version.info", status=await check_version()),
         reply_markup=InlineMarkup.version(),
