@@ -71,8 +71,8 @@ async def help_cmd(message: Message):
     await message.reply(t("help"))
 
 
-@router.message(CommandWithoutPrefixFilter("профиль"))
 @router.message(Command("profile"))
+@router.message(CommandWithoutPrefixFilter("профиль"))
 async def profile_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
