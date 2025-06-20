@@ -428,7 +428,9 @@ async def daily_gift_cmd(message: Message):
         await send_channel_subscribe_message(message)
         return
 
-    if user.daily_gift.next_claim_available_at <= utcnow():
+    if user.daily_gift.next_claim_available_at <= utcnow() or (
+        utcnow() <= user.daily_gift.next_claim_available_at and not user.daily_gift.is_claimed
+    ):
         user.new_daily_gift()
         await user.update_async()
 
