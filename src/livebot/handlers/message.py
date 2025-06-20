@@ -5,6 +5,7 @@ from aiogram import Router
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
+from livebot.config import logger
 from livebot.consts import MARKET_ITEMS_LIST_MAX_ITEMS_COUNT, TELEGRAM_ID
 from livebot.core.weather import get_weather
 from livebot.data.items.utils import get_item, get_item_emoji
@@ -447,3 +448,10 @@ async def market_cmd(message: Message):
         t("market.main", current_page=page + 1, max_page=max_page),
         reply_markup=InlineMarkup.market_main(page, user),
     )
+
+
+@router.message(CommandWithoutPrefixFilter("бабло"))
+async def coin_cmd(message: Message):
+    user = await UserModel.get_async(id=message.from_user.id)  # noqa
+
+    logger.debug("ok")
