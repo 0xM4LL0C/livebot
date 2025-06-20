@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command, CommandObject, CommandStart, or_f
 from aiogram.types import Message
 
@@ -71,8 +71,8 @@ async def help_cmd(message: Message):
     await message.reply(t("help"))
 
 
-# @router.message(CommandWithoutPrefixFilter("профиль"))
-@router.message(or_f(Command("profile"), F.text.in_({"профиль"})))
+@router.message(CommandWithoutPrefixFilter("профиль"))
+@router.message(or_f(Command("profile")))
 async def profile_cmd(message: Message):
     user = await UserModel.get_async(id=message.from_user.id)
 
