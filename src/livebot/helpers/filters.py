@@ -1,26 +1,17 @@
-from aiogram.filters import Command, CommandObject
-from aiogram.filters.command import CommandException, CommandPatternType
+from aiogram.filters import BaseFilter, CommandObject
+from aiogram.types import Message
 
 
-class CustomCommandFilter(Command):
-    def __init__(self, *values: CommandPatternType, **kwargs):
-        super().__init__(
-            *values,
-            prefix="",
-            **kwargs,
-        )
+class CommandWithoutPrefixFilter(BaseFilter):
+    def __init__(self, *commands: str):
+        self.commands = [cmd.lower() for cmd in commands]
 
-    def extract_command(self, text: str) -> CommandObject:
-        try:
-            full_command, *args = text.split(maxsplit=1)
-        except ValueError:
-            raise CommandException("not enough values to unpack")  # pylint: disable=W0707
-
-        command, _, mention = full_command.partition("@")
-
-        return CommandObject(
-            prefix=self.prefix,
-            command=command,
-            mention=mention or None,
-            args=args[0] if args else None,
-        )
+    async def __call__(self, message: Message, *_, **__) -> bool | dict:
+        text = message.text.lower()
+        for cmd in self.commands:
+            if text == cmd:
+                return {"command": CommandObject(command=cmd, args="")}
+            if text.startswith(cmd + " "):
+                args = text[len(cmd) + 1 :].strip()
+                return {"command": CommandObject(command=cmd, args=args)}
+        return False
