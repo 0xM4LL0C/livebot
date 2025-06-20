@@ -451,7 +451,7 @@ async def market_cmd(message: Message):
 
 
 @router.message(CommandWithoutPrefixFilter("бабло"))
-async def coin_cmd(message: Message):
+async def coin_cmd(message: Message, command: CommandObject):
     user = await UserModel.get_async(id=message.from_user.id)  # noqa
 
-    logger.debug("ok")
+    logger.debug(command.command)
