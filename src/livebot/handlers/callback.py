@@ -23,6 +23,7 @@ from livebot.helpers.callback_factory import (
     HomeCallback,
     MarketCallback,
     QuestCallback,
+    RulesCallback,
     ShopCallback,
     TraderCallback,
     TransferCallback,
@@ -586,3 +587,14 @@ async def market_callback(
                 t("market.my-items"),
                 reply_markup=InlineMarkup.market_my_items(user),
             )
+
+
+@router.callback_query(RulesCallback.filter())
+async def rules_callback(query: CallbackQuery, callback_data: RulesCallback):
+    assert isinstance(query.message, Message)
+    await query.message.delete()
+
+    user = await UserModel.get_async(id=callback_data.user_id)
+
+    user.accepted_rules = True
+    await user.update_async()
