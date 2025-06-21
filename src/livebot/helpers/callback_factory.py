@@ -65,3 +65,7 @@ class MarketCallback(CallbackData, prefix="market"):
     item_oid: Optional[str] = None
     current_page: Optional[int] = None
     user_id: int
+
+
+class RulesCallback(CallbackData, prefix="rules"):
+    user_id: int

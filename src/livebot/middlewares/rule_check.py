@@ -5,6 +5,7 @@ from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from livebot.consts import TELEGRAM_ID
 from livebot.database.models import UserModel
+from livebot.helpers.callback_factory import RulesCallback
 from livebot.helpers.utils import quick_markup
 
 
@@ -14,7 +15,7 @@ async def send_rules_message(message: Message, user: UserModel):
         {
             "Читать": {"url": "https://0xM4LL0C.github.io/livebot/rules"},
             "Я прочитал и полностью согласен с правилами": {
-                "callback_data": f"accept_rules {user.id}"
+                "callback_data": RulesCallback(user_id=user.id)
             },
         },
     )
