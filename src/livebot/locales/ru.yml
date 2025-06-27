@@ -156,6 +156,7 @@ home:
       work: Работа
       sleep: Спать
       game: Играть
+      fishing: Рыбалка
   main: <b>🏠 Дом милый дом</b>
   actions-choice: Чем хочешь заняться?
 mobs:
@@ -224,6 +225,15 @@ actions:
       Ты поиграл
 
       + {func:pretty_int(mood)} настроения
+  fishing:
+    fishing: |
+      <b>Рыбалка</b>
+
+      Осталось: {func:get_time_difference_string(time_left)}
+    end: |
+      Ты закончил рыбалку
+
+      + {func:pretty_int(quantity)} {obj:item.name} {obj:item.emoji}
 too_hungry: Ты слишком голодный
 too_tired: Ты слишком устал
 rules: Правила

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 ChatIdType = int | str
-UserActionType = Literal["walk", "work", "sleep", "game"]
+UserActionType = Literal["walk", "work", "sleep", "game", "fishing"]
 
 
 @dataclass(kw_only=True)

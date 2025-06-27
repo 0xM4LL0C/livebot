@@ -54,6 +54,7 @@ class UserNotificationStatus(SubModel):
     hunger: bool = False
     fatigue: bool = False
     daily_gift: bool = False
+    fishing: bool = False
 
 
 @dataclass
@@ -207,7 +208,7 @@ class AchievementsInfo(SubModel):
         reward = ""
 
         for item in achievement.reward:
-            reward += f" + {item.quantity} {item.name} {get_item_emoji(item.name)}"
+            reward += f" + {item.quantity} {item.name} {get_item_emoji(item.name)}\n"
 
             if item.name == "бабло":
                 self._user.coin += item.quantity
@@ -433,14 +434,14 @@ class UserModel(BaseModel):
     async def check_achievements(self):
         unknown_achievements = set()
 
-        for user_ach in self.achievements_info.achievements:
+        for key in self.achievements_info.progress:
             try:
-                ach = get_achievement(user_ach.name.lower().replace("-", " "))
+                ach = get_achievement(key)
             except AchievementNotFoundError:
-                unknown_achievements.add(user_ach)
+                unknown_achievements.add(key)
                 continue
 
-            if ach.check(self):
+            if ach.check(self) and not self.achievements_info.is_completed(key):
                 await self.achievements_info.award(ach)
 
     def new_daily_gift(self):

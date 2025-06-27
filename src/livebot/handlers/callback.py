@@ -9,7 +9,13 @@ from aiogram.types import CallbackQuery, Message
 from bson import ObjectId
 
 from livebot.consts import MARKET_ITEMS_LIST_MAX_ITEMS_COUNT
-from livebot.core.player_actions import game_action, sleep_action, walk_action, work_action
+from livebot.core.player_actions import (
+    fishing_action,
+    game_action,
+    sleep_action,
+    walk_action,
+    work_action,
+)
 from livebot.data.achievements.utils import get_achievement
 from livebot.data.items.items import ITEMS
 from livebot.data.items.utils import get_item, get_item_count_for_rarity, get_random_items
@@ -311,6 +317,8 @@ async def home_callback(query: CallbackQuery, callback_data: HomeCallback):
             await sleep_action(query, user)
         case "game":
             await game_action(query, user)
+        case "fishing":
+            await fishing_action(query, user)
 
 
 @router.callback_query(TraderCallback.filter())
