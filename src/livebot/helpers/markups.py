@@ -158,12 +158,15 @@ class InlineMarkup:
         work_text = active_action_text("work", t("home.buttons.actions.work"))
         sleep_text = active_action_text("sleep", t("home.buttons.actions.sleep"))
         game_text = active_action_text("game", t("home.buttons.actions.game"))
+        fishing_text = active_action_text("fishing", t("home.buttons.actions.fishing"))
+
         return quick_markup(
             {
                 walk_text: {"callback_data": HomeCallback(action="walk", user_id=user.id)},
                 work_text: {"callback_data": HomeCallback(action="work", user_id=user.id)},
                 sleep_text: {"callback_data": HomeCallback(action="sleep", user_id=user.id)},
                 game_text: {"callback_data": HomeCallback(action="game", user_id=user.id)},
+                fishing_text: {"callback_data": HomeCallback(action="fishing", user_id=user.id)},
             },
             sizes=(2,),
         )

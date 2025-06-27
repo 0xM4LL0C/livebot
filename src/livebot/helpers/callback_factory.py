@@ -2,6 +2,8 @@ from typing import Literal, Optional
 
 from aiogram.filters.callback_data import CallbackData
 
+from livebot.datatypes import UserActionType
+
 
 class ShopCallback(CallbackData, prefix="shop"):
     item_name: str
@@ -32,7 +34,7 @@ class QuestCallback(CallbackData, prefix="quest"):
 
 
 class HomeCallback(CallbackData, prefix="home"):
-    action: Literal["actions", "main-menu", "walk", "work", "sleep", "game"]
+    action: Literal["actions", "main-menu"] | UserActionType
     user_id: int
 
 

@@ -6,7 +6,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 
 from livebot.core.weather import get_weather
-from livebot.data.items.utils import get_item_emoji
+from livebot.data.items.utils import get_item, get_item_emoji
 from livebot.data.mobs.utils import get_random_mob
 from livebot.database.models import UserAction, UserModel
 from livebot.helpers.datetime_utils import utcnow
@@ -248,3 +248,61 @@ async def game_action(query: CallbackQuery, user: UserModel):
     await user.check_status(query.message.chat.id)
     await user.update_async()
     await query.message.edit_text(t("actions.game.end", mood=mood))
+
+
+async def fishing_action(query: CallbackQuery, user: UserModel):
+    assert isinstance(query.message, Message)  # fol linters
+    current_time = utcnow()
+    if user.action is None:
+        if user.hunger <= 20:
+            await query.answer(t("too_hungry"), show_alert=True)
+            return
+        if user.fatigue <= 20:
+            await query.answer(t("too_tired"), show_alert=True)
+            return
+
+        user.action = UserAction(
+            "fishing",
+            end=current_time + timedelta(hours=random.randint(1, 4)),
+        )
+        await user.update_async()
+    elif not user.is_current_action("fishing"):
+        await query.answer(t("busy_with_something_else"), show_alert=True)
+        return
+
+    if not user.inventory.has("удочка"):
+        await query.answer(
+            t("item-not-found-in-inventory", item_name="удочка"),
+            show_alert=True,
+        )
+        return
+
+    if current_time < user.action.end:
+        time_left = user.action.end - current_time
+
+        with suppress(TelegramBadRequest):  # for exception: message is not modified
+            await query.message.edit_text(
+                t("actions.fishing.fishing", time_left=time_left),
+                reply_markup=InlineMarkup.update_action(user.action.type, user),
+            )
+        return
+
+    item = get_item("рыба")
+    quantity = random.randint(1, 4 * user.luck)
+
+    rod = user.inventory.get("удочка")
+    rod.use(random.uniform(*get_item(rod.name).strength_reduction))  # type: ignore
+
+    user.inventory.add(item.name, quantity)
+
+    user.action = None
+    user.xp += random.uniform(4.7, 8.2)
+    user.hunger -= random.randint(4, 8)
+    user.fatigue -= random.randint(5, 10)
+    user.mood -= random.randint(10, 15)
+    user.notification_status.fishing = False
+    user.achievements_info.incr_progress("рыбак")
+
+    await user.check_status(query.message.chat.id)
+    await user.update_async()
+    await query.message.edit_text(t("actions.fishing.end", item=item, quantity=quantity))

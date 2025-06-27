@@ -106,4 +106,14 @@ ACHIEVEMENTS: Final = [
             AchievementReward(name="буст", quantity=1),
         ],
     ),
+    Achievement(
+        name="рыбак",
+        emoji="🎣",
+        desc="сходи на рыбалку 15 раз",
+        need=15,
+        reward=[
+            AchievementReward(name="рыба", quantity=50),
+            AchievementReward(name="бокс", quantity=1),
+        ],
+    ),
 ]

@@ -40,6 +40,9 @@ async def _notification():
             elif user.action.type == "game" and not user.notification_status.game:
                 user.notification_status.game = True
                 messages.add(t(f"notifications.end-{user.action.type}"))
+            elif user.action.type == "fishing" and not user.notification_status.fishing:
+                user.notification_status.fishing = True
+                messages.add(t(f"notifications.end-{user.action.type}"))
         if user.health < 30:
             ...
         if user.fatigue < 30:

@@ -20,7 +20,7 @@ async def _check():
             if ev.is_set():
                 continue
 
-        if user.last_checked_at >= utcnow() - timedelta(minutes=15):
+        if (user.last_checked_at - utcnow()) >= timedelta(minutes=15):
             continue
         await user.fetch_async()
         user.last_checked_at = utcnow()
