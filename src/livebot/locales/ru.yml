@@ -283,6 +283,7 @@ notifications:
   end-work: Ты закончил работу
   end-sleep: Ты проснулся
   end-game: Ты закончил играть
+  end-fishing: Ты закончил рыбалку
   daily-gift-available: Ежедневный подарок уже доступен. Не забудь его получить
 version:
   buttons:
