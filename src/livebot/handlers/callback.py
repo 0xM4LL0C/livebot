@@ -432,6 +432,10 @@ async def daily_gift_callback(query: CallbackQuery, callback_data: DailyGiftCall
 
     assert isinstance(query.message, Message)  # for liners
 
+    if user.daily_gift.next_claim_available_at <= utcnow():
+        user.new_daily_gift()
+        await user.update_async()
+
     if user.daily_gift.is_claimed:
         await query.answer(
             t("daily-gift.already-claimed", daily_gift=user.daily_gift), show_alert=True
@@ -443,15 +447,20 @@ async def daily_gift_callback(query: CallbackQuery, callback_data: DailyGiftCall
     if not user.daily_gift.last_claimed_at:
         user.daily_gift.last_claimed_at = utcnow()
 
-    if user.daily_gift.last_claimed_at.date() == (utcnow() - timedelta(days=1)).date():
+    if (
+        user.daily_gift.last_claimed_at
+        and user.daily_gift.last_claimed_at.date() == (utcnow() - timedelta(days=1)).date()
+    ):
         user.daily_gift.streak += 1
     else:
         user.daily_gift.streak = 1
-
     user.daily_gift.last_claimed_at = utcnow()
     user.daily_gift.is_claimed = True
 
     items = ""
+
+    assert user.daily_gift.items
+
     for item_name, quantity in user.daily_gift.items.items():
         item = get_item(item_name)
 
