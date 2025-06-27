@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Добавлено
+
+- Добавлено новое действие: рыбалка ([#184](https://github.com/0xM4LL0C/livebot/issues/184))
+- Добавлен новый предмет: удочка ([#185](https://github.com/0xM4LL0C/livebot/issues/185))
+- Добавлен новый предмет: рыба ([#186](https://github.com/0xM4LL0C/livebot/issues/186))
+- Добавлено новое достижение: рыбак ([#187](https://github.com/0xM4LL0C/livebot/issues/187))
+
 ### Изменено
 
 - Проверка игроков теперь раз в 15 минут
+
+### Исправлено
+
+- Исправлено проблема с получением достиженый
 
 ## [13.1.7] - 2025-06-27
 
