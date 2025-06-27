@@ -404,4 +404,15 @@ ITEMS: Final = [
         desc="Ивентовый предмет",
         rarity=ItemRarity.LEGENDARY,
     ),
+    Item(
+        name="рыба",
+        emoji="🐟",
+        desc="Еда. Можно получить вовремя рыбалки",
+        rarity=ItemRarity.COMMON,
+        is_quest_item=True,
+        can_exchange=True,
+        effect=60,
+        quest_coin=range(2000, 3000),
+        exchange_price=range(1500, 2780),
+    ),
 ]

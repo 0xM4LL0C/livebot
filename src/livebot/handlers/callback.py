@@ -172,7 +172,7 @@ async def use_callback(query: CallbackQuery, callback_data: UseCallback):
     item = get_item(user_item.name)
 
     match item.name:
-        case "трава" | "буханка" | "сэндвич" | "пицца" | "тако" | "суп":
+        case "трава" | "буханка" | "сэндвич" | "пицца" | "тако" | "суп" | "рыба":
             user.hunger += item.effect  # type: ignore
             mess = t("use.hunger", item_name=item.name, effect=item.effect)
         case "буст":
