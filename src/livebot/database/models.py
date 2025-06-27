@@ -254,7 +254,7 @@ class DailyGift(SubModel):
     @property
     def next_claim_available_at(self) -> datetime:
         if not self.last_claimed_at:
-            self.last_claimed_at = utcnow() - timedelta(days=1)
+            self.last_claimed_at = utcnow()
         return self.last_claimed_at + timedelta(days=1)
 
 
