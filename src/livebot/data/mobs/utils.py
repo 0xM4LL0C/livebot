@@ -19,7 +19,7 @@ def get_mob(name: str) -> Mob:
 
 
 def get_random_mob(user: UserModel) -> Optional[Mob]:
-    if not user.met_mob:
+    if user.met_mob:
         return
     mob = random.choice(MOBS)
     chance = random.uniform(0.0, 100.0)

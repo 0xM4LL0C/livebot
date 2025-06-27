@@ -36,7 +36,7 @@ async def walk_action(query: CallbackQuery, user: UserModel):
     if current_time < user.action.end:
         time_left = user.action.end - current_time
 
-        if time_left >= timedelta(minutes=random.randint(15, 20)):
+        if time_left >= timedelta(minutes=random.randint(1, 5)):
             if mob := get_random_mob(user):
                 await user.update_async()
                 await mob.on_meet(query, user)
@@ -119,12 +119,6 @@ async def work_action(query: CallbackQuery, user: UserModel):
     if current_time < user.action.end:
         time_left = user.action.end - current_time
 
-        if time_left >= timedelta(minutes=random.randint(15, 20)):
-            if mob := get_random_mob(user):
-                await user.update_async()
-                await mob.on_meet(query, user)
-                return
-
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
                 t("actions.work.working", time_left=time_left),
@@ -171,12 +165,6 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
     if current_time < user.action.end:
         time_left = user.action.end - current_time
 
-        if time_left >= timedelta(minutes=random.randint(15, 20)):
-            if mob := get_random_mob(user):
-                await user.update_async()
-                await mob.on_meet(query, user)
-                return
-
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
                 t("actions.sleep.sleeping", time_left=time_left),
@@ -222,12 +210,6 @@ async def game_action(query: CallbackQuery, user: UserModel):
 
     if current_time < user.action.end:
         time_left = user.action.end - current_time
-
-        if time_left >= timedelta(minutes=random.randint(15, 20)):
-            if mob := get_random_mob(user):
-                await user.update_async()
-                await mob.on_meet(query, user)
-                return
 
         with suppress(TelegramBadRequest):  # for exception: message is not modified
             await query.message.edit_text(
