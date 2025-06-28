@@ -149,9 +149,6 @@ async def sleep_action(query: CallbackQuery, user: UserModel):
         if user.hunger <= 20:
             await query.answer(t("too_hungry"), show_alert=True)
             return
-        if user.fatigue <= 20:
-            await query.answer(t("too_tired"), show_alert=True)
-            return
 
         user.action = UserAction(
             "sleep",
