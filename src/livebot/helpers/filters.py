@@ -7,6 +7,8 @@ class CommandWithoutPrefixFilter(BaseFilter):
         self.commands = [cmd.lower() for cmd in commands]
 
     async def __call__(self, message: Message) -> bool | dict:
+        if not message.text:
+            return False
         text = message.text.lower()
         for cmd in self.commands:
             if text == cmd:
