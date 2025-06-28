@@ -8,6 +8,11 @@ on:
     paths:
       - "**.py"
       - ".github/workflows/check.yml"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
 
 jobs:
   init:
