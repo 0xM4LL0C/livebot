@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [13.2.0] - 2025-06-28
+
 ### Добавлено
 
 - Добавлено новое действие: рыбалка ([#184](https://github.com/0xM4LL0C/livebot/issues/184))
