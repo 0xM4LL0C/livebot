@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Изменено
+
+- Проверка игроков теперь раз в час
+
 ## [13.2.1] - 2025-06-28
 
 ### Исправлено
