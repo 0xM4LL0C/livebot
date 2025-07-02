@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "livebot"
 description = "Игровой телеграм бот"
-version = "13.2.1"
+version = "13.3.0"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
