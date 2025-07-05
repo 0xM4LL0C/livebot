@@ -181,6 +181,11 @@ async def craft_cmd(message: Message, command: CommandObject):
 @router.message(CommandWithoutPrefixFilter("передать"))
 @router.message(Command("transfer"))
 async def transfer_cmd(message: Message, command: CommandObject):
+    await message.reply(
+        "Из за серезного бага, эта команда верменно не работает. Подробнее: https://github.com/0xM4LL0C/livebot/issues/193"
+    )
+
+    return
     user = await UserModel.get_async(id=message.from_user.id)
 
     args = str(command.args).strip().split()
