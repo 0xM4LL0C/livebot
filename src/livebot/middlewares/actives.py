@@ -27,6 +27,7 @@ class ActiveMiddleware(BaseMiddleware):
                 return
 
             result = await handler(event, data)
+            await user.fetch_async()
 
             if (utcnow() - user.last_active_time).days >= 1:
                 user.achievements_info.incr_progress("новичок")
