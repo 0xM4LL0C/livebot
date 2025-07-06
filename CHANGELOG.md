@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Исправлено
 
-- Bcghfdkty баг связанный с командой `/transfer` ([#193](https://github.com/0xM4LL0C/livebot/issues/193))
+- Исправлен баг связанный с командой `/transfer` ([#193](https://github.com/0xM4LL0C/livebot/issues/193))
 
 ## [13.3.1] - 2025-07-05
 
