@@ -237,6 +237,9 @@ async def transfer_cmd(message: Message, command: CommandObject):
         )
         return
     else:
+        if not user.inventory.has(item.name):
+            await message.reply(t("item-not-found-in-inventory", item_name=item.name))
+            return
         user_item = user.inventory.get(item.name)
         mess = transfer_item(user, target_user, user_item.id, quantity=quantity)
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [13.3.3] - 2025-07-08
+
+### Исправлено
+
+- Исправлен баг связанный с командой `/transfer`
+
 ## [13.3.2] - 2025-07-06
 
 ### Исправлено

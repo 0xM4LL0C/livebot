@@ -154,6 +154,9 @@ class Inventory(SubModel):
     def get(self, name: str) -> UserItem:
         items = self.get_all(name)
 
+        if not items:
+            raise NoResult(name)
+
         try:
             item = items[0]
             if item.quantity <= 0:
